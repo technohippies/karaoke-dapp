@@ -1,0 +1,22 @@
+{
+  "ciphertext": "rxJzNANCYrB6GJsv6l8cklt/UW9SrpypVuM8AqFbjgDQJPZeRro/9pbsuFUhw3OETDTPu1OHV3bXfAgqNxhJb/0GrYXidqhjpNTDgwe90HMpBmp0KaEPh6pAJYpqoGAoiQknnlGCV4ywv6IsAwDsAlWe8iKQpXbwAt0C",
+  "dataToEncryptHash": "49bac3dba60752be1bb0f06d856a0b31a660c3358b935688275860ab26cca94c",
+  "accessControlConditions": [
+    {
+      "contractAddress": "",
+      "standardContractType": "",
+      "chain": "ethereum",
+      "method": "",
+      "parameters": [
+        ":currentActionIpfsId"
+      ],
+      "returnValueTest": {
+        "comparator": "=",
+        "value": "bafkreiavs4rrweexl4fgkwdkz72232huqs23minptlb3ppyaiuzwqzepe4"
+      }
+    }
+  ],
+  "encryptedAt": "2025-06-28T17:52:15.432Z",
+  "forAction": "voice-grader",
+  "actionCid": "bafkreiavs4rrweexl4fgkwdkz72232huqs23minptlb3ppyaiuzwqzepe4"
+}

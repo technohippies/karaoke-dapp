@@ -12,9 +12,9 @@
 
 const MUSIC_STORE_ADDRESS = '<TO_BE_SET>'; // Will be set from deployment
 
-const go = async () => {
+(async () => {
   try {
-    const { userAddress, songId, encryptedMIDI, midiHash } = jsParams;
+    // jsParams properties are available as direct variables
     
     // 1. Verify user has purchased song access
     const hasAccess = await Lit.Actions.callContract({
@@ -74,6 +74,4 @@ const go = async () => {
       error: error.message 
     });
   }
-};
-
-go();
+})();

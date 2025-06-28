@@ -12,13 +12,13 @@
 
 const MUSIC_STORE_ADDRESS = '<TO_BE_SET>'; // Will be set from deployment
 
-const go = async () => {
+(async () => {
   try {
-    const { sessionId, recallBucketId, userId, songId, totalLines } = jsParams;
+    // jsParams properties are available as direct variables
     
     // 1. In production, this would fetch from Recall Network
     // For MVP, we'll receive aggregated data from frontend
-    const attemptedLines = jsParams.lineResults || [];
+    const attemptedLines = lineResults || [];
     const creditsUsed = attemptedLines.length;
     
     // 2. Handle partial completion
@@ -79,6 +79,4 @@ const go = async () => {
       error: error.message 
     });
   }
-};
-
-go();
+})();

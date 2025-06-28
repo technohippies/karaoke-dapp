@@ -1,0 +1,10 @@
+[
+  {
+    "action": "midi-decryptor",
+    "error": "No CID found in AIOZ IPFS response: {\"message\":\"Pin with that hash already exists\",\"status\":\"fail\"}"
+  },
+  {
+    "action": "session-settlement",
+    "error": "No CID found in AIOZ IPFS response: {\"message\":\"Pin with that hash already exists\",\"status\":\"fail\"}"
+  }
+]
