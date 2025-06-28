@@ -11,4 +11,4 @@ out/
 .env
 
 # Deployment files (keep the directory but not the contents)
-deployments/*.json
+deployments/*.jsonlib/
