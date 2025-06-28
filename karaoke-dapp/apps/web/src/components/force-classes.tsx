@@ -42,6 +42,11 @@ export function ForceClasses() {
       <div className="w-[400px] sm:w-[540px]" />
       <div className="border-neutral-800" />
       
+      {/* Sheet close button classes */}
+      <div className="bg-neutral-800 hover:bg-neutral-700 h-9 w-9 flex items-center justify-center cursor-pointer" />
+      <div className="text-neutral-400 hover:text-neutral-50" />
+      <div className="ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+      
       {/* Animation classes */}
       <div className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
       <div className="data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom" />
@@ -52,6 +57,16 @@ export function ForceClasses() {
       {/* More utility classes */}
       <div className="pointer-events-none size-4 shrink-0" />
       <div className="sr-only" />
+      
+      {/* Flexbox and spacing classes */}
+      <div className="flex flex-col space-y-2 text-center sm:text-left" />
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2" />
+      <div className="text-lg font-semibold" />
+      <div className="text-sm text-neutral-300" />
+      
+      {/* Section height classes */}
+      <div className="h-16 h-24" />
+      <div className="mt-3 mb-6 rounded-lg" />
     </div>
   );
 }

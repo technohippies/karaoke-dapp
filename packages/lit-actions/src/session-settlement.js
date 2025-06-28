@@ -10,7 +10,7 @@
  * - totalLines: total number of lines in the song
  */
 
-const MUSIC_STORE_ADDRESS = '<TO_BE_SET>'; // Will be set from deployment
+const KARAOKE_STORE_ADDRESS = '0xb55d11F5b350cA770e31de13c88F43098A1f097f';
 
 (async () => {
   try {

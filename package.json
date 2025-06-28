@@ -14,5 +14,9 @@
   },
   "devDependencies": {
     "turbo": "latest"
+  },
+  "dependencies": {
+    "bs58": "^6.0.0",
+    "ethers5": "npm:ethers@^5.8.0"
   }
 }

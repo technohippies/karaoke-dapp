@@ -30,7 +30,7 @@ export const FromBottom: Story = {
         <Button variant="outline">Open from Bottom</Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[400px]">
-        <SheetHeader>
+        <SheetHeader className="text-left">
           <SheetTitle>Bottom Sheet</SheetTitle>
           <SheetDescription>
             This sheet slides up from the bottom of the screen.
@@ -41,11 +41,6 @@ export const FromBottom: Story = {
             Perfect for mobile-style interactions or detail views.
           </p>
         </div>
-        <SheetFooter>
-          <SheetClose asChild>
-            <Button variant="outline">Close</Button>
-          </SheetClose>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
   ),

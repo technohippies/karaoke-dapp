@@ -2,22 +2,22 @@
   {
     "actionName": "voice-grader",
     "ipfsCid": "QmZSt2pkbxRiyf9fBRiBxxHEFhJmggoUjEx9eQgz8ei18f",
-    "deployedAt": "2025-06-28T18:38:04.220Z",
+    "deployedAt": "2025-06-28T19:40:57.427Z",
     "network": "datil",
     "contractAddress": null
   },
   {
     "actionName": "midi-decryptor",
-    "ipfsCid": "QmcxaPtv9RSnzGtuX9rpxLZAd2DS1GrVB7mnN7TfwJMTK3",
-    "deployedAt": "2025-06-28T18:38:04.768Z",
+    "ipfsCid": "QmQyjFws2H5BeaQLpTFtHCvGdE12wGBNBCABQNAUBZq9m6",
+    "deployedAt": "2025-06-28T19:40:58.552Z",
     "network": "datil",
-    "contractAddress": "0x323f3aE73d07A7B28C31cD80985b6BC195db5a80"
+    "contractAddress": "0xb55d11F5b350cA770e31de13c88F43098A1f097f"
   },
   {
     "actionName": "session-settlement",
-    "ipfsCid": "QmXwJPoyRqcmaqPtVBcHYJDmQ3wY4yjKRfhERN2Pq5ovy3",
-    "deployedAt": "2025-06-28T18:38:05.044Z",
+    "ipfsCid": "QmQgdKP73CP6M8YPZZsJVV8ki35MVmrxCmSFY5fN9tT1mB",
+    "deployedAt": "2025-06-28T19:40:58.997Z",
     "network": "datil",
-    "contractAddress": "0x323f3aE73d07A7B28C31cD80985b6BC195db5a80"
+    "contractAddress": "0xb55d11F5b350cA770e31de13c88F43098A1f097f"
   }
 ]

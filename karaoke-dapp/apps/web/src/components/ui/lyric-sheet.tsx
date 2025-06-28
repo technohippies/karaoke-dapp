@@ -46,26 +46,37 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
           </div>
         </SheetHeader>
         <div className="mt-6 space-y-4">
-          {sections.map((section) => (
-            <div
-              key={section.id}
-              className={cn(
-                "cursor-pointer rounded-lg border border-neutral-700 p-4 transition-all",
-                "hover:border-neutral-600 hover:bg-neutral-800",
-                activeSection === section.id && "border-neutral-500 bg-neutral-800"
-              )}
-              onClick={() => setActiveSection(
-                activeSection === section.id ? null : section.id
-              )}
-            >
-              <h3 className="text-lg font-medium text-neutral-50">{section.title}</h3>
-              {activeSection === section.id && (
-                <div className="mt-3 text-sm text-neutral-300">
-                  <p>Content for {section.title} will appear here.</p>
-                </div>
-              )}
-            </div>
-          ))}
+          {sections.map((section) => {
+            const getMinHeight = () => {
+              switch (section.id) {
+                case "translate": return "h-16" // ~2 lines
+                case "meaning": return "h-24" // ~4 lines  
+                case "grammar": return "h-24" // ~4 lines
+                default: return "h-16"
+              }
+            }
+            
+            return (
+              <div
+                key={section.id}
+                className={cn(
+                  "cursor-pointer rounded-lg p-4 transition-all",
+                  activeSection === section.id && "bg-neutral-800",
+                  getMinHeight()
+                )}
+                onClick={() => setActiveSection(
+                  activeSection === section.id ? null : section.id
+                )}
+              >
+                <h3 className="text-lg font-medium text-neutral-50 hover:underline">{section.title}</h3>
+                {activeSection === section.id && (
+                  <div className="mt-3 text-sm text-neutral-300">
+                    <p>Content for {section.title} will appear here.</p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </SheetContent>
     </Sheet>

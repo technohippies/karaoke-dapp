@@ -1,10 +1,14 @@
 [
   {
+    "action": "voice-grader",
+    "error": "No CID found in Pinata response: {\"error\":{\"reason\":\"INVALID_CREDENTIALS\",\"details\":\"token is malformed: could not base64 decode signature: illegal base64 data at input byte 65\"}}"
+  },
+  {
     "action": "midi-decryptor",
-    "error": "No CID found in AIOZ IPFS response: {\"message\":\"Pin with that hash already exists\",\"status\":\"fail\"}"
+    "error": "No CID found in Pinata response: {\"error\":{\"reason\":\"INVALID_CREDENTIALS\",\"details\":\"token is malformed: could not base64 decode signature: illegal base64 data at input byte 65\"}}"
   },
   {
     "action": "session-settlement",
-    "error": "No CID found in AIOZ IPFS response: {\"message\":\"Pin with that hash already exists\",\"status\":\"fail\"}"
+    "error": "No CID found in Pinata response: {\"error\":{\"reason\":\"INVALID_CREDENTIALS\",\"details\":\"token is malformed: could not base64 decode signature: illegal base64 data at input byte 65\"}}"
   }
 ]
