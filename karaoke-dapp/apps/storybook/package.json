@@ -1,0 +1,27 @@
+{
+  "name": "@karaoke-dapp/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "storybook": "storybook dev -p 6006"
+  },
+  "dependencies": {
+    "@karaoke-dapp/ui": "workspace:*",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "storybook": "9.0.14",
+    "@storybook/react-vite": "9.0.14",
+    "@storybook/addon-links": "9.0.14",
+    "@storybook/addon-themes": "9.0.14",
+    "@storybook/addon-docs": "9.0.14",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2",
+    "vite": "^7.0.0",
+    "@tailwindcss/vite": "^4.0.0"
+  }
+}

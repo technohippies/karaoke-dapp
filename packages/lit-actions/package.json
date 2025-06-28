@@ -1,0 +1,17 @@
+{
+  "name": "@karaoke-dapp/lit-actions",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "deploy": "bun run scripts/deploy.ts",
+    "encrypt-deepgram-key": "bun run scripts/encrypt-key.ts"
+  },
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^6.0.0",
+    "@lit-protocol/constants": "^6.0.0",
+    "@lit-protocol/lit-auth-client": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

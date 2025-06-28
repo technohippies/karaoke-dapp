@@ -1,0 +1,20 @@
+{
+  "name": "@karaoke-dapp/tableland",
+  "version": "1.0.0",
+  "scripts": {
+    "deploy-tables": "node scripts/deploy-tables.js",
+    "deploy-tables:bun": "bun run scripts/deploy-tables.ts",
+    "update-songs": "bun run scripts/update-songs.ts",
+    "check-tables": "bun run scripts/check-tables.ts"
+  },
+  "dependencies": {
+    "@tableland/sdk": "^7.2.1",
+    "@lit-protocol/lit-node-client": "^6.0.0",
+    "@lit-protocol/constants": "^6.0.0",
+    "ethers": "^6.0.0",
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "karaoke-dapp",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "turbo": "^2.5.4"
+  },
+  "packageManager": "bun@1.1.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

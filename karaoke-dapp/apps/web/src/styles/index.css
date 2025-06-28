@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Using Tailwind neutral colors */
+    --background: 0 0% 100%; /* white */
+    --foreground: 0 0% 9%; /* neutral-900 */
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 0 0% 9%; /* neutral-900 */
+    --popover: 0 0% 100%; /* white */
+    --popover-foreground: 0 0% 9%; /* neutral-900 */
+    --primary: 0 0% 9%; /* neutral-900 */
+    --primary-foreground: 0 0% 98%; /* neutral-50 */
+    --secondary: 0 0% 96%; /* neutral-100 */
+    --secondary-foreground: 0 0% 9%; /* neutral-900 */
+    --muted: 0 0% 96%; /* neutral-100 */
+    --muted-foreground: 0 0% 45%; /* neutral-600 */
+    --accent: 0 0% 96%; /* neutral-100 */
+    --accent-foreground: 0 0% 9%; /* neutral-900 */
+    --destructive: 0 84% 60%; /* red-500 */
+    --destructive-foreground: 0 0% 98%; /* neutral-50 */
+    --border: 0 0% 90%; /* neutral-200 */
+    --input: 0 0% 90%; /* neutral-200 */
+    --ring: 0 0% 64%; /* neutral-400 */
+    --radius: 0.5rem;
+    
+    /* Tailwind neutral colors as CSS variables */
+    --neutral-50: 0 0% 98%;
+    --neutral-100: 0 0% 96%;
+    --neutral-200: 0 0% 90%;
+    --neutral-300: 0 0% 83%;
+    --neutral-400: 0 0% 64%;
+    --neutral-500: 0 0% 45%;
+    --neutral-600: 0 0% 32%;
+    --neutral-700: 0 0% 25%;
+    --neutral-800: 0 0% 15%;
+    --neutral-900: 0 0% 9%;
+    --neutral-950: 0 0% 4%;
+  }
+
+  .dark {
+    --background: 0 0% 9%; /* neutral-900 */
+    --foreground: 0 0% 98%; /* neutral-50 */
+    --card: 0 0% 9%; /* neutral-900 */
+    --card-foreground: 0 0% 98%; /* neutral-50 */
+    --popover: 0 0% 9%; /* neutral-900 */
+    --popover-foreground: 0 0% 98%; /* neutral-50 */
+    --primary: 0 0% 98%; /* neutral-50 */
+    --primary-foreground: 0 0% 9%; /* neutral-900 */
+    --secondary: 0 0% 15%; /* neutral-800 */
+    --secondary-foreground: 0 0% 98%; /* neutral-50 */
+    --muted: 0 0% 15%; /* neutral-800 */
+    --muted-foreground: 0 0% 64%; /* neutral-400 */
+    --accent: 0 0% 15%; /* neutral-800 */
+    --accent-foreground: 0 0% 98%; /* neutral-50 */
+    --destructive: 0 84% 60%; /* red-500 */
+    --destructive-foreground: 0 0% 98%; /* neutral-50 */
+    --border: 0 0% 15%; /* neutral-800 */
+    --input: 0 0% 15%; /* neutral-800 */
+    --ring: 0 0% 83%; /* neutral-300 */
+  }
+}
+
+@theme {
+  /* Tailwind neutral colors in oklch */
+  --color-neutral-50: oklch(0.98 0 0);
+  --color-neutral-100: oklch(0.96 0 0);
+  --color-neutral-200: oklch(0.90 0 0);
+  --color-neutral-300: oklch(0.83 0 0);
+  --color-neutral-400: oklch(0.64 0 0);
+  --color-neutral-500: oklch(0.45 0 0);
+  --color-neutral-600: oklch(0.32 0 0);
+  --color-neutral-700: oklch(0.25 0 0);
+  --color-neutral-800: oklch(0.15 0 0);
+  --color-neutral-900: oklch(0.09 0 0);
+  --color-neutral-950: oklch(0.04 0 0);
+  
+  /* Custom primary colors for karaoke dApp */
+  --color-primary-50: oklch(0.97 0.02 240);
+  --color-primary-100: oklch(0.93 0.04 240);
+  --color-primary-200: oklch(0.86 0.08 240);
+  --color-primary-300: oklch(0.77 0.13 240);
+  --color-primary-400: oklch(0.65 0.17 240);
+  --color-primary-500: oklch(0.52 0.19 240);
+  --color-primary-600: oklch(0.42 0.18 240);
+  --color-primary-700: oklch(0.35 0.15 240);
+  --color-primary-800: oklch(0.29 0.12 240);
+  --color-primary-900: oklch(0.24 0.09 240);
+  
+  /* Spacing scale */
+  --spacing: 0.25rem;
+  
+  /* Custom fonts */
+  --font-display: "Inter", "system-ui", "sans-serif";
+  
+  /* Breakpoints */
+  --breakpoint-3xl: 1920px;
+  
+  /* Animation easings */
+  --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  /* Consistent border radius values */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-full: 9999px;
+}

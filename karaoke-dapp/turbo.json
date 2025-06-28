@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": [
+    "VITE_TABLELAND_SONGS_TABLE",
+    "VITE_TABLELAND_PURCHASES_TABLE",
+    "VITE_LIT_PKP_ADDRESS",
+    "VITE_MUSIC_STORE_ADDRESS",
+    "VITE_CHAIN_ID"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "storybook-static/**"]
+    },
+    "lint": {},
+    "typecheck": {},
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

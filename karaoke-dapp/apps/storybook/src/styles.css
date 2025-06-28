@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+/* Import the theme from the main app */
+@theme {
+  /* Custom theme variables for karaoke dApp */
+  --color-primary-50: oklch(0.97 0.02 240);
+  --color-primary-100: oklch(0.93 0.04 240);
+  --color-primary-200: oklch(0.86 0.08 240);
+  --color-primary-300: oklch(0.77 0.13 240);
+  --color-primary-400: oklch(0.65 0.17 240);
+  --color-primary-500: oklch(0.52 0.19 240);
+  --color-primary-600: oklch(0.42 0.18 240);
+  --color-primary-700: oklch(0.35 0.15 240);
+  --color-primary-800: oklch(0.29 0.12 240);
+  --color-primary-900: oklch(0.24 0.09 240);
+  
+  /* Spacing scale */
+  --spacing: 0.25rem;
+  
+  /* Custom fonts */
+  --font-display: "Inter", "system-ui", "sans-serif";
+  
+  /* Breakpoints */
+  --breakpoint-3xl: 1920px;
+  
+  /* Animation easings */
+  --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
