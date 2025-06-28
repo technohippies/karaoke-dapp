@@ -23,10 +23,10 @@ export const Default: Story = {
   },
 };
 
-export const Active: Story = {
+export const Hovered: Story = {
   args: {
     text: "Consectetur adipiscing elit",
-    active: true,
+    className: "bg-neutral-600",
   },
 };
 

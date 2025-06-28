@@ -1,0 +1,75 @@
+/* Force Tailwind to generate these utility classes */
+
+/* Button sizes */
+.h-8 { height: 2rem; }
+.h-9 { height: 2.25rem; }
+.h-10 { height: 2.5rem; }
+.w-9 { width: 2.25rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-8 { padding-left: 2rem; padding-right: 2rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.p-0 { padding: 0; }
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+
+/* LyricLine */
+.py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+
+/* Sheet */
+.p-6 { padding: 1.5rem; }
+.h-\[80vh\] { height: 80vh; }
+.h-\[400px\] { height: 400px; }
+.h-\[200px\] { height: 200px; }
+.w-\[400px\] { width: 400px; }
+.w-3\/4 { width: 75%; }
+.sm\:w-\[540px\] { width: 540px; }
+.sm\:max-w-sm { max-width: 24rem; }
+
+/* Positioning */
+.fixed { position: fixed; }
+.absolute { position: absolute; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.inset-x-0 { left: 0; right: 0; }
+.inset-y-0 { top: 0; bottom: 0; }
+.top-0 { top: 0; }
+.right-0 { right: 0; }
+.bottom-0 { bottom: 0; }
+.left-0 { left: 0; }
+.top-4 { top: 1rem; }
+.right-4 { right: 1rem; }
+
+/* Z-index */
+.z-50 { z-index: 50; }
+
+/* Borders */
+.border-t { border-top-width: 1px; }
+.border-b { border-bottom-width: 1px; }
+.border-l { border-left-width: 1px; }
+.border-r { border-right-width: 1px; }
+.border-neutral-800 { border-color: rgb(38 38 38); }
+
+/* Gaps and spacing */
+.gap-4 { gap: 1rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mt-6 { margin-top: 1.5rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+
+/* Colors */
+.bg-neutral-900 { background-color: rgb(23 23 23); }
+.bg-black\/80 { background-color: rgb(0 0 0 / 0.8); }
+
+/* Animations - handled by animations.css */
+
+/* Transitions */
+.transition {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+.ease-in-out { transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); }
+.duration-300 { transition-duration: 300ms; }
+.duration-500 { transition-duration: 500ms; }
+
+/* Shadow */
+.shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); }

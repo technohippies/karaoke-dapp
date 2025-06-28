@@ -3,6 +3,7 @@ import { cn } from "../../lib/utils"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -37,6 +38,9 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
       <SheetContent side="bottom" className="h-[80vh]">
         <SheetHeader>
           <SheetTitle className="sr-only">Lyric Details</SheetTitle>
+          <SheetDescription className="sr-only">
+            View translation, meaning, and grammar for this lyric line
+          </SheetDescription>
           <div className="mb-6 text-lg font-medium text-neutral-50">
             {lyricText}
           </div>
