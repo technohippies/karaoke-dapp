@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Preview } from '@storybook/react';
-import '../src/tailwind-compiled.css';
+import '../../web/src/styles/index.css';
 
 const preview: Preview = {
   parameters: {
@@ -11,13 +11,34 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    backgrounds: {
+      default: 'dark',
+      values: [
+        {
+          name: 'dark',
+          value: '#171717', // neutral-900
+        },
+      ],
+    },
+    layout: 'centered',
+    darkMode: {
+      current: 'dark',
+      stylePreview: true,
+    },
   },
   decorators: [
-    (Story) => (
-      <div style={{ padding: '1rem' }}>
-        <Story />
-      </div>
-    ),
+    (Story) => {
+      // Ensure dark mode is applied to the root
+      React.useEffect(() => {
+        document.documentElement.classList.add('dark');
+      }, []);
+      
+      return (
+        <div className="min-h-screen" style={{ padding: '2rem' }}>
+          <Story />
+        </div>
+      );
+    },
   ],
 };
 

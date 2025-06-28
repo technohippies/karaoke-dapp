@@ -9,6 +9,13 @@
   },
   "dependencies": {
     "@karaoke-dapp/ui": "workspace:*",
+    "@karaoke-dapp/web": "workspace:*",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@phosphor-icons/react": "^2.1.5",
+    "@radix-ui/react-slot": "^1.1.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.4.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },

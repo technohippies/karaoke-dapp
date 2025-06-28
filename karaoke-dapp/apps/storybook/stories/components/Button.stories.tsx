@@ -1,6 +1,7 @@
 import React from 'react';
-import type { Meta, StoryObj } from 'storybook/internal/types';
-import { Button } from '@karaoke-dapp/ui';
+import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '@karaoke-dapp/web/src/components/ui/button';
+import { Microphone } from '@phosphor-icons/react';
 
 const meta = {
   title: 'Components/Button',
@@ -82,6 +83,6 @@ export const Large: Story = {
 export const Icon: Story = {
   args: {
     size: 'icon',
-    children: '🎤',
+    children: <Microphone size={20} weight="bold" />,
   },
 };
