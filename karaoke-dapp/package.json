@@ -6,14 +6,32 @@
     "packages/*"
   ],
   "scripts": {
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "process-song": "tsx scripts/process-songs.ts process",
+    "verify-song": "tsx scripts/process-songs.ts verify",
+    "test-decrypt": "tsx scripts/test-decryption.ts test",
+    "test-integration": "tsx scripts/integration-test.ts"
   },
   "devDependencies": {
+    "@types/yargs": "^17.0.33",
+    "axios": "^1.10.0",
+    "dotenv": "^17.0.0",
+    "form-data": "^4.0.3",
+    "ora": "^8.2.0",
     "prettier": "^3.2.5",
-    "turbo": "^2.5.4"
+    "tsx": "^4.20.3",
+    "turbo": "^2.5.4",
+    "yargs": "^18.0.0"
   },
   "packageManager": "bun@1.1.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@lit-protocol/encryption": "^7.2.0",
+    "@lit-protocol/lit-node-client": "^7.2.0",
+    "@lit-protocol/types": "^7.2.0",
+    "@tableland/sdk": "^7.2.1",
+    "ethers": "^6.14.4"
   }
 }

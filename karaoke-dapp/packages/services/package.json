@@ -1,0 +1,25 @@
+{
+  "name": "@karaoke-dapp/services",
+  "version": "0.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^7.2.0",
+    "@lit-protocol/encryption": "^7.2.0",
+    "@lit-protocol/types": "^7.2.0",
+    "ethers": "^6.14.4",
+    "axios": "^1.10.0",
+    "form-data": "^4.0.3",
+    "@karaoke-dapp/db": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^20.11.0"
+  }
+}
