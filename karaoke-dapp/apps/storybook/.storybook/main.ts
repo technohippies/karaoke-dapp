@@ -15,15 +15,10 @@ const config: StorybookConfig = {
     options: {},
   },
   viteFinal: async (config) => {
-    // Import Tailwind plugin dynamically with content paths
+    // Import Tailwind plugin dynamically - v4 auto-detects content
     const { default: tailwindcss } = await import('@tailwindcss/vite');
     config.plugins = config.plugins || [];
-    config.plugins.push(tailwindcss({
-      content: [
-        '../stories/**/*.{js,ts,jsx,tsx}',
-        '../web/src/**/*.{js,ts,jsx,tsx}',
-      ],
-    }));
+    config.plugins.push(tailwindcss());
     return config;
   },
   docs: {
