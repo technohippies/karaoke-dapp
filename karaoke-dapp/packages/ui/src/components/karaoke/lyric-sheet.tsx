@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet"
-import { LyricLine } from "./lyric-line"
+import { MediaRow } from "../ui/media-row"
 import { Button } from "../ui/button"
 
 interface LyricSheetProps {

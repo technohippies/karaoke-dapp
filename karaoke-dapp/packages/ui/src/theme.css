@@ -39,4 +39,14 @@
   .karaoke-gradient-subtle {
     background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-900) 100%);
   }
+  
+  /* Hide scrollbars for karaoke display */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }
