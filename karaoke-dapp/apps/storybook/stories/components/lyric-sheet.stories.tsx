@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
-    lyricText: 'Lorem ipsum dolor sit amet',
+    lyricText: 'I will love you forever, until the stars no longer shine in the night sky above us',
   },
   render: (args) => (
     <div className="p-8">
@@ -30,17 +30,17 @@ export const MultipleLines: Story = {
   render: () => (
     <div className="space-y-2 p-8">
       <p className="mb-4 text-sm text-neutral-400">Click any lyric line to see its details:</p>
-      <LyricSheet lyricText="Lorem ipsum dolor sit amet" />
-      <LyricSheet lyricText="Consectetur adipiscing elit sed do" />
-      <LyricSheet lyricText="Eiusmod tempor incididunt ut labore" />
-      <LyricSheet lyricText="Et dolore magna aliqua ut enim" />
+      <LyricSheet lyricText="I will love you forever, until the stars no longer shine" />
+      <LyricSheet lyricText="Through the darkest nights and brightest days, you'll always be mine" />
+      <LyricSheet lyricText="When the world feels cold and the path seems unclear and everything's falling apart" />
+      <LyricSheet lyricText="I'll be there beside you, holding your heart" />
     </div>
   ),
 }
 
 export const CustomTrigger: Story = {
   args: {
-    lyricText: 'Lorem ipsum dolor sit amet',
+    lyricText: 'I will love you forever, until the stars no longer shine in the night sky above us',
   },
   render: (args) => (
     <div className="p-8">
