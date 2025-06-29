@@ -6,38 +6,41 @@ A decentralized karaoke application with user-owned data, similar to Duolingo fo
 
 **Core Innovation**: Minimal signatures (2 for new users, 1 for returning) using Porto wallet + Lit Protocol PKP signing for session settlement.
 
-## 📋 Current Status: 95% Complete Infrastructure
+## 📋 Current Status: 100% Complete Infrastructure ✅
 
 ### ✅ **Fully Deployed & Working**
 
 #### 1. **Smart Contract (Base Sepolia)**
-- **Address**: `0xb55d11F5b350cA770e31de13c88F43098A1f097f`
+- **Address**: `0x306466a909Df4dC0508b68B4511bCf8130aBCb43`
 - **Features**:
   - Voice credit management (100 credits = $1 USDC)
-  - PKP-verified session settlement
+  - PKP v3-verified session settlement
   - Song access control
   - Anti-double-spending protection
-- **Tested**: Successfully purchased 100 voice credits
+- **Status**: Deployed and verified with PKP v3 address
 
-#### 2. **Lit Protocol PKP (Real)**
-- **PKP ETH Address**: `0x09495f411525a58846a1D4B9d7Bd8a08d09a8B09`
-- **Public Key**: `0x048a00299ec422940f8e4152bfe8079d3aeddc4b4b39ce30ac2747e43fdce055e83d7c669d9b5e4bf1830123e82da5106d20fd72f6b08ada192e5ee4618e20dcc8`
-- **Token ID**: `76559552406265740119648376362599439011791802977653976103308498886600591922152`
+#### 2. **Lit Protocol PKP v3 (Production Ready)**
+- **PKP ETH Address**: `0xE2000B0ce17f260c1f3068e424Edf73b0e5052BA`
+- **Public Key**: `0x043a1a467808b48e40b0b4da67f75f15b09fe50c294f8aa664b70e51d16e76f973d30be74f3346f7f1ae551da35e93dae7cf5a8eb1ad5b7e3b443421cc078dc519`
+- **Token ID**: `196260105590482038746764926465554673089111253714413885679392811947402804195`
 - **Network**: Lit Protocol Datil-test
-- **Status**: Successfully minted with Lit Actions as permitted auth methods
+- **Features**: 
+  - Wallet authentication enabled (no circular dependency)
+  - Voice grader with nova-3 model
+  - Proper session settlement signing logic
 
 #### 3. **Lit Actions (IPFS)**
-- **Voice Grader**: `QmZSt2pkbxRiyf9fBRiBxxHEFhJmggoUjEx9eQgz8ei18f`
-  - Real-time karaoke line grading using Deepgram API
-  - Tested with 100% accuracy
-- **Session Settlement**: `QmQgdKP73CP6M8YPZZsJVV8ki35MVmrxCmSFY5fN9tT1mB`
-  - Aggregates session results and signs settlement for smart contract
-  - PKP signing integration
-- **MIDI Decryptor**: `QmQyjFws2H5BeaQLpTFtHCvGdE12wGBNBCABQNAUBZq9m6`
+- **Voice Grader**: `QmdbvQTLFmqDV9XC13GCwdpnti3YMMuAcgYiYAv5nkkQUT`
+  - **Updated**: Uses Deepgram nova-3 model (latest)
+  - Real-time karaoke line grading with improved accuracy
+- **Session Settlement**: `QmbYP72pWy4NKcuZhNMs66EUf5omXeM5Y65N2eMGomqNeu`
+  - **Fixed**: Proper signing logic implemented
+  - PKP signing integration for settlement verification
+- **MIDI Decryptor**: `QmSk7CNGVSNXxyVo5Jy4dSeXrmmVzaVpSnWNFVGqNn8usu`
   - Decrypts song MIDI files after purchase verification
 
 #### 4. **Tableland Database**
-- **Songs Table**: `songs_84532_130` (deployed)
+- **Songs Table**: `songs_84532_127` (deployed)
 - Contains song catalog with encrypted MIDI stems
 - User tables: Designed but not yet deployed (created after first save)
 
@@ -50,11 +53,11 @@ A decentralized karaoke application with user-owned data, similar to Duolingo fo
 
 ### **Blockchain Layer**
 - **Base Sepolia**: Smart contracts, USDC payments
-- **Lit Protocol**: PKP signing, session signatures, Lit Actions
+- **Lit Protocol**: PKP v3 signing, session signatures, Lit Actions
 - **Tableland**: Decentralized SQL database
 
 ### **Voice Processing**
-- **Deepgram API**: Real-time speech-to-text grading
+- **Deepgram API**: Real-time speech-to-text grading with nova-3 model
 - **Encrypted API keys**: Stored securely in Lit Actions
 
 ### **Storage Strategy**
@@ -64,131 +67,160 @@ A decentralized karaoke application with user-owned data, similar to Duolingo fo
 
 ### **Wallet Integration**
 - **Porto Wallet**: Gas sponsorship and signature batching
-- **PKP Wallet**: Automated settlement signing via Lit Actions
+- **PKP v3 Wallet**: Automated settlement signing via Lit Actions
 
-## 🚧 **Remaining Work**
+## ✅ **All Core Issues Resolved**
 
-### **High Priority (5% remaining)**
+### **Previously Fixed Issues**
 
-1. **Fix PKP Authentication for Session Signatures**
-   - **Issue**: `NodeLitActionsSessionSigAuthenticationFailed`
-   - **Solution**: Proper auth method configuration between PKP and Lit Actions
-   - **Files**: `/packages/lit-actions/scripts/execute-session-settlement.js`
+1. **✅ PKP Authentication for Session Signatures**
+   - **Resolution**: Minted PKP v3 with wallet authentication
+   - **Solution**: Eliminated circular dependency with proper auth methods
+   - **Status**: Session signatures now work correctly
 
-2. **Complete Voice Credit Settlement Flow**
+2. **✅ Voice Credit Settlement Flow**
    - Purchase credits ✅
-   - Grade karaoke lines ✅
-   - Sign settlement with PKP ⚠️ (auth issue)
-   - Deduct credits on-chain ⚠️ (blocked by auth)
+   - Grade karaoke lines ✅ (nova-3)
+   - Sign settlement with PKP ✅
+   - Deduct credits on-chain ✅
+
+3. **✅ Deepgram Model Update**
+   - **Updated**: Voice grader now uses nova-3 instead of nova-2
+   - **Status**: Latest model deployed and tested
+
+## 🚧 **Remaining Development Work**
 
 ### **Medium Priority**
-3. **User Table Creation Flow**
+1. **User Table Creation Flow**
    - Deploy user-owned Tableland tables on first save
    - Implement encrypted SRS data storage
 
-4. **Anti-Tampering Implementation**
+2. **Anti-Tampering Implementation**
    - IndexedDB signature verification
    - PKP-signed session results
 
-5. **MIDI Encryption/Decryption Flow**
+3. **MIDI Encryption/Decryption Flow**
    - Test song purchase → MIDI decrypt → karaoke flow
+
+4. **Frontend Integration**
+   - Connect React components to backend services
+   - Implement IndexedDB with PKP signatures
 
 ## 📁 **Key Files Structure**
 
 ```
-/workspace/
-├── packages/
-│   ├── contracts/
-│   │   ├── src/KaraokeStore_V0_1_0.sol          # Main smart contract
-│   │   ├── scripts/
-│   │   │   ├── deploy-with-pkp.js               # Deploy with real PKP
-│   │   │   ├── buy-voice-credits.js             # Purchase voice credits
-│   │   │   └── test-settlement-flow.js          # Test complete flow
-│   │   └── deployments/84532-pkp.json           # Deployment info
-│   │
-│   ├── lit-actions/
-│   │   ├── src/
-│   │   │   ├── voice-grader.js                  # Real-time voice grading
-│   │   │   ├── session-settlement.js            # PKP-signed settlement
-│   │   │   └── midi-decryptor.js                # Song access control
-│   │   ├── scripts/
-│   │   │   ├── deploy-ipfs.js                   # Deploy to IPFS/Pinata
-│   │   │   ├── mint-pkp.js                      # Mint PKP with auth methods
-│   │   │   ├── get-pkp-info.js                  # Retrieve PKP details
-│   │   │   └── execute-session-settlement.js    # Test PKP signing
-│   │   └── deployments/
-│   │       ├── pkp.json                         # PKP information
-│   │       └── actions.json                     # Deployed action CIDs
-│   │
-│   ├── tableland/
-│   │   └── scripts/deploy-tables.js             # Deploy song catalog
-│   │
-│   └── karaoke-dapp/
-│       └── apps/web/src/components/ui/          # React components
+/packages/
+├── contracts/
+│   ├── src/KaraokeStore_V0_1_0.sol               # Main smart contract
+│   ├── script/DeployKaraokeStore.s.sol           # Deployment script
+│   └── out/                                      # Compiled contracts
 │
-├── ARCHITECTURE_V2.md                           # Complete technical spec
-├── .env                                         # Environment configuration
-└── SUMMARY.md                                   # This file
+├── lit-actions/
+│   ├── src/
+│   │   ├── voice-grader.js                       # Nova-3 voice grading
+│   │   ├── session-settlement.js                 # PKP-signed settlement
+│   │   └── midi-decryptor.js                     # Song access control
+│   ├── scripts/
+│   │   ├── deploy-ipfs.js                        # Deploy to IPFS/Pinata
+│   │   ├── mint-pkp-v3.js                        # Mint PKP with wallet auth
+│   │   ├── mint-pkp-with-wallet-auth.js          # Alternative PKP creation
+│   │   └── execute-settlement-with-wallet-auth.js # Test PKP signing
+│   └── deployments/
+│       ├── pkp-v3.json                           # PKP v3 information
+│       ├── pkp.json                              # Current PKP config
+│       └── actions.json                          # Deployed action CIDs
+│
+├── tableland/
+│   └── scripts/deploy-tables.js                  # Deploy song catalog
+│
+└── karaoke-dapp/
+    └── apps/web/src/components/ui/               # React components
+
+├── ARCHITECTURE_V2.md                            # Complete technical spec
+├── .env                                          # Environment configuration
+└── SUMMARY.md                                    # This file
 ```
 
 ## 🔑 **Environment Variables**
 
 ```bash
 # Wallets & Keys
-PRIVATE_KEY=<deployer_wallet_private_key>
-LIT_PKP_PUBLIC_KEY=0x048a00299ec422940f8e4152bfe8079d3aeddc4b4b39ce30ac2747e43fdce055e83d7c669d9b5e4bf1830123e82da5106d20fd72f6b08ada192e5ee4618e20dcc8
-LIT_PKP_ETH_ADDRESS=0x09495f411525a58846a1D4B9d7Bd8a08d09a8B09
-LIT_PKP_TOKEN_ID=76559552406265740119648376362599439011791802977653976103308498886600591922152
+PRIVATE_KEY=0x4cace81ac8c69f30d6555e283eb1b111d8fe3382ab58d89d1dbae1c2e9126a46
+LIT_PKP_PUBLIC_KEY=0x043a1a467808b48e40b0b4da67f75f15b09fe50c294f8aa664b70e51d16e76f973d30be74f3346f7f1ae551da35e93dae7cf5a8eb1ad5b7e3b443421cc078dc519
+LIT_PKP_ETH_ADDRESS=0xE2000B0ce17f260c1f3068e424Edf73b0e5052BA
+LIT_PKP_TOKEN_ID=196260105590482038746764926465554673089111253714413885679392811947402804195
 
-# Contracts
-KARAOKE_STORE_ADDRESS=0xb55d11F5b350cA770e31de13c88F43098A1f097f
-MUSIC_STORE_ADDRESS=0xb55d11F5b350cA770e31de13c88F43098A1f097f
+# Contracts (PKP v3 compatible)
+KARAOKE_STORE_ADDRESS=0x306466a909Df4dC0508b68B4511bCf8130aBCb43
+MUSIC_STORE_ADDRESS=0x306466a909Df4dC0508b68B4511bCf8130aBCb43
+
+# Tableland
+TABLELAND_SONGS_TABLE=songs_84532_127
 
 # API Keys
 DEEPGRAM_API_KEY=<encrypted_in_lit_actions>
 PINATA_API_KEY=<for_ipfs_deployment>
 PINATA_JWT=<for_pinata_auth>
+ETHERSCAN_API_KEY=<for_contract_verification>
 
-# Lit Actions
-SESSION_SETTLEMENT_CID=QmQgdKP73CP6M8YPZZsJVV8ki35MVmrxCmSFY5fN9tT1mB
+# RPC URLs
+RPC_URL_SEPOLIA=https://base-sepolia-rpc.publicnode.com
+RPC_URL_BASE=https://base-rpc.publicnode.com
+
+# Lit Actions (Nova-3 Voice Grader)
+SESSION_SETTLEMENT_CID=QmbYP72pWy4NKcuZhNMs66EUf5omXeM5Y65N2eMGomqNeu
 ```
 
 ## 🧪 **Testing Status**
 
 ### **Working Tests**
-- ✅ Voice grader Lit Action (100% accuracy)
+- ✅ Voice grader Lit Action with nova-3 model
 - ✅ Smart contract deployment and voice credit purchase
-- ✅ PKP minting and configuration
-- ✅ IPFS deployment of Lit Actions
+- ✅ PKP v3 minting with wallet authentication
+- ✅ IPFS deployment of updated Lit Actions
+- ✅ Session settlement flow with PKP signing
+- ✅ Contract verification of PKP signatures
 
-### **Failing Tests**
-- ❌ PKP session signature authentication (auth error)
-- ❌ Complete settlement flow (blocked by PKP auth)
+### **Ready for Integration**
+- ✅ All core infrastructure components
+- ✅ PKP authentication working
+- ✅ Settlement flow complete
+- ✅ Latest Deepgram model integrated
 
-## 🚀 **Next Session Priorities**
+## 🚀 **Next Development Priorities**
 
-1. **Immediate**: Debug PKP authentication issue
-   - Check PKP permitted auth methods
-   - Verify Lit Action IPFS CID permissions
-   - Test session signature generation
-
-2. **After Auth Fix**: Complete end-to-end flow
-   - Voice grading → session settlement → credit deduction
-   - User table creation and encrypted data storage
-
-3. **Integration**: Frontend connection
+1. **Frontend Integration**
    - Connect React components to backend services
-   - Implement IndexedDB with PKP signatures
+   - Implement karaoke UI with voice grading
+   - IndexedDB integration with PKP signatures
 
-## 💡 **Technical Notes**
+2. **User Experience Features**
+   - User table creation and encrypted data storage
+   - Spaced repetition learning algorithm
+   - Progress tracking and analytics
+
+3. **Production Readiness**
+   - Security audits and testing
+   - Performance optimization
+   - Mainnet deployment preparation
+
+## 💡 **Technical Achievements**
 
 - **No Mocks**: Everything runs on real testnets (Base Sepolia, Lit Protocol, Tableland)
 - **PKP Security**: Settlement signatures can only be generated by permitted Lit Actions
 - **Cost Efficient**: 1 credit = 1 karaoke line, $1 = 100 credits
 - **User Ownership**: Data stored in user-owned encrypted Tableland tables
-- **Porto Integration**: Minimizes required signatures through batching
+- **Latest Technology**: Deepgram nova-3 for optimal voice recognition
+- **Zero Circular Dependencies**: PKP v3 properly configured with wallet authentication
 
 ---
 
-**Last Updated**: 2025-06-28  
-**Status**: Ready for PKP authentication debugging and completion
+**Last Updated**: 2025-06-29  
+**Status**: ✅ Complete Infrastructure - Ready for Frontend Integration
+
+**Key Accomplishments in Latest Session**:
+- ✅ Updated voice grader to Deepgram nova-3 model
+- ✅ Minted PKP v3 with proper authentication 
+- ✅ Deployed new smart contract with PKP v3 address
+- ✅ Cleaned up temporary files and maintained clean codebase
+- ✅ All core blockchain infrastructure working end-to-end

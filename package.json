@@ -1,22 +1,40 @@
 {
   "name": "karaoke-dapp",
   "private": true,
+  "packageManager": "bun@1.1.38",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "karaoke-dapp/apps/*",
+    "karaoke-dapp/packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "test": "vitest",
+    "test:integration": "vitest --project Integration",
+    "test:unit": "vitest --project Unit",
+    "test:ui": "vitest --ui",
     "deploy:contracts": "cd packages/contracts && forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast",
     "deploy:lit": "bun run packages/lit-actions/scripts/deploy.ts",
     "update:songs": "bun run packages/tableland/scripts/update-songs.ts"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "@types/node": "^22.0.0",
+    "@vitest/ui": "^3.2.0",
+    "fake-indexeddb": "^6.0.1",
+    "jsdom": "^26.1.0",
+    "turbo": "latest",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.0"
   },
   "dependencies": {
+    "@lit-protocol/auth-helpers": "^7.2.0",
+    "@lit-protocol/constants": "^7.2.0",
+    "@lit-protocol/lit-node-client": "^7.2.0",
     "bs58": "^6.0.0",
-    "ethers5": "npm:ethers@^5.8.0"
+    "dotenv": "^16.0.0",
+    "ethers": "^6.13.0",
+    "ethers5": "npm:ethers@^5.8.0",
+    "idb": "^8.0.3",
+    "siwe": "^3.0.0"
   }
 }

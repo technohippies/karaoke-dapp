@@ -66,7 +66,6 @@ async function main() {
     console.log(`LIT_PKP_PUBLIC_KEY=${pkpWallet.address}`);
     console.log("\n⚡ Fund this address with:");
     console.log("- ETH for gas fees");
-    console.log("- Recall tokens for bucket storage");
     console.log("\nPKP info saved to packages/lit-actions/deployments/lit-pkp.json");
     
     // Instructions for real PKP minting

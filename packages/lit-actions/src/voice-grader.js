@@ -7,7 +7,6 @@
  * - expectedText: the correct lyrics
  * - sessionId: unique session identifier
  * - lineIndex: which line in the song
- * - recallBucketId: where to store results
  */
 
 const DEEPGRAM_API_KEY_ENCRYPTED = 'lz0H79OXlryCSDY4W3IQW53/OsOVubQ3h4nq+8j+5loqQV3PuMQc+Q3XkKgCb6Vq3v7U6GT0SdKNatxTOiJggWwHraXENujZwtCLhxlWsGEpi+s6J4qjXf4fvzv1R5N9pSNIURdGn/ZGAI3QvDi7awged32hrAgy6F8C';
@@ -21,7 +20,6 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     console.log('typeof expectedText:', typeof expectedText);
     console.log('typeof sessionId:', typeof sessionId);
     console.log('typeof lineIndex:', typeof lineIndex);
-    console.log('typeof recallBucketId:', typeof recallBucketId);
     console.log('typeof jsParams:', typeof jsParams);
     
     // 1. Decrypt Deepgram API key
@@ -71,8 +69,7 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     // 3. Calculate accuracy (simple word matching for MVP)
     const accuracy = calculateAccuracy(transcript.toLowerCase(), expectedText.toLowerCase());
 
-    // 4. Store result in Recall bucket
-    // Note: This requires the Recall client to be initialized with PKP wallet
+    // 4. Return result for IndexedDB storage
     const lineResult = {
       lineIndex: lineIndex,
       accuracy,
@@ -82,7 +79,7 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
       status: 'completed'
     };
 
-    // For MVP, we'll return the result and let the frontend handle Recall storage
+    // Return the result for frontend IndexedDB storage
     Lit.Actions.setResponse({
       response: JSON.stringify({
         success: true,
