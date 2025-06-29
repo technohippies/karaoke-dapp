@@ -1,6 +1,7 @@
 {
   "name": "@karaoke-dapp/lit-actions",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "create-pkp": "node scripts/create-pkp.js",
     "deploy": "node scripts/deploy.js",
@@ -8,13 +9,16 @@
     "encrypt-deepgram-key": "bun run scripts/encrypt-key.ts"
   },
   "dependencies": {
-    "@lit-protocol/lit-node-client": "^6.0.0",
     "@lit-protocol/constants": "^7.2.0",
     "@lit-protocol/lit-auth-client": "^6.0.0",
-    "ethers": "^6.0.0",
+    "@lit-protocol/lit-node-client": "^6.0.0",
+    "bs58": "^6.0.0",
     "dotenv": "^16.0.0",
+    "ethers": "^6.0.0",
     "form-data": "^4.0.0",
-    "ora": "^5.4.1"
+    "formdata-node": "^6.0.3",
+    "ora": "^5.4.1",
+    "siwe": "^3.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest"

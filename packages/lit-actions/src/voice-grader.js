@@ -56,7 +56,7 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
       bytes[i] = binaryString.charCodeAt(i);
     }
     
-    const deepgramResponse = await fetch('https://api.deepgram.com/v1/listen?model=nova-2&language=en', {
+    const deepgramResponse = await fetch('https://api.deepgram.com/v1/listen?model=nova-3&language=en', {
       method: 'POST',
       headers: {
         'Authorization': `Token ${apiKey}`,

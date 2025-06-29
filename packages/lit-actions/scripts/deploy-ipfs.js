@@ -1,5 +1,5 @@
-const fs = require('fs/promises');
-const path = require('path');
+import fs from "fs/promises";
+import path from "path";
 const ora = require('ora');
 const { ipfsClient } = require('./utils/ipfsClient.js');
 
