@@ -1,0 +1,14 @@
+{
+  "karaokeStore": "0x83a160b15aC694415824434FAD3ccbAf89D1a7d4",
+  "contractVersion": "0.1.0",
+  "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  "litPkp": "0xc257C096759F6497DC0e387b736693567A963eCe",
+  "litPkpPublicKey": "0x0403ecb679560fad3820b051fe1fceda8385d8c1624670f514ea3d60a001ba82fbedc5776140ea460b52ac143d0530162d97fcc46ab69c730413ef432ae0da6f31",
+  "litPkpTokenId": "87048780474496876234698781748638210316352951501347541971882534942142018022623",
+  "litPkpOwner": "0x7d3924A73f1242663fD8BbD1f2559fa6081Ba6D1",
+  "litPkpHasWalletAuth": true,
+  "chainId": 84532,
+  "deployedAt": "2025-06-29T09:31:01.000Z",
+  "transactionHash": "check broadcast file",
+  "verificationUrl": "https://sepolia.basescan.org/address/0x83a160b15ac694415824434fad3ccbaf89d1a7d4#code"
+}
