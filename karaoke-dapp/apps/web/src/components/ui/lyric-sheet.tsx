@@ -40,22 +40,24 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
       <SheetTrigger asChild>
         {children || <LyricLine text={lyricText} />}
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[85vh] max-h-[85vh] p-0 flex flex-col">
-        <SheetHeader className="px-6 pt-6 pb-4 shrink-0">
-          <SheetTitle className="sr-only">Lyric Details</SheetTitle>
-          <SheetDescription className="sr-only">
-            View translation, meaning, and grammar for this lyric line
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6">
-          <div className="space-y-4">
+      <SheetContent side="bottom" className="p-0" style={{ height: '95vh', maxHeight: '700px' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <SheetHeader className="px-6 pt-12 pb-4" style={{ flexShrink: 0 }}>
+            <SheetTitle className="sr-only">Lyric Details</SheetTitle>
+            <SheetDescription className="sr-only">
+              View translation, meaning, and grammar for this lyric line
+            </SheetDescription>
+          </SheetHeader>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div className="space-y-3 px-6 pb-4">
+            <div className="h-8"></div>
             {sections.map((section) => {
               const getMinHeight = () => {
                 switch (section.id) {
-                  case "translate": return "min-h-[10rem]" // 160px for lyric + translation
-                  case "meaning": return "min-h-[12rem]" // 192px for full paragraph  
-                  case "grammar": return "min-h-[16rem]" // 256px for multiple grammar points
-                  default: return "min-h-[10rem]"
+                  case "translate": return "min-h-[5rem]"
+                  case "meaning": return "min-h-[6rem]"
+                  case "grammar": return "min-h-[7rem]"
+                  default: return "min-h-[5rem]"
                 }
               }
               
@@ -67,7 +69,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
                     getMinHeight()
                   )}
                 >
-                  <h3 className="text-base font-medium text-neutral-50 mb-3">{section.title}:</h3>
+                  <h3 className="text-base font-medium text-neutral-50 mb-2">{section.title}:</h3>
                   {section.id === "translate" && (
                     <div className="text-sm text-neutral-50 mb-2">
                       {lyricText}
@@ -88,25 +90,26 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
               )
             })}
             </div>
-        </div>
-        {!hasContent && (
-          <div className="shrink-0 p-6">
+          </div>
+          <div style={{ flexShrink: 0, padding: '24px' }}>
             <Button 
               size="lg" 
               className="w-full"
               onClick={() => {
-                // Simulate generating content
-                setGeneratedContent({
-                  translate: "我会永远爱你，直到星星不再闪烁",
-                  meaning: "这句歌词用诗意的比喻表达永恒的爱情。歌手承诺他们的爱会持续到一个不可能发生的事件（星星停止闪烁），暗示他们的爱是无尽的。在中国文化中，天体意象常常代表永恒和神圣。",
-                  grammar: "will - 将来时态助动词\nforever - 副词，表示\"永远\"\nuntil...no longer - 直到...不再的句式结构\n这个句子使用将来进行时来表达持续的承诺。"
-                })
-              }}
-            >
-              Generate
-            </Button>
+              // Simulate generating content
+              setGeneratedContent({
+                translate: "我会永远爱你，直到星星不再闪烁",
+                meaning: "这句歌词用诗意的比喻表达永恒的爱情。歌手承诺他们的爱会持续到一个不可能发生的事件，暗示爱是无尽的。",
+                grammar: "will - 将来时态助动词\nforever - 副词，表示\"永远\"\nuntil...no longer - 直到...不再的句式结构"
+              })
+            }}
+            disabled={hasContent}
+            style={{ visibility: hasContent ? 'hidden' : 'visible' }}
+          >
+            Generate
+          </Button>
           </div>
-        )}
+        </div>
       </SheetContent>
     </Sheet>
   )
