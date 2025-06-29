@@ -1,7 +1,6 @@
 import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import { LyricSheet } from '@karaoke-dapp/web/src/components/ui/lyric-sheet'
-import { LyricLine } from '@karaoke-dapp/web/src/components/ui/lyric-line'
+import { LyricSheet, LyricLine } from '@karaoke-dapp/ui'
 
 const meta = {
   title: 'Components/LyricSheet',

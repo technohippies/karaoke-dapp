@@ -18,6 +18,8 @@
     "update:songs": "bun run packages/tableland/scripts/update-songs.ts"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.11",
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^22.0.0",
     "@vitest/ui": "^3.2.0",
     "fake-indexeddb": "^6.0.1",

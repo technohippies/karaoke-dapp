@@ -7,9 +7,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./sheet"
+} from "../ui/sheet"
 import { LyricLine } from "./lyric-line"
-import { Button } from "./button"
+import { Button } from "../ui/button"
 
 interface LyricSheetProps {
   children?: React.ReactNode
@@ -30,6 +30,9 @@ const sections: Section[] = [
 
 export function LyricSheet({ children, lyricText }: LyricSheetProps) {
   const [activeSection, setActiveSection] = React.useState<string | null>(null)
+  // TODO: Implement section switching
+  void activeSection
+  void setActiveSection
   const [generatedContent, setGeneratedContent] = React.useState<Record<string, string>>({})
   
   // Check if any content exists

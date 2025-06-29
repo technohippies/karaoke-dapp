@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Header } from '@/components/ui/header';
+import { Button, Header } from '@karaoke-dapp/ui';
+import { TailwindTest } from '@/components/TailwindTest';
 
 export default function App() {
   const handleAccountClick = () => {
@@ -20,6 +20,7 @@ export default function App() {
               <Button variant="outline">Learn More</Button>
               <Button variant="ghost">Documentation</Button>
             </div>
+            <TailwindTest />
           </div>
         </div>
       </div>

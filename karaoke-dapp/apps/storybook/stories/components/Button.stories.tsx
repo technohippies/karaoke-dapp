@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from '@karaoke-dapp/web/src/components/ui/button';
+import { Button } from '@karaoke-dapp/ui';
 import { Microphone } from '@phosphor-icons/react';
 
 const meta = {

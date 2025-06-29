@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
-import { Button } from '@karaoke-dapp/web/src/components/ui/button';
+import { Button } from '@karaoke-dapp/ui';
 import {
   Sheet,
   SheetClose,
@@ -10,7 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@karaoke-dapp/web/src/components/ui/sheet';
+} from '@karaoke-dapp/ui';
 
 const meta = {
   title: 'Components/Sheet',

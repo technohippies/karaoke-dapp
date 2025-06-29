@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import { Header } from '@karaoke-dapp/web/src/components/ui/header'
+import { Header } from '@karaoke-dapp/ui'
 
 const meta = {
   title: 'Components/Header',

@@ -1,0 +1,42 @@
+/* Karaoke dApp Theme - Tailwind CSS v4 */
+@theme {
+  /* Primary color - Purple/Pink gradient */
+  --color-primary-50: oklch(97% 0.023 320);
+  --color-primary-100: oklch(94% 0.053 320);
+  --color-primary-200: oklch(86% 0.089 320);
+  --color-primary-300: oklch(78% 0.128 320);
+  --color-primary-400: oklch(70% 0.165 320);
+  --color-primary-500: oklch(62% 0.192 320);
+  --color-primary-600: oklch(54% 0.213 320);
+  --color-primary-700: oklch(46% 0.211 320);
+  --color-primary-800: oklch(38% 0.192 320);
+  --color-primary-900: oklch(30% 0.151 320);
+  --color-primary-950: oklch(20% 0.074 320);
+
+  /* Accent color - Cyan/Teal */
+  --color-accent-50: oklch(97% 0.02 190);
+  --color-accent-100: oklch(93% 0.04 190);
+  --color-accent-200: oklch(86% 0.08 190);
+  --color-accent-300: oklch(76% 0.12 190);
+  --color-accent-400: oklch(65% 0.15 190);
+  --color-accent-500: oklch(55% 0.17 190);
+  --color-accent-600: oklch(45% 0.16 190);
+  --color-accent-700: oklch(35% 0.14 190);
+  --color-accent-800: oklch(25% 0.10 190);
+  --color-accent-900: oklch(18% 0.06 190);
+
+  /* Custom spacing for karaoke components */
+  --spacing-lyric: 1.5rem;
+  --spacing-card: 2rem;
+}
+
+@layer components {
+  /* Karaoke-specific gradients */
+  .karaoke-gradient {
+    background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-accent-500) 100%);
+  }
+
+  .karaoke-gradient-subtle {
+    background: linear-gradient(135deg, var(--color-primary-800) 0%, var(--color-primary-900) 100%);
+  }
+}

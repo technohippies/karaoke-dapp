@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Preview } from '@storybook/react';
-import '../../web/src/styles/index.css';
+import './preview.css';
+import '@karaoke-dapp/ui/styles.css';
 
 const preview: Preview = {
   parameters: {
