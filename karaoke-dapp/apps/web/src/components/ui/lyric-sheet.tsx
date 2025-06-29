@@ -52,12 +52,12 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
             <div className="space-y-3 px-6 pb-4">
             <div className="h-8"></div>
             {sections.map((section) => {
-              const getMinHeight = () => {
+              const getHeight = () => {
                 switch (section.id) {
-                  case "translate": return "min-h-[5rem]"
-                  case "meaning": return "min-h-[6rem]"
-                  case "grammar": return "min-h-[7rem]"
-                  default: return "min-h-[5rem]"
+                  case "translate": return "h-[7rem]"
+                  case "meaning": return "h-[8rem]"
+                  case "grammar": return "h-[9rem]"
+                  default: return "h-[7rem]"
                 }
               }
               
@@ -65,27 +65,29 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
                 <div
                   key={section.id}
                   className={cn(
-                    "p-6 rounded-lg bg-neutral-900",
-                    getMinHeight()
+                    "relative p-6 rounded-lg bg-neutral-900 overflow-hidden",
+                    getHeight()
                   )}
                 >
-                  <h3 className="text-base font-medium text-neutral-50 mb-2">{section.title}:</h3>
-                  {section.id === "translate" && (
-                    <div className="text-sm text-neutral-50 mb-2">
-                      {lyricText}
-                    </div>
-                  )}
-                  {generatedContent[section.id] && (
-                    <div className="text-sm text-neutral-300 space-y-1">
+                  <h3 className="text-base font-medium text-neutral-50">{section.title}:</h3>
+                  <div className="mt-2 space-y-1">
+                    {section.id === "translate" && (
+                      <div className="text-sm text-neutral-50">
+                        {lyricText}
+                      </div>
+                    )}
+                    <div className="text-sm text-neutral-300" style={{ visibility: generatedContent[section.id] ? 'visible' : 'hidden' }}>
                       {section.id === "grammar" ? (
-                        generatedContent[section.id].split('\n').map((line, i) => (
-                          <p key={i}>{line}</p>
-                        ))
+                        <>
+                          <p>{generatedContent[section.id]?.split('\n')[0] || 'placeholder'}</p>
+                          <p>{generatedContent[section.id]?.split('\n')[1] || 'placeholder'}</p>
+                          <p>{generatedContent[section.id]?.split('\n')[2] || 'placeholder'}</p>
+                        </>
                       ) : (
-                        <p>{generatedContent[section.id]}</p>
+                        <p>{generatedContent[section.id] || 'placeholder text that takes up space'}</p>
                       )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )
             })}
