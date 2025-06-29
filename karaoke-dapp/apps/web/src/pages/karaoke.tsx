@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Header, KaraokeDisplay, AudioPlayer, Button } from '@karaoke-dapp/ui'
 import { Microphone, Stop } from '@phosphor-icons/react'
@@ -41,7 +41,7 @@ function KaraokeContent() {
   } = useAudio()
   
   const [lyrics, setLyrics] = useState<KaraokeLyricLine[]>([])
-  const [activeLyricIndex, setActiveLyricIndex] = useState(-1)
+  const [, setActiveLyricIndex] = useState(-1)
   const [lyricsWithScores, setLyricsWithScores] = useState<KaraokeLyricLine[]>([])
   const [isProcessingRecording, setIsProcessingRecording] = useState(false)
   
@@ -109,12 +109,6 @@ function KaraokeContent() {
     }
   }
   
-  const handleSeekToLyric = (lyricId: string) => {
-    const lyric = lyrics.find(l => l.id === lyricId)
-    if (lyric) {
-      seek(lyric.startTime / 1000)
-    }
-  }
   
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
@@ -127,7 +121,6 @@ function KaraokeContent() {
             <KaraokeDisplay
               lines={lyricsWithScores}
               currentTime={currentTime * 1000} // Convert to milliseconds
-              onLineClick={handleSeekToLyric}
             />
           </div>
         </div>

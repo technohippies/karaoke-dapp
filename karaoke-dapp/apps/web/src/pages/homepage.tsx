@@ -1,4 +1,3 @@
-import React from "react"
 import { Header, MediaRow, Button } from "@karaoke-dapp/ui"
 import { Play, Star } from "@phosphor-icons/react"
 import { useNavigate } from "react-router-dom"

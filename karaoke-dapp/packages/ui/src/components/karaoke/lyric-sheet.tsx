@@ -8,7 +8,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet"
-import { MediaRow } from "../ui/media-row"
 import { Button } from "../ui/button"
 
 interface LyricSheetProps {
@@ -41,7 +40,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        {children || <LyricLine text={lyricText} />}
+        {children || <span>{lyricText}</span>}
       </SheetTrigger>
       <SheetContent side="bottom" className="p-0" style={{ height: '95vh', maxHeight: '700px' }}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

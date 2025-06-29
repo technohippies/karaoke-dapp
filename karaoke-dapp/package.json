@@ -10,7 +10,8 @@
     "process-song": "tsx scripts/process-songs.ts process",
     "verify-song": "tsx scripts/process-songs.ts verify",
     "test-decrypt": "tsx scripts/test-decryption.ts test",
-    "test-integration": "tsx scripts/integration-test.ts"
+    "test-integration": "tsx scripts/integration-test.ts",
+    "deploy-songs-table": "tsx scripts/deploy-songs-table.ts"
   },
   "devDependencies": {
     "@types/yargs": "^17.0.33",
