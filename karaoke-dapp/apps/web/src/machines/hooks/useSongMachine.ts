@@ -1,6 +1,5 @@
 import { useMachine } from '@xstate/react';
 import { useAccount } from 'wagmi';
-import { useNavigate } from 'react-router-dom';
 import { useEffect, useCallback } from 'react';
 import { songMachine } from '../song/songMachine';
 import { songServices } from '../song/services';
@@ -8,27 +7,9 @@ import { songGuards } from '../song/guards';
 
 export function useSongMachine(songId: number) {
   const { address } = useAccount();
-  const navigate = useNavigate();
 
   const [state, send, actorRef] = useMachine(songMachine.provide({
     guards: songGuards,
-    actions: {
-      navigateToKaraoke: ({ context }) => {
-        // Get the current path to extract artist and song
-        const currentPath = window.location.pathname;
-        const pathParts = currentPath.split('/').filter(Boolean);
-        const [artist, song] = pathParts;
-        
-        // Navigate to /artist/song/karaoke
-        navigate(`/${artist}/${song}/karaoke`, {
-          state: {
-            midiData: context.midiData,
-            audioUrl: context.audioUrl,
-            lyricsUrl: context.lyricsUrl,
-          },
-        });
-      },
-    },
     actors: songServices,
   }), {
     input: {
@@ -67,15 +48,6 @@ export function useSongMachine(songId: number) {
   const isReady = state.matches('purchased.ready');
   const hasError = state.matches('error');
   
-  // Debug logging
-  useEffect(() => {
-    console.log('🎵 Song machine state:', state.value, {
-      hasMidiData: !!state.context.midiData,
-      hasEncryptedCid: !!state.context.encryptedCid,
-      isReady,
-      needsDownload
-    });
-  }, [state.value, state.context.midiData, state.context.encryptedCid, isReady, needsDownload]);
 
   // Get button state and text
   const getButtonState = useCallback(() => {

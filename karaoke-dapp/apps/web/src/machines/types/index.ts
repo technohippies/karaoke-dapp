@@ -40,6 +40,11 @@ export type SongEvent =
   | { type: 'UNLOCK' }
   | { type: 'DOWNLOAD' }
   | { type: 'START_KARAOKE' }
+  | { type: 'COUNTDOWN_COMPLETE' }
+  | { type: 'COMPLETE' }
+  | { type: 'EXIT' }
+  | { type: 'PRACTICE' }
+  | { type: 'CANCEL' }
   | { type: 'RETRY' }
   | { type: 'UPDATE_ADDRESS'; address: string }
   | { type: 'ERROR'; error: string };

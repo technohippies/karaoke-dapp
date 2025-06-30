@@ -298,16 +298,38 @@ export const songMachine = createMachine({
         ready: {
           description: 'Song ready to play - show start karaoke button',
           on: {
-            START_KARAOKE: '#song.startingKaraoke',
+            START_KARAOKE: '#song.karaoke',
           },
         },
       },
     },
     
-    startingKaraoke: {
-      description: 'Transitioning to karaoke mode',
-      entry: 'navigateToKaraoke',
-      type: 'final',
+    karaoke: {
+      description: 'Karaoke mode active',
+      initial: 'preparing',
+      states: {
+        preparing: {
+          description: 'Showing countdown and checking microphone',
+          on: {
+            COUNTDOWN_COMPLETE: 'playing',
+            CANCEL: '#song.purchased.ready',
+          },
+        },
+        playing: {
+          description: 'Karaoke in progress',
+          on: {
+            COMPLETE: 'finished',
+            EXIT: '#song.purchased.ready',
+          },
+        },
+        finished: {
+          description: 'Karaoke completed - showing score',
+          on: {
+            PRACTICE: 'preparing',
+            EXIT: '#song.purchased.ready',
+          },
+        },
+      },
     },
     
     error: {

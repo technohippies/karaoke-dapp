@@ -131,19 +131,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
     
     if (!midiPlayerRef.current) {
-      console.error('❌ MIDI player not initialized after waiting')
       return
     }
     
     try {
-      console.log('🎹 Loading MIDI in audio context, size:', midiDataArray.length)
       const parsedData = await midiPlayerRef.current.load(midiDataArray)
-      console.log('✅ MIDI loaded successfully:', {
-        name: parsedData.name,
-        duration: parsedData.duration,
-        tracks: parsedData.tracks.length,
-        tempo: parsedData.tempo
-      })
       setMidiData(parsedData)
       
       // Use MIDI duration if no audio is loaded

@@ -1,25 +1,46 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, CountdownScreen, MicrophonePermission, KaraokeScore } from "@karaoke-dapp/ui"
 import { useParams } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
 import { useSongMachine } from "../machines"
 import { useAccount, useConnect } from "wagmi"
 import { LyricsService } from "../services/lyrics.service"
+import { AudioProvider, useAudio } from '../contexts/audio-context'
+import { parseLRC } from '../utils/lyrics-parser'
+import { X } from '@phosphor-icons/react'
+import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 
 
 function SongDetailContent({ song }: { song: Song }) {
   const { isConnected } = useAccount()
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
+  const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
+  const [showCountdown, setShowCountdown] = useState(false)
+  const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
   
   // Now we have the actual songId from the database
   const {
+    state,
     checkAccess,
     getButtonState,
     isCheckingAccess,
-    error: machineError
+    error: machineError,
+    send
   } = useSongMachine(song.id)
+  
+  // Audio context
+  const {
+    loadMidi,
+    play,
+    pause,
+    currentTime,
+    duration,
+    isPlaying,
+    startRecording,
+    stopRecording
+  } = useAudio()
   
   useEffect(() => {
     async function loadLyrics() {
@@ -35,8 +56,23 @@ function SongDetailContent({ song }: { song: Song }) {
           song.duration
         )
         
-        if (lyricsData && lyricsData.plainLyrics) {
-          setLyrics(lyricsData.plainLyrics.split('\n').filter(line => line.trim()))
+        if (lyricsData) {
+          // Set plain lyrics for display
+          if (lyricsData.plainLyrics) {
+            setLyrics(lyricsData.plainLyrics.split('\n').filter(line => line.trim()))
+          }
+          
+          // Parse synced lyrics for karaoke
+          if (lyricsData.syncedLyrics) {
+            const parsedLyrics = parseLRC(lyricsData.syncedLyrics)
+            const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
+              id: line.id.toString(),
+              text: line.text,
+              startTime: line.startTime * 1000,
+              endTime: line.endTime * 1000
+            }))
+            setKaraokeLyrics(karaokeLines)
+          }
         }
       } catch (err) {
         console.error('Failed to load lyrics:', err)
@@ -53,12 +89,180 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isConnected, checkAccess])
   
+  // Check if we're in karaoke mode
+  const isInKaraokeMode = state.matches('karaoke')
+  const isKaraokePreparing = state.matches('karaoke.preparing')
+  const isKaraokePlaying = state.matches('karaoke.playing')
+  const isKaraokeFinished = state.matches('karaoke.finished')
+  
+  // Reset states when leaving karaoke
+  useEffect(() => {
+    if (!isInKaraokeMode) {
+      setShowCountdown(false)
+      setHasMicPermission(null)
+    }
+  }, [isInKaraokeMode])
+  
+  // Handle entering karaoke mode
+  useEffect(() => {
+    async function prepareKaraoke() {
+      if (isKaraokePreparing && state.context.midiData) {
+        // Load MIDI data
+        await loadMidi(state.context.midiData)
+        
+        // Check microphone permission
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          stream.getTracks().forEach(track => track.stop())
+          setHasMicPermission(true)
+          setShowCountdown(true)
+        } catch {
+          setHasMicPermission(false)
+        }
+      }
+    }
+    
+    if (isKaraokePreparing) {
+      prepareKaraoke()
+    }
+  }, [isKaraokePreparing, state.context.midiData, loadMidi])
+  
+  // Handle karaoke playback
+  useEffect(() => {
+    if (isKaraokePlaying && !isPlaying) {
+      play()
+      startRecording()
+    }
+  }, [isKaraokePlaying, isPlaying, play, startRecording])
+  
+  // Handle song completion
+  useEffect(() => {
+    if (isKaraokePlaying && currentTime >= duration && duration > 0) {
+      stopRecording()
+      send({ type: 'COMPLETE' })
+    }
+  }, [isKaraokePlaying, currentTime, duration, stopRecording, send])
+  
   const handleAccountClick = () => {
     // Account functionality
   }
   
   const buttonState = getButtonState()
   
+  // Handle karaoke mode
+  if (isInKaraokeMode) {
+    // Show countdown as overlay
+    if (isKaraokePreparing && showCountdown) {
+      return (
+        <>
+          {/* Karaoke display with countdown overlay */}
+          <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+            <Header 
+              onAccountClick={handleAccountClick}
+              leftContent={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    pause()
+                    setShowCountdown(false)
+                    setHasMicPermission(null)
+                    send({ type: 'EXIT' })
+                  }}
+                >
+                  <X size={24} />
+                </Button>
+              }
+            />
+            <KaraokeDisplay
+              lines={karaokeLyrics}
+              currentTime={0} // Not started yet
+            />
+          </div>
+          
+          {/* Countdown overlay with semi-transparent background */}
+          <CountdownScreen 
+            onComplete={() => {
+              setShowCountdown(false)
+              send({ type: 'COUNTDOWN_COMPLETE' })
+            }}
+          />
+        </>
+      )
+    }
+    
+    // Show mic permission
+    if (isKaraokePreparing && !showCountdown && hasMicPermission === false) {
+      return (
+        <MicrophonePermission
+          onRequestPermission={async () => {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+              stream.getTracks().forEach(track => track.stop())
+              setHasMicPermission(true)
+              setShowCountdown(true)
+            } catch {
+              setHasMicPermission(false)
+            }
+          }}
+        />
+      )
+    }
+    
+    // Show karaoke playing
+    if (isKaraokePlaying) {
+      return (
+        <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+          <Header 
+            onAccountClick={handleAccountClick}
+            leftContent={
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  pause()
+                  stopRecording()
+                  send({ type: 'EXIT' })
+                }}
+              >
+                <X size={24} />
+              </Button>
+            }
+          />
+          <KaraokeDisplay
+            lines={karaokeLyrics}
+            currentTime={currentTime * 1000} // Convert to milliseconds
+          />
+        </div>
+      )
+    }
+    
+    // Show score
+    if (isKaraokeFinished) {
+      return (
+        <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+          <Header onAccountClick={handleAccountClick} />
+          <div className="flex-1 flex flex-col items-center justify-center p-8">
+            <KaraokeScore
+              score={85} // TODO: Calculate actual score
+              songTitle={song.title}
+              artist={song.artist}
+              onPractice={() => send({ type: 'PRACTICE' })}
+            />
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => send({ type: 'EXIT' })}
+            >
+              Back to Song
+            </Button>
+          </div>
+        </div>
+      )
+    }
+  }
+  
+  // Normal song detail view
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
       <Header onAccountClick={handleAccountClick} />
@@ -262,5 +466,9 @@ export function SongDetailPage() {
     )
   }
 
-  return <SongDetailContent song={songData} />
+  return (
+    <AudioProvider>
+      <SongDetailContent song={songData} />
+    </AudioProvider>
+  )
 }
