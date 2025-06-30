@@ -47,31 +47,42 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const midiPlayerRef = useRef<MidiPlayerService | null>(null)
   
-  // Initialize Web Audio API context and MIDI player
+  // Initialize Web Audio API context
   useEffect(() => {
     audioContextRef.current = new window.AudioContext()
     gainNodeRef.current = audioContextRef.current.createGain()
     gainNodeRef.current.connect(audioContextRef.current.destination)
     
-    // Initialize MIDI player
-    midiPlayerRef.current = new MidiPlayerService({
-      volume: midiVolume,
-      onTimeUpdate: (time) => {
-        // Only update time if MIDI is playing
-        if (midiData && !audioBuffer) {
-          setCurrentTime(time)
-        }
-      },
-      onEnd: () => {
-        setIsPlaying(false)
-        setCurrentTime(0)
-        pauseTimeRef.current = 0
-      },
-    })
+    return () => {
+      audioContextRef.current?.close()
+    }
+  }, [])
+  
+  // Initialize MIDI player separately to ensure it's ready when needed
+  useEffect(() => {
+    if (!midiPlayerRef.current) {
+      console.log('🎹 Initializing MIDI player')
+      midiPlayerRef.current = new MidiPlayerService({
+        volume: midiVolume,
+        onTimeUpdate: (time) => {
+          // Update time for MIDI playback
+          if (midiData) {
+            setCurrentTime(time)
+          }
+        },
+        onEnd: () => {
+          setIsPlaying(false)
+          setCurrentTime(0)
+          pauseTimeRef.current = 0
+        },
+      })
+    }
     
     return () => {
-      midiPlayerRef.current?.dispose()
-      audioContextRef.current?.close()
+      if (midiPlayerRef.current) {
+        midiPlayerRef.current.dispose()
+        midiPlayerRef.current = null
+      }
     }
   }, [])
   
@@ -112,8 +123,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [])
   
   const loadMidi = useCallback(async (midiDataArray: Uint8Array) => {
+    // Wait for MIDI player to be initialized
+    let attempts = 0;
+    while (!midiPlayerRef.current && attempts < 10) {
+      console.log('⏳ Waiting for MIDI player initialization...')
+      await new Promise(resolve => setTimeout(resolve, 100))
+      attempts++
+    }
+    
     if (!midiPlayerRef.current) {
-      console.error('❌ MIDI player not initialized')
+      console.error('❌ MIDI player not initialized after waiting')
       return
     }
     

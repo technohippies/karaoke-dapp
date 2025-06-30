@@ -37,9 +37,10 @@ export function HomePage() {
   }
   
   const handleSongClick = (song: Song) => {
-    // Use ID-based URL with slug for SEO
-    const slug = `${song.artist.toLowerCase().replace(/\s+/g, '-')}-${song.title.toLowerCase().replace(/\s+/g, '-')}`
-    navigate(`/s/${song.id}/${slug}`)
+    // Use artist/song URL structure
+    const artistSlug = song.artist.toLowerCase().replace(/\s+/g, '-')
+    const songSlug = song.title.toLowerCase().replace(/\s+/g, '-')
+    navigate(`/${artistSlug}/${songSlug}`)
   }
   
   return (

@@ -2,6 +2,10 @@ export const songGuards = {
   hasAccess: ({ event }: any) => {
     return event.output?.hasAccess === true && event.output?.tokenId;
   },
+
+  canUnlock: ({ event }: any) => {
+    return event.output?.canUnlock === true && event.output?.credits > 0;
+  },
   
   hasCachedMidi: ({ event }: any) => {
     // Only check for midiData - audioUrl might be empty string

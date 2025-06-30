@@ -18,6 +18,12 @@ export const songServices = {
       throw new Error('No user address');
     }
 
+    console.log('🔍 checkAccess called for:', { 
+      songId: context.songId, 
+      userAddress: context.userAddress 
+    });
+
+    // Check if user already has access to this specific song
     const hasAccess = await readContract(wagmiConfig, {
       address: MUSIC_STORE_ADDRESS,
       abi: MusicStoreV2ABI,
@@ -25,12 +31,164 @@ export const songServices = {
       args: [context.userAddress as `0x${string}`, BigInt(context.songId)],
     });
 
+    console.log('🎵 Song access check result:', hasAccess);
+
+    // Also check user's credit balance and purchase history for debugging
+    try {
+      const credits = await readContract(wagmiConfig, {
+        address: MUSIC_STORE_ADDRESS,
+        abi: MusicStoreV2ABI,
+        functionName: 'getCredits',
+        args: [context.userAddress as `0x${string}`],
+      });
+      console.log('💳 User credit balance:', credits.toString());
+
+      // Check if user has access to other songs to understand their purchase history
+      console.log('🔍 Checking access to all songs for purchase history...');
+      for (let songId = 1; songId <= 3; songId++) {
+        try {
+          const hasAccessToSong = await readContract(wagmiConfig, {
+            address: MUSIC_STORE_ADDRESS,
+            abi: MusicStoreV2ABI,
+            functionName: 'checkAccess',
+            args: [context.userAddress as `0x${string}`, BigInt(songId)],
+          });
+          console.log(`🎵 Song ${songId} access:`, hasAccessToSong);
+        } catch (err) {
+          console.log(`❓ Song ${songId} check failed:`, err);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to check credits:', error);
+    }
+
     if (hasAccess) {
-      // For now, just return a mock token ID since getUserTokenForSong doesn't exist in the ABI
+      // User already owns this song
+      console.log('✅ User has access to song', context.songId);
       return { hasAccess: true, tokenId: `${context.songId}-${context.userAddress}` };
     }
 
-    return { hasAccess: false };
+    // User doesn't own the song - check if they have credits to unlock it
+    try {
+      const credits = await readContract(wagmiConfig, {
+        address: MUSIC_STORE_ADDRESS,
+        abi: MusicStoreV2ABI,
+        functionName: 'getCredits',
+        args: [context.userAddress as `0x${string}`],
+      });
+
+      console.log(`💳 User has ${credits} credits for song ${context.songId}`);
+
+      if (credits > 0n) {
+        // User has credits available but doesn't own the song yet
+        console.log('✅ User can unlock song with credits');
+        return { 
+          hasAccess: false,
+          canUnlock: true,
+          credits: Number(credits)
+        };
+      }
+
+      // User has no credits - they need to purchase
+      console.log('❌ User has no credits to unlock song');
+      return { hasAccess: false };
+    } catch (error) {
+      console.error('❌ Failed to check credits:', error);
+      // Fallback to original behavior
+      console.log('❌ User does not have access to song', context.songId);
+      return { hasAccess: false };
+    }
+  }),
+
+  unlockSong: fromPromise(async ({ input }: { input: SongContext }) => {
+    const context = input;
+    if (!context.userAddress) {
+      throw new Error('No user address');
+    }
+
+    console.log('🔓 Unlocking song with credits:', context.songId);
+
+    try {
+      // Use 1 credit to unlock the song
+      const unlockHash = await writeContract(wagmiConfig, {
+        address: MUSIC_STORE_ADDRESS,
+        abi: MusicStoreV2ABI,
+        functionName: 'unlockSong',
+        args: [BigInt(context.songId)],
+      });
+
+      console.log('🎵 Song unlock tx:', unlockHash);
+
+      // Wait for confirmation
+      const receipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash: unlockHash,
+        confirmations: 1,
+      });
+
+      if (receipt.status !== 'success') {
+        throw new Error('Song unlock failed');
+      }
+
+      console.log('✅ Song unlocked successfully with credits');
+
+      // Immediately fetch and cache the content after unlocking
+      console.log('📦 Auto-downloading content after unlock...');
+      
+      // Get encrypted CID (for now, using mock)
+      const encryptedCid = `encrypted-${context.songId}`;
+      
+      // Get audio and lyrics URLs from database
+      const dbService = new DatabaseService();
+      const songData = await dbService.getSongById(context.songId);
+
+      if (!songData) {
+        throw new Error('Song not found after unlock');
+      }
+
+      const audioUrl = songData.stems?.vocals || '';
+      const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
+
+      // Generate mock MIDI data (since we're in development mode)
+      const { createMockMidiData } = await import('../../utils/mock-midi');
+      const mockMidiData = createMockMidiData();
+
+      // Cache the data immediately
+      const { openDB } = await import('idb');
+      const db = await openDB('karaoke-cache', 1, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains('midi-cache')) {
+            db.createObjectStore('midi-cache');
+          }
+        },
+      });
+
+      const cacheKey = `midi-song-${context.songId}-v3`;
+      await db.put('midi-cache', {
+        midiData: mockMidiData,
+        audioUrl,
+        lyricsUrl,
+        timestamp: Date.now(),
+      }, cacheKey);
+      
+      console.log('✅ Content cached automatically after unlock');
+
+      return { 
+        tokenId: unlockHash,
+        midiData: mockMidiData,
+        audioUrl,
+        lyricsUrl
+      };
+    } catch (error: any) {
+      console.error('❌ Unlock error:', error);
+      
+      if (error.message?.includes('User rejected')) {
+        throw new Error('Transaction cancelled');
+      } else if (error.message?.includes('insufficient credits')) {
+        throw new Error('Not enough credits');
+      } else {
+        throw new Error(error.message || 'Unlock failed');
+      }
+    }
   }),
 
   approveUSDC: fromPromise(async ({ input }: { input: SongContext }) => {
@@ -202,7 +360,7 @@ export const songServices = {
         },
       });
       
-      const cacheKey = `midi-song-${context.songId}-v1`;
+      const cacheKey = `midi-song-${context.songId}-v3`; // Bumped version to force re-download
       const cachedData = await db.get(MIDI_CACHE_STORE, cacheKey);
       console.log('📦 Cached data found:', !!cachedData);
       
@@ -311,17 +469,9 @@ export const songServices = {
     // Check if this is a mock encrypted CID (development mode)
     if (context.encryptedCid.startsWith('encrypted-')) {
       console.log('🧪 Using mock encrypted CID for development:', context.encryptedCid);
-      // Return mock MIDI data for development
-      const mockMidiData = new Uint8Array([
-        0x4d, 0x54, 0x68, 0x64, // "MThd"
-        0x00, 0x00, 0x00, 0x06, // Header length
-        0x00, 0x00, // Format type 0
-        0x00, 0x01, // 1 track
-        0x00, 0x60, // 96 ticks per quarter note
-        0x4d, 0x54, 0x72, 0x6b, // "MTrk"
-        0x00, 0x00, 0x00, 0x04, // Track length
-        0x00, 0xff, 0x2f, 0x00  // End of track
-      ]);
+      // Import the mock MIDI generator
+      const { createMockMidiData } = await import('../../utils/mock-midi');
+      const mockMidiData = createMockMidiData();
 
       // Get audio and lyrics URLs from database
       const dbService = new DatabaseService();
@@ -349,7 +499,7 @@ export const songServices = {
         },
       });
 
-      const cacheKey = `midi-song-${context.songId}-v1`;
+      const cacheKey = `midi-song-${context.songId}-v3`; // Bump version to force refresh
       await db.put(MIDI_CACHE_STORE, {
         midiData: mockMidiData,
         audioUrl,
@@ -423,7 +573,7 @@ export const songServices = {
       },
     });
 
-    const cacheKey = `midi-song-${context.songId}-v1`;
+    const cacheKey = `midi-song-${context.songId}-v3`; // Match version with checkCache
     await db.put(MIDI_CACHE_STORE, {
       midiData: context.midiData,
       audioUrl: context.audioUrl,

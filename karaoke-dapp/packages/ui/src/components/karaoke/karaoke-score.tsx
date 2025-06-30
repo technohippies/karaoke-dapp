@@ -1,0 +1,179 @@
+import { motion } from "motion/react"
+import { cn } from "../../lib/utils"
+import { Button } from "../ui/button"
+import { Spinner } from "../ui/spinner"
+
+interface KaraokeScoreProps {
+  isLoading?: boolean
+  score?: number
+  totalScore?: number
+  accuracy?: number
+  songTitle?: string
+  artist?: string
+  onPractice?: () => void
+  className?: string
+}
+
+export function KaraokeScore({
+  isLoading = false,
+  score = 0,
+  totalScore = 100,
+  accuracy = 0,
+  songTitle,
+  artist,
+  onPractice,
+  className
+}: KaraokeScoreProps) {
+  const percentage = totalScore > 0 ? Math.round((score / totalScore) * 100) : 0
+  
+  const getScoreColor = (percentage: number) => {
+    if (percentage >= 90) return "text-green-400"
+    if (percentage >= 70) return "text-yellow-400"
+    if (percentage >= 50) return "text-orange-400"
+    return "text-red-400"
+  }
+
+  const getScoreMessage = (percentage: number) => {
+    if (percentage >= 90) return "Outstanding!"
+    if (percentage >= 70) return "Great job!"
+    if (percentage >= 50) return "Good effort!"
+    return "Keep practicing!"
+  }
+
+  if (isLoading) {
+    return (
+      <div className={cn(
+        "min-h-screen bg-neutral-900 text-white flex flex-col",
+        className
+      )}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Spinner size="lg" />
+            <p className="text-xl text-neutral-300">Calculating Score...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn(
+      "min-h-screen bg-neutral-900 text-white flex flex-col",
+      className
+    )}>
+      <div className="flex-1 flex items-center justify-center px-4 pb-20">
+        <motion.div 
+          className="text-center max-w-md w-full space-y-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* Song info */}
+          {(songTitle || artist) && (
+            <motion.div 
+              className="space-y-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {songTitle && (
+                <h2 className="text-2xl font-bold text-white">{songTitle}</h2>
+              )}
+              {artist && (
+                <p className="text-lg text-neutral-300">{artist}</p>
+              )}
+            </motion.div>
+          )}
+
+          {/* Score circle */}
+          <motion.div 
+            className="relative w-48 h-48 mx-auto"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          >
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+              {/* Background circle */}
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+                className="text-neutral-700"
+              />
+              {/* Progress circle */}
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="45"
+                stroke="currentColor"
+                strokeWidth="8"
+                fill="none"
+                strokeLinecap="round"
+                className={getScoreColor(percentage)}
+                strokeDasharray={283}
+                initial={{ strokeDashoffset: 283 }}
+                animate={{ strokeDashoffset: 283 - (283 * percentage) / 100 }}
+                transition={{ delay: 0.6, duration: 1.5, ease: "easeOut" }}
+              />
+            </svg>
+            
+            {/* Score text */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <motion.div 
+                  className={cn("text-4xl font-bold", getScoreColor(percentage))}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                >
+                  {percentage}%
+                </motion.div>
+                <motion.div 
+                  className="text-sm text-neutral-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.4 }}
+                >
+                  {score}/{totalScore}
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Score message */}
+          <motion.div 
+            className="space-y-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.6 }}
+          >
+            <h3 className={cn("text-2xl font-semibold", getScoreColor(percentage))}>
+              {getScoreMessage(percentage)}
+            </h3>
+            {accuracy > 0 && (
+              <p className="text-neutral-400">
+                Accuracy: {Math.round(accuracy * 100)}%
+              </p>
+            )}
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Fixed footer with practice button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-neutral-800/80 backdrop-blur-lg border-t border-neutral-700">
+        <div className="container mx-auto px-4 py-4">
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={onPractice}
+          >
+            Practice
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

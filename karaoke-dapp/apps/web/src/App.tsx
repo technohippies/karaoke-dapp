@@ -17,13 +17,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         
-        {/* Song routes with nice slugs */}
-        <Route path="/song/:songSlug" element={<SongDetailPage />} />
-        <Route path="/s/:songId/:songSlug?" element={<SongDetailPage />} />
-        
-        {/* Karaoke routes */}
-        <Route path="/karaoke/:songSlug" element={<KaraokePage />} />
-        <Route path="/k/:songId/:songSlug?" element={<KaraokePage />} />
+        {/* Song routes: /artist/song */}
+        <Route path="/:artist/:song" element={<SongDetailPage />} />
+        <Route path="/:artist/:song/karaoke" element={<KaraokePage />} />
         
         {/* Future routes */}
         <Route path="/account" element={<AccountPage />} />

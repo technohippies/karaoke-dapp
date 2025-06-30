@@ -1,7 +1,7 @@
 import { Database } from '@tableland/sdk';
 
 // Browser-compatible constants (avoiding Node.js fs imports)
-export const SONGS_TABLE = 'songs_v6_84532_131';
+export const SONGS_TABLE = 'songs_v7_84532_132';
 
 export interface Song {
   id: number;

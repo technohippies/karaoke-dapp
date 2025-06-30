@@ -43,6 +43,13 @@ export const songMachine = createMachine({
             }),
           },
           {
+            target: 'canUnlock',
+            guard: 'canUnlock',
+            actions: assign({
+              credits: ({ event }) => event.output.credits,
+            }),
+          },
+          {
             target: 'unpurchased',
           },
         ],
@@ -59,6 +66,46 @@ export const songMachine = createMachine({
       description: 'Song not purchased - show purchase button',
       on: {
         PURCHASE: 'approvingUSDC',
+      },
+    },
+
+    canUnlock: {
+      description: 'User has credits available - show unlock button',
+      on: {
+        UNLOCK: 'unlocking',
+      },
+    },
+
+    unlocking: {
+      description: 'Using credit to unlock song',
+      invoke: {
+        id: 'unlockSong',
+        src: 'unlockSong',
+        input: ({ context }) => context,
+        onDone: [
+          {
+            target: 'purchased.ready',
+            guard: ({ event }) => !!event.output.midiData,
+            actions: assign({
+              tokenId: ({ event }) => event.output.tokenId,
+              midiData: ({ event }) => event.output.midiData,
+              audioUrl: ({ event }) => event.output.audioUrl,
+              lyricsUrl: ({ event }) => event.output.lyricsUrl,
+            }),
+          },
+          {
+            target: 'purchased.checkingCache',
+            actions: assign({
+              tokenId: ({ event }) => event.output.tokenId,
+            }),
+          },
+        ],
+        onError: {
+          target: 'canUnlock',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
       },
     },
     

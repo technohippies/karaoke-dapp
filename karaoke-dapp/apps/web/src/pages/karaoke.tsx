@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Header, KaraokeDisplay, AudioPlayer, Button, CountdownScreen, MicrophonePermission } from '@karaoke-dapp/ui'
+import { Header, KaraokeDisplay, Button, CountdownScreen, MicrophonePermission } from '@karaoke-dapp/ui'
 import { X } from '@phosphor-icons/react'
 import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, getCurrentLyricIndex } from '../utils/lyrics-parser'
@@ -28,9 +28,8 @@ const sampleLRC = `[00:01.00] Welcome to the karaoke demo
 function KaraokeContent() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { songId } = useParams()
+  const { artist, song } = useParams()
   const {
-    isPlaying,
     currentTime,
     duration,
     isRecording,
@@ -38,7 +37,6 @@ function KaraokeContent() {
     hasAudio,
     play,
     pause,
-    seek,
     startRecording,
     stopRecording,
     loadAudio,
@@ -48,6 +46,7 @@ function KaraokeContent() {
   const [lyrics, setLyrics] = useState<KaraokeLyricLine[]>([])
   const [, setActiveLyricIndex] = useState(-1)
   const [lyricsWithScores, setLyricsWithScores] = useState<KaraokeLyricLine[]>([])
+  const [songId, setSongId] = useState<number | null>(null)
   const [showCountdown, setShowCountdown] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
@@ -63,9 +62,25 @@ function KaraokeContent() {
   useEffect(() => {
     const loadSongData = async () => {
       try {
+        // First find the song by artist/title to get its ID
+        let numericSongId: number | null = null;
+        
+        if (artist && song) {
+          const dbService = new DatabaseService()
+          const songs = await dbService.getSongs()
+          const foundSong = songs.find(s => 
+            s.artist.toLowerCase().replace(/\s+/g, '-') === artist &&
+            s.title.toLowerCase().replace(/\s+/g, '-') === song
+          )
+          
+          if (foundSong) {
+            numericSongId = foundSong.id
+            setSongId(foundSong.id)
+          }
+        }
         // Load MIDI data if available
         if (navigationState?.midiData) {
-          console.log('🎹 Loading MIDI data, size:', navigationState.midiData.length)
+          // Load MIDI data
           await loadMidi(navigationState.midiData)
         } else {
           console.warn('⚠️ No MIDI data in navigation state')
@@ -76,18 +91,20 @@ function KaraokeContent() {
           console.log('🎵 Loading audio from:', navigationState.audioUrl)
           await loadAudio(navigationState.audioUrl)
         } else {
-          console.log('ℹ️ No audio URL provided, using MIDI only')
+          // No audio URL - using MIDI only for karaoke
         }
         
         // Fetch song details and lyrics
-        if (songId) {
+        if (numericSongId) {
           setIsLoadingLyrics(true)
           const dbService = new DatabaseService()
           const lyricsService = new LyricsService()
           
-          const song = await dbService.getSongById(parseInt(songId))
+          const song = await dbService.getSongById(numericSongId)
+          
           if (song) {
             // Try to fetch lyrics from LRCLIB
+            // Fetch lyrics from LRCLIB
             const lyricsData = await lyricsService.getLyricsForSong(
               song.lrclib_id,
               song.title,
@@ -95,9 +112,11 @@ function KaraokeContent() {
               '', // album name not stored in our DB
               song.duration
             )
+            // Process lyrics data
             
             if (lyricsData && lyricsData.syncedLyrics) {
               // Use synced lyrics if available
+              // Use synced lyrics with timestamps
               const parsedLyrics = parseLRC(lyricsData.syncedLyrics)
               const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
                 id: line.id.toString(),
@@ -154,7 +173,9 @@ function KaraokeContent() {
     
     loadSongData()
     checkMicrophonePermission()
-  }, [songId]) // Run when songId changes
+  }, [artist, song, navigationState, loadMidi, loadAudio]) // Run when dependencies change
+  
+  // Lyrics state is now properly managed
   
   // Update active lyric based on current time
   useEffect(() => {
@@ -197,14 +218,14 @@ function KaraokeContent() {
   }
   
   const handleCountdownComplete = async () => {
-    console.log('🎬 Countdown complete, starting playback')
+    // Start playback after countdown
     setShowCountdown(false)
     setIsReady(true)
     
     // Start playback (MIDI and/or audio)
     try {
       await play()
-      console.log('▶️ Playback started')
+      // Playback started successfully
     } catch (error) {
       console.error('❌ Error starting playback:', error)
     }
@@ -212,7 +233,7 @@ function KaraokeContent() {
     // Start recording automatically
     try {
       await startRecording()
-      console.log('🎤 Recording started')
+      // Recording started successfully
     } catch (error) {
       console.error('❌ Error starting recording:', error)
     }
@@ -223,7 +244,12 @@ function KaraokeContent() {
     if (isRecording) {
       stopRecording()
     }
-    navigate(`/s/${songId}`)
+    // Navigate back to song detail page using artist/song format
+    if (artist && song) {
+      navigate(`/${artist}/${song}`)
+    } else {
+      navigate('/')
+    }
   }
   
   const checkMicrophonePermission = async () => {
@@ -299,18 +325,16 @@ function KaraokeContent() {
         </div>
       </div>
       
-      {/* Audio progress bar only */}
+      {/* Progress indicator - simple bar without controls for karaoke */}
       {isReady && (
         <div className="bg-neutral-800/50 backdrop-blur-lg border-t border-neutral-700">
-          <div className="container mx-auto px-4 py-4">
-            <AudioPlayer
-              isPlaying={isPlaying}
-              currentTime={currentTime}
-              duration={duration}
-              onPlay={play}
-              onPause={pause}
-              onSeek={seek}
-            />
+          <div className="container mx-auto px-4 py-2">
+            <div className="w-full bg-neutral-700 rounded-full h-1">
+              <div 
+                className="bg-purple-500 h-1 rounded-full transition-all duration-300"
+                style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+              />
+            </div>
           </div>
         </div>
       )}

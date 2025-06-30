@@ -7,6 +7,7 @@ export * from './components/ui/sheet';
 export * from './components/ui/header';
 export * from './components/ui/page-header';
 export * from './components/ui/media-row';
+export * from './components/ui/spinner';
 
 // Karaoke Components
 export * from './components/karaoke/lyric-sheet';
@@ -15,6 +16,7 @@ export * from './components/karaoke/karaoke-display';
 export * from './components/karaoke/audio-player';
 export * from './components/karaoke/countdown-screen';
 export * from './components/karaoke/microphone-permission';
+export * from './components/karaoke/karaoke-score';
 
 // Song Components
 export * from './components/song/download-slider';

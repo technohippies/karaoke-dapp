@@ -3,8 +3,10 @@ import { Database } from '@tableland/sdk';
 import { Wallet, ethers } from 'ethers';
 import ora from 'ora';
 import dotenv from 'dotenv';
+import * as path from 'path';
 
-dotenv.config();
+// Load from parent directory .env
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 async function deploySongsTable() {
   const spinner = ora('Preparing to deploy songs table on Base Sepolia...').start();
@@ -28,9 +30,9 @@ async function deploySongsTable() {
     
     spinner.text = 'Creating songs table...';
     
-    // Create the songs table
+    // Create the songs table with slug column
     const { meta: createMeta } = await db
-      .prepare(`CREATE TABLE songs_v6 (
+      .prepare(`CREATE TABLE songs_v7 (
         id INTEGER PRIMARY KEY,
         isrc TEXT NOT NULL UNIQUE,
         iswc TEXT,
@@ -41,7 +43,8 @@ async function deploySongsTable() {
         language TEXT NOT NULL,
         genius_id INTEGER,
         lrclib_id INTEGER,
-        artwork_hash TEXT
+        artwork_hash TEXT,
+        slug TEXT NOT NULL UNIQUE
       )`)
       .run();
     
@@ -55,42 +58,42 @@ async function deploySongsTable() {
     const tableName = createMeta.txn?.names?.[0] || 'unknown';
     spinner.succeed(`Songs table created: ${tableName}`);
     
-    // Insert test data
-    spinner.start('Inserting test song (Royals by Lorde)...');
+    // Insert Dancing Queen only (Royals already exists)
+    spinner.start('Inserting Dancing Queen by ABBA...');
     
     const { meta: insertMeta } = await db
       .prepare(`INSERT INTO ${tableName} (
         id, isrc, iswc, title, artist, duration, stems, language, genius_id, lrclib_id, artwork_hash
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .bind(
-        1, // id
-        'USG7D1404203', // isrc
-        'T-061.400.517-2', // iswc
-        'Royals', // title
-        'Lorde', // artist
-        192, // duration in seconds
-        JSON.stringify({ piano: 'bafkreigeqagpjdguf62urlljficfgc4thu3djxicjze34wyuyhins56d4i' }), // stems
+        2, // id
+        'DEG320707560', // isrc
+        'T-000.000.001-0', // iswc
+        'Dancing Queen', // title
+        'ABBA', // artist
+        231, // duration in seconds
+        JSON.stringify({ piano: 'bafkreih52fqtmu2cny7arnw3uwljilpixii6iqefqr4d7k7sm3zksfl5ii' }), // stems
         'en', // language
-        114153, // genius_id
-        2643794, // lrclib_id
+        395791, // genius_id
+        974064, // lrclib_id
         JSON.stringify({ // artwork_hash
-          id: '04eaa177af6d7ce3e549241bf1cc0b16',
-          ext: 'png',
+          id: 'ca44cb452ad50cf3e47a1c3ad30ebb15',
+          ext: 'jpg',
           sizes: {
             t: '300x300x1',
-            f: '1000x1000x1'
+            f: '600x600x1'
           }
         })
       )
       .run();
     
-    // Wait for transaction but handle receipt polling errors
     try {
       await insertMeta.txn?.wait();
     } catch (error) {
       console.log('Insert receipt polling failed, but transaction likely succeeded');
     }
-    spinner.succeed('Test song inserted successfully');
+    
+    spinner.succeed('Dancing Queen inserted successfully');
     
     // Skip verification due to API issues, but deployment succeeded
     console.log('\n📊 Deployed Table Details:');
@@ -100,7 +103,7 @@ async function deploySongsTable() {
     console.log(`Owner: ${wallet.address}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('\n🎵 Inserted song:');
-    console.log('1. Royals by Lorde (ISRC: USG7D1404203)');
+    console.log('2. Dancing Queen by ABBA (ID: 2)');
     
     console.log('\n✅ Next steps:');
     console.log('1. Update SONGS_TABLE in tableland.ts:');

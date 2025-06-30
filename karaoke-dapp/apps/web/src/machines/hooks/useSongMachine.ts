@@ -14,7 +14,13 @@ export function useSongMachine(songId: number) {
     guards: songGuards,
     actions: {
       navigateToKaraoke: ({ context }) => {
-        navigate(`/karaoke/${context.songId}`, {
+        // Get the current path to extract artist and song
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/').filter(Boolean);
+        const [artist, song] = pathParts;
+        
+        // Navigate to /artist/song/karaoke
+        navigate(`/${artist}/${song}/karaoke`, {
           state: {
             midiData: context.midiData,
             audioUrl: context.audioUrl,
@@ -41,6 +47,7 @@ export function useSongMachine(songId: number) {
   // Helper methods for common actions
   const checkAccess = useCallback(() => send({ type: 'CHECK_ACCESS' }), [send]);
   const purchase = useCallback(() => send({ type: 'PURCHASE' }), [send]);
+  const unlock = useCallback(() => send({ type: 'UNLOCK' }), [send]);
   const download = useCallback(() => send({ type: 'DOWNLOAD' }), [send]);
   const startKaraoke = useCallback(() => send({ type: 'START_KARAOKE' }), [send]);
   const retry = useCallback(() => send({ type: 'RETRY' }), [send]);
@@ -49,6 +56,8 @@ export function useSongMachine(songId: number) {
   const isIdle = state.matches('idle');
   const isCheckingAccess = state.matches('checkingAccess');
   const isUnpurchased = state.matches('unpurchased');
+  const canUnlock = state.matches('canUnlock');
+  const isUnlocking = state.matches('unlocking');
   const isApprovingUSDC = state.matches('approvingUSDC');
   const isPurchasing = state.matches('purchasing');
   const isPurchased = state.matches('purchased');
@@ -72,6 +81,8 @@ export function useSongMachine(songId: number) {
   const getButtonState = useCallback(() => {
     if (isCheckingAccess || isCheckingCache) return { text: 'Loading...', disabled: true };
     if (isUnpurchased) return { text: 'Purchase', disabled: false, action: purchase };
+    if (canUnlock) return { text: 'Use Credit', disabled: false, action: unlock };
+    if (isUnlocking) return { text: 'Unlocking...', disabled: true };
     if (isApprovingUSDC) return { text: 'Approving USDC...', disabled: true };
     if (isPurchasing) return { text: 'Purchasing...', disabled: true };
     if (needsDownload) return { text: 'Download', disabled: false, action: download };
@@ -79,7 +90,7 @@ export function useSongMachine(songId: number) {
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
     if (hasError) return { text: 'Retry', disabled: false, action: retry };
     return { text: 'Loading...', disabled: true };
-  }, [isCheckingAccess, isCheckingCache, isUnpurchased, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, download, startKaraoke, retry]);
+  }, [isCheckingAccess, isCheckingCache, isUnpurchased, canUnlock, isUnlocking, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, unlock, download, startKaraoke, retry]);
 
   return {
     state,
@@ -88,6 +99,7 @@ export function useSongMachine(songId: number) {
     // Actions
     checkAccess,
     purchase,
+    unlock,
     download,
     startKaraoke,
     retry,
@@ -95,6 +107,8 @@ export function useSongMachine(songId: number) {
     isIdle,
     isCheckingAccess,
     isUnpurchased,
+    canUnlock,
+    isUnlocking,
     isApprovingUSDC,
     isPurchasing,
     isPurchased,
@@ -106,5 +120,6 @@ export function useSongMachine(songId: number) {
     // Helpers
     getButtonState,
     error: state.context.error,
+    credits: state.context.credits,
   };
 }

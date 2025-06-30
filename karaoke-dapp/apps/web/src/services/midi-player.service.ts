@@ -54,8 +54,18 @@ export class MidiPlayerService implements MidiPlayer {
     try {
       this.state.isLoading = true;
       
+      console.log('🎼 Loading MIDI data, size:', midiData.length);
+      console.log('🎼 First 16 bytes:', Array.from(midiData.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      
       // Parse MIDI data
       this.midi = new Midi(midiData);
+      
+      console.log('🎼 MIDI parsed:', {
+        name: this.midi.name,
+        tracksCount: this.midi.tracks.length,
+        duration: this.midi.duration,
+        totalNotes: this.midi.tracks.reduce((sum, track) => sum + track.notes.length, 0)
+      });
       
       // Extract metadata
       const parsedData: ParsedMidiData = {

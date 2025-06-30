@@ -9,6 +9,7 @@ export interface SongContext {
   audioUrl?: string;
   lyricsUrl?: string;
   sessionSigs?: SessionSigsMap;
+  credits?: number;
   error?: string;
 }
 
@@ -36,6 +37,7 @@ export interface LyricLine {
 export type SongEvent =
   | { type: 'CHECK_ACCESS' }
   | { type: 'PURCHASE' }
+  | { type: 'UNLOCK' }
   | { type: 'DOWNLOAD' }
   | { type: 'START_KARAOKE' }
   | { type: 'RETRY' }
