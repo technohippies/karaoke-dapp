@@ -191,6 +191,8 @@ export const songServices = {
 
   checkCache: fromPromise(async ({ input }: { input: SongContext }) => {
     const context = input;
+    console.log('🔍 checkCache called for song:', context.songId);
+    
     try {
       const db = await openDB('karaoke-cache', 1, {
         upgrade(db) {
@@ -200,13 +202,20 @@ export const songServices = {
         },
       });
       
-      const cachedData = await db.get(MIDI_CACHE_STORE, `song-${context.songId}`);
+      const cacheKey = `midi-song-${context.songId}-v1`;
+      const cachedData = await db.get(MIDI_CACHE_STORE, cacheKey);
+      console.log('📦 Cached data found:', !!cachedData);
       
       if (cachedData && cachedData.midiData) {
+        console.log('✅ Returning cached MIDI data', {
+          hasMidiData: !!cachedData.midiData,
+          hasAudioUrl: !!cachedData.audioUrl,
+          hasLyricsUrl: !!cachedData.lyricsUrl
+        });
         return {
           midiData: cachedData.midiData,
-          audioUrl: cachedData.audioUrl,
-          lyricsUrl: cachedData.lyricsUrl,
+          audioUrl: cachedData.audioUrl || '',  // Ensure audioUrl is not undefined
+          lyricsUrl: cachedData.lyricsUrl || '',
         };
       }
 
@@ -219,10 +228,14 @@ export const songServices = {
       }
       
       // For now, return mock encrypted CID since the field doesn't exist yet
+      const encryptedCid = `encrypted-${context.songId}`;
+      console.log('📄 Returning encrypted CID:', encryptedCid);
+      
       return {
-        encryptedCid: `encrypted-${context.songId}`,
+        encryptedCid: encryptedCid,
       };
     } catch (error) {
+      console.error('❌ checkCache error:', error);
       throw error;
     }
   }),
@@ -327,6 +340,25 @@ export const songServices = {
         lyricsUrl
       });
 
+      // Cache the mock data immediately
+      const db = await openDB('karaoke-cache', 1, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains(MIDI_CACHE_STORE)) {
+            db.createObjectStore(MIDI_CACHE_STORE);
+          }
+        },
+      });
+
+      const cacheKey = `midi-song-${context.songId}-v1`;
+      await db.put(MIDI_CACHE_STORE, {
+        midiData: mockMidiData,
+        audioUrl,
+        lyricsUrl,
+        timestamp: Date.now(),
+      }, cacheKey);
+      
+      console.log('💾 Mock MIDI data cached with key:', cacheKey);
+
       return {
         midiData: mockMidiData,
         audioUrl,
@@ -391,11 +423,12 @@ export const songServices = {
       },
     });
 
+    const cacheKey = `midi-song-${context.songId}-v1`;
     await db.put(MIDI_CACHE_STORE, {
       midiData: context.midiData,
       audioUrl: context.audioUrl,
       lyricsUrl: context.lyricsUrl,
       timestamp: Date.now(),
-    }, `song-${context.songId}`);
+    }, cacheKey);
   }),
 };

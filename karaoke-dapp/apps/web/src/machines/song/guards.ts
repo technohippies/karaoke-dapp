@@ -4,7 +4,15 @@ export const songGuards = {
   },
   
   hasCachedMidi: ({ event }: any) => {
-    return event.output?.midiData && event.output?.audioUrl;
+    // Only check for midiData - audioUrl might be empty string
+    const hasMidi = !!event.output?.midiData;
+    console.log('🔍 hasCachedMidi guard evaluation:', {
+      hasMidi,
+      eventOutput: event.output,
+      midiDataType: typeof event.output?.midiData,
+      midiDataLength: event.output?.midiData?.length
+    });
+    return hasMidi;
   },
   
   hasValidSession: ({ event }: any) => {

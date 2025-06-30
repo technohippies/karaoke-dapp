@@ -63,22 +63,44 @@ test.describe('Purchase Flow', () => {
       // Click download button
       await page.locator('.fixed.bottom-0 button').first().click()
       
-      // Wait for decryption to complete
-      await page.waitForTimeout(7000)
+      // Wait for session signature popup
+      await page.waitForTimeout(2000)
+      
+      // Handle session signature
+      try {
+        await metamask.confirmSignature()
+        console.log('Session signature confirmed')
+      } catch (e) {
+        console.log('No session signature needed or already handled')
+      }
+      
+      // Wait for download to complete - should show "Start Karaoke" button
+      await expect(page.locator('button:has-text("Start Karaoke")')).toBeVisible({ 
+        timeout: 30000 
+      })
+      console.log('Download completed - Start Karaoke button visible')
+      
+      // Give it a moment to ensure caching completes
+      await page.waitForTimeout(2000)
       
       // Check for session creation logs
       const sessionLogs = logs.filter(log => 
         log.includes('createSession') || 
         log.includes('Connecting to encryption') ||
-        log.includes('decryptMidi')
+        log.includes('decryptMidi') ||
+        log.includes('✅ Mock MIDI decryption') ||
+        log.includes('💾 Mock MIDI data cached')
       )
       
       console.log(`Session/encryption logs found: ${sessionLogs.length}`)
-      console.log('Sample logs:', sessionLogs.slice(0, 3))
+      console.log('Sample logs:', sessionLogs.slice(0, 5))
       
       // Verify download was triggered
       const newLogs = logs.length - initialLogCount
       console.log(`New logs captured during download: ${newLogs}`)
+      
+      // Show the last few logs to see what happened
+      console.log('Last 10 logs:', logs.slice(-10))
       
       // Check if MIDI was stored in IndexedDB
       const midiInDB = await page.evaluate(async () => {
@@ -86,19 +108,20 @@ test.describe('Purchase Flow', () => {
           const request = indexedDB.open('karaoke-cache')
           request.onsuccess = (event) => {
             const db = event.target.result
-            if (!db.objectStoreNames.contains('decrypted-files')) {
+            if (!db.objectStoreNames.contains('midi-cache')) {
+              console.log('midi-cache store not found')
               resolve(false)
               return
             }
             
-            const transaction = db.transaction(['decrypted-files'], 'readonly')
-            const store = transaction.objectStore('decrypted-files')
+            const transaction = db.transaction(['midi-cache'], 'readonly')
+            const store = transaction.objectStore('midi-cache')
             const getAllRequest = store.getAllKeys()
             
             getAllRequest.onsuccess = () => {
               const keys = getAllRequest.result
-              const hasMidi = keys.some(key => key.includes('midi'))
-              console.log('IndexedDB keys:', keys)
+              const hasMidi = keys.some(key => key.includes('midi-song'))
+              console.log('IndexedDB midi-cache keys:', keys)
               resolve(hasMidi)
             }
             
@@ -156,11 +179,77 @@ test.describe('Purchase Flow', () => {
       
       // Click download
       await page.locator('.fixed.bottom-0 button').first().click()
-      await page.waitForTimeout(5000)
+      
+      // Wait for session signature popup
+      await page.waitForTimeout(2000)
+      
+      // Handle session signature
+      try {
+        await metamask.confirmSignature()
+        console.log('Session signature confirmed')
+      } catch (e) {
+        console.log('No session signature needed or already handled')
+      }
+      
+      // Wait for download to complete - should show "Start Karaoke" button
+      await expect(page.locator('button:has-text("Start Karaoke")')).toBeVisible({ 
+        timeout: 30000 
+      })
+      console.log('Download completed - Start Karaoke button visible')
+      
+      // Give it a moment to ensure caching completes
+      await page.waitForTimeout(2000)
     }
     
     // Simple verification - just ensure the test completed
     console.log('✅ Test completed successfully')
+  })
+
+  test('should use cached MIDI on second visit', async ({
+    context,
+    page,
+    metamaskPage,
+    extensionId,
+  }) => {
+    const metamask = new MetaMask(
+      context,
+      metamaskPage,
+      fundedSetup.walletPassword,
+      extensionId
+    )
+
+    // First visit - download and cache MIDI
+    await page.goto('/s/1/lorde-royals')
+    await page.locator('button:has-text("Connect Wallet to Purchase")').click()
+    await page.locator('button:has-text("MetaMask")').click()
+    await metamask.connectToDapp()
+    
+    // Wait for state to update
+    await page.waitForTimeout(2000)
+    
+    // Should show Download button
+    const downloadButton = page.locator('.fixed.bottom-0 button:has-text("Download")')
+    await expect(downloadButton).toBeVisible({ timeout: 10000 })
+    
+    // Click download
+    await downloadButton.click()
+    
+    // Handle session signature
+    await page.waitForTimeout(2000)
+    await metamask.confirmSignature()
+    
+    // Wait for download to complete
+    await expect(page.locator('button:has-text("Start Karaoke")')).toBeVisible({ timeout: 30000 })
+    
+    // Navigate away and come back
+    await page.goto('/')
+    await page.waitForTimeout(1000)
+    await page.goto('/s/1/lorde-royals')
+    
+    // Should immediately show "Start Karaoke" without needing to download
+    await expect(page.locator('.fixed.bottom-0 button:has-text("Start Karaoke")')).toBeVisible({ timeout: 5000 })
+    
+    console.log('✅ Cached MIDI detected successfully')
   })
 
   test('should handle transaction rejection', async ({
@@ -181,29 +270,51 @@ test.describe('Purchase Flow', () => {
     page.on('console', msg => logs.push(msg.text()))
 
     await page.goto('/s/1/lorde-royals')
+    
+    // Connect wallet first
     await page.locator('button:has-text("Connect Wallet to Purchase")').click()
     await page.locator('button:has-text("MetaMask")').click()
     await metamask.connectToDapp()
     
-    await page.waitForTimeout(1000)
-    await page.locator('.fixed.bottom-0 button').first().click()
+    // Wait for the purchase button to appear after wallet connection
+    await page.waitForTimeout(2000) // Give time for state to update
     
-    // Wait for the purchase sheet to open
-    await page.waitForSelector('text="Purchase Song Pack"')
+    // The purchase button should be in the fixed footer
+    const purchaseButton = page.locator('.fixed.bottom-0 button:has-text("Purchase")')
+    await expect(purchaseButton).toBeVisible({ timeout: 10000 })
+    
+    // Click purchase button to open the sheet
+    await purchaseButton.click()
+    
+    // Wait for the purchase sheet to open and be visible
+    await page.waitForSelector('.sheet-content', { state: 'visible' })
+    await page.waitForSelector('text="Purchase Song Pack"', { state: 'visible' })
     
     // Click the purchase button in the sheet
-    await page.locator('button:has-text("Buy Song Pack")').last().click()
+    await page.locator('button:has-text("Buy Song Pack")').click()
     
-    // Wait for MetaMask popup
-    await page.waitForTimeout(2000)
+    // Wait a bit for MetaMask to appear
+    await page.waitForTimeout(1000)
     
-    // Reject the transaction
+    // First approve USDC spending if needed
+    const approveButton = await metamask.page.locator('button:has-text("Approve")').first()
+    if (await approveButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await metamask.confirmTransaction()
+      await page.waitForTimeout(2000)
+    }
+    
+    // Now reject the actual purchase transaction
     await metamask.rejectTransaction()
     
-    // Should show error message
-    await expect(page.getByText(/transaction cancelled|rejected/i)).toBeVisible({ timeout: 5000 })
+    // Wait for error state
+    await page.waitForTimeout(1000)
     
-    // Should still show purchase button (not downloaded)
-    await expect(page.locator('.fixed.bottom-0 button').first()).toContainText('Purchase')
+    // Should show error message - check for the retry button instead
+    const retryButton = await page.locator('button:has-text("Retry")').first()
+    await expect(retryButton).toBeVisible({ timeout: 5000 })
+    
+    // Verify error message is shown
+    const errorText = await page.locator('.text-red-400').first()
+    await expect(errorText).toContainText(/cancelled|rejected/i)
   })
 })

@@ -58,15 +58,33 @@ export const songMachine = createMachine({
     unpurchased: {
       description: 'Song not purchased - show purchase button',
       on: {
-        PURCHASE: 'purchasing',
+        PURCHASE: 'approvingUSDC',
+      },
+    },
+    
+    approvingUSDC: {
+      description: 'Approving USDC spending',
+      invoke: {
+        id: 'approveUSDC',
+        src: 'approveUSDC',
+        input: ({ context }) => context,
+        onDone: {
+          target: 'purchasing',
+        },
+        onError: {
+          target: 'unpurchased',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
       },
     },
     
     purchasing: {
-      description: 'Processing purchase transaction',
+      description: 'Processing purchase and unlock transaction',
       invoke: {
-        id: 'purchaseSong',
-        src: 'purchaseSong',
+        id: 'purchaseAndUnlock',
+        src: 'purchaseAndUnlock',
         input: ({ context }) => context,
         onDone: {
           target: 'purchased',
@@ -97,17 +115,38 @@ export const songMachine = createMachine({
               {
                 target: 'ready',
                 guard: 'hasCachedMidi',
-                actions: assign({
-                  midiData: ({ event }) => event.output.midiData,
-                  audioUrl: ({ event }) => event.output.audioUrl,
-                  lyricsUrl: ({ event }) => event.output.lyricsUrl,
-                }),
+                actions: [
+                  ({ event }) => {
+                    console.log('🎯 Cached MIDI guard passed, transitioning to ready with:', {
+                      hasMidiData: !!event.output.midiData,
+                      midiDataLength: event.output.midiData?.length,
+                      audioUrl: event.output.audioUrl,
+                      lyricsUrl: event.output.lyricsUrl
+                    });
+                  },
+                  assign({
+                    midiData: ({ event }) => event.output.midiData,
+                    audioUrl: ({ event }) => event.output.audioUrl,
+                    lyricsUrl: ({ event }) => event.output.lyricsUrl,
+                  }),
+                ],
               },
               {
                 target: 'needsDownload',
-                actions: assign({
-                  encryptedCid: ({ event }) => event.output.encryptedCid,
-                }),
+                actions: [
+                  ({ event }) => {
+                    console.log('⚠️ No cached MIDI found, transitioning to needsDownload with:', {
+                      output: event.output,
+                      hasEncryptedCid: !!event.output?.encryptedCid
+                    });
+                  },
+                  assign({
+                    encryptedCid: ({ event }) => {
+                      console.log('📝 Assigning encryptedCid from checkCache:', event.output?.encryptedCid);
+                      return event.output?.encryptedCid;
+                    },
+                  }),
+                ],
               },
             ],
             onError: {
@@ -161,7 +200,7 @@ export const songMachine = createMachine({
                   }),
                 },
                 onError: {
-                  target: '#song.purchased.needsDownload',
+                  target: '#song.error',
                   actions: assign({
                     error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
                   }),
@@ -184,7 +223,7 @@ export const songMachine = createMachine({
                   }),
                 },
                 onError: {
-                  target: '#song.purchased.needsDownload',
+                  target: '#song.error',
                   actions: assign({
                     error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
                   }),
@@ -227,7 +266,7 @@ export const songMachine = createMachine({
     error: {
       description: 'Error state with retry option',
       on: {
-        RETRY: 'idle',
+        RETRY: 'purchased.needsDownload',
       },
     },
   },
