@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { PurchaseSlider } from '../../components/song/purchase-slider'
-import { Button } from '../../components/ui/button'
+import type { Meta, StoryObj } from '@storybook/react';
+import { PurchaseSlider } from '../../components/song/purchase-slider';
+import { Button } from '../../components/ui/button';
 
 const meta = {
   title: 'Song/PurchaseSlider',
@@ -12,10 +12,10 @@ const meta = {
   argTypes: {
     onPurchase: { action: 'purchase' },
   },
-} satisfies Meta<typeof PurchaseSlider>
+} satisfies Meta<typeof PurchaseSlider>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -23,7 +23,7 @@ export const Default: Story = {
     price: 5,
     isPurchasing: false,
   },
-}
+};
 
 export const Processing: Story = {
   args: {
@@ -31,7 +31,7 @@ export const Processing: Story = {
     price: 5,
     isPurchasing: true,
   },
-}
+};
 
 export const ExpensiveSong: Story = {
   args: {
@@ -39,4 +39,4 @@ export const ExpensiveSong: Story = {
     price: 25,
     children: <Button size="lg">Premium Track</Button>,
   },
-}
+};

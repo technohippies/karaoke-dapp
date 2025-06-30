@@ -1,17 +1,17 @@
-import * as React from "react"
-import * as SheetPrimitive from "@radix-ui/react-dialog"
-import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "@phosphor-icons/react"
+import * as React from 'react';
+import * as SheetPrimitive from '@radix-ui/react-dialog';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { X } from '@phosphor-icons/react';
 
-import { cn } from "../../lib/utils"
+import { cn } from '../../lib/utils';
 
-const Sheet = SheetPrimitive.Root
+const Sheet = SheetPrimitive.Root;
 
-const SheetTrigger = SheetPrimitive.Trigger
+const SheetTrigger = SheetPrimitive.Trigger;
 
-const SheetClose = SheetPrimitive.Close
+const SheetClose = SheetPrimitive.Close;
 
-const SheetPortal = SheetPrimitive.Portal
+const SheetPortal = SheetPrimitive.Portal;
 
 function SheetOverlay({
   className,
@@ -21,39 +21,36 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 animate-in fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+        'fixed inset-0 z-50 bg-black/40 animate-in fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0',
         className
       )}
       {...props}
     />
-  )
+  );
 }
 
-const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-neutral-900 p-6 shadow-lg",
-  {
-    variants: {
-      side: {
-        top: "inset-x-0 top-0 border-b border-neutral-800 animate-in slide-in-from-top data-[state=closed]:animate-out data-[state=closed]:slide-out-to-top",
-        bottom:
-          "inset-x-0 bottom-0 border-t border-neutral-800 animate-in slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r border-neutral-800 animate-in slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left sm:max-w-sm",
-        right:
-          "inset-y-0 right-0 h-full w-3/4 border-l border-neutral-800 animate-in slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right sm:max-w-sm",
-      },
+const sheetVariants = cva('fixed z-50 gap-4 bg-neutral-900 p-6 shadow-lg', {
+  variants: {
+    side: {
+      top: 'inset-x-0 top-0 border-b border-neutral-800 animate-in slide-in-from-top data-[state=closed]:animate-out data-[state=closed]:slide-out-to-top',
+      bottom:
+        'inset-x-0 bottom-0 border-t border-neutral-800 animate-in slide-in-from-bottom data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom',
+      left: 'inset-y-0 left-0 h-full w-3/4 border-r border-neutral-800 animate-in slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left sm:max-w-sm',
+      right:
+        'inset-y-0 right-0 h-full w-3/4 border-l border-neutral-800 animate-in slide-in-from-right data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right sm:max-w-sm',
     },
-    defaultVariants: {
-      side: "right",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    side: 'right',
+  },
+});
 
 interface SheetContentProps
   extends React.ComponentProps<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
 function SheetContent({
-  side = "right",
+  side = 'right',
   className,
   children,
   ...props
@@ -73,7 +70,7 @@ function SheetContent({
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
-  )
+  );
 }
 
 const SheetHeader = ({
@@ -82,13 +79,13 @@ const SheetHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
+      'flex flex-col space-y-2 text-center sm:text-left',
       className
     )}
     {...props}
   />
-)
-SheetHeader.displayName = "SheetHeader"
+);
+SheetHeader.displayName = 'SheetHeader';
 
 const SheetFooter = ({
   className,
@@ -96,13 +93,13 @@ const SheetFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
       className
     )}
     {...props}
   />
-)
-SheetFooter.displayName = "SheetFooter"
+);
+SheetFooter.displayName = 'SheetFooter';
 
 function SheetTitle({
   className,
@@ -111,10 +108,10 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("text-lg font-semibold text-neutral-50", className)}
+      className={cn('text-lg font-semibold text-neutral-50', className)}
       {...props}
     />
-  )
+  );
 }
 
 function SheetDescription({
@@ -124,10 +121,10 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-sm text-neutral-400", className)}
+      className={cn('text-sm text-neutral-400', className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -141,4 +138,4 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
-}
+};

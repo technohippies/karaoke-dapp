@@ -1,14 +1,14 @@
-import * as React from "react"
-import { User } from "@phosphor-icons/react"
+import * as React from 'react';
+import { User } from '@phosphor-icons/react';
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  onAccountClick?: () => void
-  isConnected?: boolean
-  address?: string
+  onAccountClick?: () => void;
+  isConnected?: boolean;
+  address?: string;
 }
 
 const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
-  ({ className, onAccountClick, isConnected, address, ...props }, ref) => {
+  ({ onAccountClick, isConnected, address, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -16,18 +16,14 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
         {...props}
       >
         <div>
-          <img
-            src="/logo.png"
-            alt="Karaoke dApp"
-            className="h-8 w-auto"
-          />
+          <img src="/logo.png" alt="Karaoke dApp" className="h-8 w-auto" />
         </div>
 
         <button
           onClick={onAccountClick}
           className={`rounded-md text-neutral-50 flex items-center justify-center px-3 py-2 ${
-            isConnected 
-              ? 'bg-green-700 hover:bg-green-600' 
+            isConnected
+              ? 'bg-green-700 hover:bg-green-600'
               : 'bg-neutral-700 hover:bg-neutral-600'
           }`}
           aria-label="Account"
@@ -41,10 +37,10 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
           )}
         </button>
       </div>
-    )
+    );
   }
-)
+);
 
-Header.displayName = "Header"
+Header.displayName = 'Header';
 
-export { Header }
+export { Header };

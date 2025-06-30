@@ -17,7 +17,9 @@
   "scripts": {
     "build": "tailwindcss -i ./src/styles.css -o ./dist/styles.css",
     "dev": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.5",
@@ -29,6 +31,7 @@
     "tailwind-merge": "^2.4.0"
   },
   "devDependencies": {
+    "@karaoke-dapp/eslint-config": "workspace:*",
     "@tailwindcss/cli": "^4.0.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/react": "^19.0.2",

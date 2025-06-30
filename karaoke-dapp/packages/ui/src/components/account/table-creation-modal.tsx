@@ -1,37 +1,37 @@
-import React from 'react'
+import React from 'react';
 
 interface TableCreationModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: (tableName: string) => void
-  createUserTable: () => Promise<string | null>
-  isCreatingTable: boolean
-  error: string | null
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (tableName: string) => void;
+  createUserTable: () => Promise<string | null>;
+  isCreatingTable: boolean;
+  error: string | null;
 }
 
-export function TableCreationModal({ 
-  isOpen, 
-  onClose, 
+export function TableCreationModal({
+  isOpen,
+  onClose,
   onSuccess,
   createUserTable,
   isCreatingTable,
-  error
+  error,
 }: TableCreationModalProps) {
-  const [showDetails, setShowDetails] = React.useState(false)
+  const [showDetails, setShowDetails] = React.useState(false);
 
   const handleCreate = async () => {
     try {
-      const tableName = await createUserTable()
+      const tableName = await createUserTable();
       if (tableName) {
-        onSuccess(tableName)
+        onSuccess(tableName);
       }
     } catch (err) {
       // Error is handled by the hook
-      console.error('Table creation failed:', err)
+      console.error('Table creation failed:', err);
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -39,15 +39,15 @@ export function TableCreationModal({
         <h2 className="text-2xl font-bold text-white mb-4">
           🎤 Create Your Karaoke Profile
         </h2>
-        
+
         <p className="text-purple-100 mb-6">
-          Congratulations on completing your first karaoke session! 
-          Let's create your personal profile to track your progress.
+          Congratulations on completing your first karaoke session! Let&apos;s
+          create your personal profile to track your progress.
         </p>
 
         <div className="bg-purple-950 bg-opacity-50 rounded-lg p-4 mb-6">
           <h3 className="text-lg font-semibold text-white mb-2">
-            What you'll get:
+            What you&apos;ll get:
           </h3>
           <ul className="space-y-2 text-purple-100">
             <li className="flex items-start">
@@ -79,14 +79,11 @@ export function TableCreationModal({
         {showDetails && (
           <div className="bg-purple-950 bg-opacity-30 rounded-lg p-3 mb-4 text-sm text-purple-200">
             <p className="mb-2">
-              This will create a personal Tableland table on Base Sepolia to store your karaoke history.
+              This will create a personal Tableland table on Base Sepolia to
+              store your karaoke history.
             </p>
-            <p className="mb-2">
-              • Gas fees: ~0.001 ETH
-            </p>
-            <p>
-              • Your data remains under your control
-            </p>
+            <p className="mb-2">• Gas fees: ~0.001 ETH</p>
+            <p>• Your data remains under your control</p>
           </div>
         )}
 
@@ -105,8 +102,20 @@ export function TableCreationModal({
             {isCreatingTable ? (
               <span className="flex items-center justify-center">
                 <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 Creating...
               </span>
@@ -114,7 +123,7 @@ export function TableCreationModal({
               'Create Profile'
             )}
           </button>
-          
+
           <button
             onClick={onClose}
             disabled={isCreatingTable}
@@ -129,5 +138,5 @@ export function TableCreationModal({
         </p>
       </div>
     </div>
-  )
+  );
 }

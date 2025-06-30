@@ -1,21 +1,32 @@
-import * as React from "react"
-import { CaretLeft } from "@phosphor-icons/react"
-import { cn } from "../../lib/utils"
+import * as React from 'react';
+import { CaretLeft } from '@phosphor-icons/react';
+import { cn } from '../../lib/utils';
 
 export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  onBack?: () => void
-  showBack?: boolean
-  rightContent?: React.ReactNode
+  title?: string;
+  onBack?: () => void;
+  showBack?: boolean;
+  rightContent?: React.ReactNode;
 }
 
 const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
-  ({ className, title, onBack, showBack = true, rightContent, children, ...props }, ref) => {
+  (
+    {
+      className,
+      title,
+      onBack,
+      showBack = true,
+      rightContent,
+      children,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "w-full flex items-center px-6 py-4 bg-neutral-800 border-b border-neutral-700",
+          'w-full flex items-center px-6 py-4 bg-neutral-800 border-b border-neutral-700',
           className
         )}
         {...props}
@@ -37,15 +48,13 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
         </div>
 
         {rightContent && (
-          <div style={{ marginLeft: 'auto' }}>
-            {rightContent}
-          </div>
+          <div style={{ marginLeft: 'auto' }}>{rightContent}</div>
         )}
       </div>
-    )
+    );
   }
-)
+);
 
-PageHeader.displayName = "PageHeader"
+PageHeader.displayName = 'PageHeader';
 
-export { PageHeader }
+export { PageHeader };

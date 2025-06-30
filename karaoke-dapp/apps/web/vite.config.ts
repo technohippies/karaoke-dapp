@@ -12,7 +12,12 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills({
-      include: ['buffer', 'process', 'util']
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      protocolImports: true,
     }),
   ],
   css: {
@@ -22,35 +27,13 @@ export default defineConfig({
       ],
     }
   },
-  define: {
-    'process.env': {},
-    global: 'globalThis',
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
   optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis',
-      },
-      plugins: [
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-          process: true
-        }),
-        NodeModulesPolyfillPlugin(),
-      ],
-    },
-  },
-  build: {
-    rollupOptions: {
-      plugins: [
-        rollupNodePolyFill(),
-      ],
-    },
+    include: ['buffer', 'process'],
   },
   server: {
     port: 3000,

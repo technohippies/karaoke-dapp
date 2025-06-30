@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { MediaRow } from '../../components/ui/media-row'
-import { Star, Clock, MusicNote } from '@phosphor-icons/react'
+import type { Meta, StoryObj } from '@storybook/react';
+import { MediaRow } from '../../components/ui/media-row';
+import { Star, MusicNote } from '@phosphor-icons/react';
 
 const meta = {
   title: 'UI/MediaRow',
@@ -12,17 +12,17 @@ const meta = {
   argTypes: {
     onClick: { action: 'clicked' },
   },
-} satisfies Meta<typeof MediaRow>
+} satisfies Meta<typeof MediaRow>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     title: 'Bohemian Rhapsody',
     subtitle: 'Queen',
   },
-}
+};
 
 export const WithImage: Story = {
   args: {
@@ -30,7 +30,7 @@ export const WithImage: Story = {
     subtitle: 'John Lennon • Easy',
     image: 'https://placehold.co/100x100/blue/white?text=I',
   },
-}
+};
 
 export const SongListing: Story = {
   args: {
@@ -44,7 +44,7 @@ export const SongListing: Story = {
       </div>
     ),
   },
-}
+};
 
 export const LyricLine: Story = {
   args: {
@@ -52,7 +52,7 @@ export const LyricLine: Story = {
     subtitle: '0:24',
     rightContent: <MusicNote size={20} className="text-neutral-500" />,
   },
-}
+};
 
 export const MultipleRows: Story = {
   render: () => (
@@ -92,4 +92,4 @@ export const MultipleRows: Story = {
       />
     </div>
   ),
-}
+};

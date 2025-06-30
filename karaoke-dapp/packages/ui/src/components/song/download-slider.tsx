@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react';
 import {
   Sheet,
   SheetContent,
@@ -6,22 +6,22 @@ import {
   SheetTitle,
   SheetDescription,
   SheetTrigger,
-} from "../ui/sheet"
-import { Button } from "../ui/button"
-import { Download, Lock } from "@phosphor-icons/react"
+} from '../ui/sheet';
+import { Button } from '../ui/button';
+import { Download, Lock } from '@phosphor-icons/react';
 
 interface DownloadSliderProps {
-  children?: React.ReactNode
-  songTitle: string
-  onDownload: () => void
-  isDecrypting?: boolean
+  children?: React.ReactNode;
+  songTitle: string;
+  onDownload: () => void;
+  isDecrypting?: boolean;
 }
 
-export function DownloadSlider({ 
-  children, 
-  songTitle, 
+export function DownloadSlider({
+  children,
+  songTitle,
   onDownload,
-  isDecrypting = false 
+  isDecrypting = false,
 }: DownloadSliderProps) {
   return (
     <Sheet>
@@ -33,14 +33,14 @@ export function DownloadSlider({
           <SheetTitle>Download Track</SheetTitle>
           <SheetDescription>{songTitle}</SheetDescription>
         </SheetHeader>
-        
+
         <div className="py-6 space-y-4">
           <div className="flex items-center justify-center gap-3 text-neutral-400">
             <Lock size={20} />
             <span className="text-sm">Encrypted MIDI</span>
           </div>
-          
-          <Button 
+
+          <Button
             onClick={onDownload}
             disabled={isDecrypting}
             className="w-full"
@@ -58,5 +58,5 @@ export function DownloadSlider({
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

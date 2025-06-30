@@ -1,0 +1,10 @@
+{
+  "name": "@karaoke-dapp/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "main": "base.js",
+  "exports": {
+    "./base": "./base.js",
+    "./react": "./react.js"
+  }
+}

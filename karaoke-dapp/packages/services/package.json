@@ -11,13 +11,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@lit-protocol/lit-node-client": "^7.2.0",
+    "@karaoke-dapp/db": "workspace:*",
     "@lit-protocol/encryption": "^7.2.0",
+    "@lit-protocol/lit-node-client": "^7.2.0",
     "@lit-protocol/types": "^7.2.0",
-    "ethers": "^6.14.4",
     "axios": "^1.10.0",
-    "form-data": "^4.0.3",
-    "@karaoke-dapp/db": "workspace:*"
+    "ethers": "^6.14.4",
+    "form-data": "^4.0.3"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

@@ -1,5 +1,7 @@
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { encryptString, decryptToString } from '@lit-protocol/encryption';
+import type { SessionSigsMap } from '@lit-protocol/types';
+import { ethers } from 'ethers';
 
 export interface EncryptionResult {
   ciphertext: string;
@@ -121,5 +123,104 @@ export class EncryptionService {
       console.error('Verification failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Get session signatures for extended access without repeated signing
+   */
+  async getSessionSigs(userAddress: `0x${string}`): Promise<SessionSigsMap> {
+    if (!this.connected) {
+      await this.connect();
+    }
+
+    // Create a wallet instance (in production, this would use the connected wallet)
+    const provider = new ethers.BrowserProvider((window as any).ethereum);
+    const signer = await provider.getSigner();
+
+    const authNeededCallback = async (params: any) => {
+      const toSign = params.message || params.statement;
+      const signature = await signer.signMessage(toSign);
+      
+      return {
+        sig: signature,
+        derivedVia: 'web3.eth.personal.sign',
+        signedMessage: toSign,
+        address: userAddress,
+      };
+    };
+
+    const sessionSigs = await this.litNodeClient.getSessionSigs({
+      chain: 'base',
+      expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24 hours
+      resourceAbilityRequests: [
+        {
+          resource: {
+            resource: '*',
+            resourcePrefix: 'lit-litaction',
+            getResourceKey: () => 'lit-litaction/*',
+            isValidLitAbility: () => true
+          } as any,
+          ability: 'lit-action-execution' as any
+        },
+        {
+          resource: {
+            resource: '*',
+            resourcePrefix: 'lit-accesscontrolcondition',
+            getResourceKey: () => 'lit-accesscontrolcondition/*',
+            isValidLitAbility: () => true
+          } as any,
+          ability: 'access-control-condition-decryption' as any
+        }
+      ],
+      authNeededCallback,
+    });
+
+    return sessionSigs;
+  }
+
+  /**
+   * Decrypt MIDI using Lit Action
+   */
+  async decryptWithAction(
+    encryptedData: EncryptionResult,
+    sessionSigs: SessionSigsMap,
+    songId: number,
+    userAddress: `0x${string}`
+  ): Promise<ArrayBuffer> {
+    if (!this.connected) {
+      await this.connect();
+    }
+
+    // Execute the Lit Action with session signatures
+    const response = await this.litNodeClient.executeJs({
+      sessionSigs,
+      code: `
+        (async () => {
+          const decrypted = await Lit.Actions.decrypt({
+            ciphertext: encryptedMIDI,
+            dataToEncryptHash: midiHash,
+            accessControlConditions
+          });
+          
+          // Convert base64 back to bytes
+          const binaryString = atob(decrypted);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          
+          return bytes;
+        })();
+      `,
+      jsParams: {
+        encryptedMIDI: encryptedData.ciphertext,
+        midiHash: encryptedData.dataToEncryptHash,
+        accessControlConditions: encryptedData.accessControlConditions,
+        songId,
+        userAddress,
+      },
+    });
+
+    return response.response as ArrayBuffer;
   }
 }
