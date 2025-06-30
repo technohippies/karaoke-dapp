@@ -1,13 +1,13 @@
 import { fromPromise } from 'xstate';
-import { readContract } from 'wagmi/actions';
+import { readContract, writeContract, waitForTransactionReceipt } from 'wagmi/actions';
 import { wagmiConfig } from '../../wagmi';
-import { MusicStoreV2ABI } from '@karaoke-dapp/contracts';
+import { MusicStoreV2ABI, CONTRACTS } from '@karaoke-dapp/contracts';
 import { EncryptionService, DatabaseService } from '@karaoke-dapp/services/browser';
 import { openDB } from 'idb';
 import type { SongContext } from '../types';
 import type { SessionSigsMap } from '@lit-protocol/types';
 
-const MUSIC_STORE_ADDRESS = '0x306466a909df4dc0508b68b4511bcf8130abcb43';
+const MUSIC_STORE_ADDRESS = CONTRACTS.baseSepolia.musicStore;
 const SESSION_STORAGE_KEY = 'lit-session-sigs';
 const MIDI_CACHE_STORE = 'midi-cache';
 
@@ -39,9 +39,143 @@ export const songServices = {
       throw new Error('No user address');
     }
 
-    // This would be implemented with wagmi's writeContract
-    // For now, returning mock data
-    throw new Error('Purchase implementation needed');
+    try {
+      // First check if user has credits
+      const credits = await readContract(wagmiConfig, {
+        address: MUSIC_STORE_ADDRESS,
+        abi: MusicStoreV2ABI,
+        functionName: 'getCredits',
+        args: [context.userAddress as `0x${string}`],
+      });
+
+      console.log('User credits:', credits);
+
+      // If no credits, need to buy a credit pack with USDC
+      if (credits === 0n) {
+        console.log('No credits, need to buy credit pack with USDC...');
+        
+        // Get the credit pack price in USDC
+        const packPrice = await readContract(wagmiConfig, {
+          address: MUSIC_STORE_ADDRESS,
+          abi: MusicStoreV2ABI,
+          functionName: 'SONG_PACK_PRICE',
+        });
+
+        console.log('Credit pack price (USDC wei):', packPrice);
+        
+        // Define USDC contract ABI (minimal)
+        const USDC_ABI = [
+          {
+            name: 'approve',
+            type: 'function',
+            inputs: [
+              { name: 'spender', type: 'address' },
+              { name: 'amount', type: 'uint256' }
+            ],
+            outputs: [{ type: 'bool' }],
+            stateMutability: 'nonpayable'
+          },
+          {
+            name: 'allowance',
+            type: 'function',
+            inputs: [
+              { name: 'owner', type: 'address' },
+              { name: 'spender', type: 'address' }
+            ],
+            outputs: [{ type: 'uint256' }],
+            stateMutability: 'view'
+          }
+        ] as const;
+        
+        // Check current allowance
+        const allowance = await readContract(wagmiConfig, {
+          address: CONTRACTS.baseSepolia.usdc,
+          abi: USDC_ABI,
+          functionName: 'allowance',
+          args: [context.userAddress as `0x${string}`, MUSIC_STORE_ADDRESS],
+        });
+        
+        console.log('Current USDC allowance:', allowance);
+        
+        // If allowance is insufficient, approve USDC spending
+        if (allowance < packPrice) {
+          console.log('Approving USDC spending...');
+          const approveHash = await writeContract(wagmiConfig, {
+            address: CONTRACTS.baseSepolia.usdc,
+            abi: USDC_ABI,
+            functionName: 'approve',
+            args: [MUSIC_STORE_ADDRESS, packPrice],
+          });
+          
+          await waitForTransactionReceipt(wagmiConfig, {
+            hash: approveHash,
+            confirmations: 1,
+          });
+          
+          console.log('USDC approved');
+        }
+
+        // Buy credit pack (this will pull USDC)
+        const hash = await writeContract(wagmiConfig, {
+          address: MUSIC_STORE_ADDRESS,
+          abi: MusicStoreV2ABI,
+          functionName: 'buyCreditPack',
+          // No value field - payment is in USDC
+        });
+
+        console.log('Credit pack purchase tx:', hash);
+
+        // Wait for confirmation
+        const receipt = await waitForTransactionReceipt(wagmiConfig, {
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status !== 'success') {
+          throw new Error('Credit pack purchase failed');
+        }
+
+        console.log('Credit pack purchased successfully');
+      }
+
+      // Now unlock the song using credits
+      const unlockHash = await writeContract(wagmiConfig, {
+        address: MUSIC_STORE_ADDRESS,
+        abi: MusicStoreV2ABI,
+        functionName: 'unlockSong',
+        args: [BigInt(context.songId)],
+      });
+
+      console.log('Song unlock tx:', unlockHash);
+
+      // Wait for confirmation
+      const unlockReceipt = await waitForTransactionReceipt(wagmiConfig, {
+        hash: unlockHash,
+        confirmations: 1,
+      });
+
+      if (unlockReceipt.status !== 'success') {
+        throw new Error('Song unlock failed');
+      }
+
+      console.log('Song unlocked successfully');
+
+      // Return the transaction hash as token ID
+      return { tokenId: unlockHash };
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      
+      // Extract user-friendly error message
+      if (error.message?.includes('User rejected')) {
+        throw new Error('Transaction cancelled');
+      } else if (error.message?.includes('insufficient funds')) {
+        throw new Error('Insufficient USDC balance');
+      } else if (error.message?.includes('ERC20: insufficient balance')) {
+        throw new Error('Insufficient USDC balance');
+      } else {
+        throw new Error(error.message || 'Purchase failed');
+      }
+    }
   }),
 
   checkCache: fromPromise(async ({ input }: { input: SongContext }) => {

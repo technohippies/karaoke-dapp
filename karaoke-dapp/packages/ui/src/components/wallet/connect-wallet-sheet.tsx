@@ -8,11 +8,12 @@ import {
   SheetTrigger,
 } from '../ui/sheet';
 import { Button } from '../ui/button';
+import type { Connector } from 'wagmi';
 
 interface ConnectWalletSheetProps {
   children?: React.ReactNode;
-  connectors: readonly any[];
-  onConnect: (connector: any) => void;
+  connectors: readonly Connector[];
+  onConnect: (connector: Connector) => void;
   isConnecting?: boolean;
   error?: Error | null;
 }
@@ -27,7 +28,7 @@ export function ConnectWalletSheet({
   const [isOpen, setIsOpen] = React.useState(false);
   const [hasTriedConnect, setHasTriedConnect] = React.useState(false);
 
-  const handleConnect = async (connector: any) => {
+  const handleConnect = async (connector: Connector) => {
     setHasTriedConnect(true);
     onConnect(connector);
     // Keep sheet open while connecting to show loading state
@@ -47,7 +48,11 @@ export function ConnectWalletSheet({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        {children || <Button size="lg" className="w-full">Connect Wallet</Button>}
+        {children || (
+          <Button size="lg" className="w-full">
+            Connect Wallet
+          </Button>
+        )}
       </SheetTrigger>
       <SheetContent side="bottom" className="h-auto">
         <SheetHeader className="text-left">
@@ -69,10 +74,14 @@ export function ConnectWalletSheet({
             >
               <span className="font-medium">{connector.name}</span>
               {connector.id === 'porto' && (
-                <span className="ml-2 text-xs text-neutral-400">Recommended</span>
+                <span className="ml-2 text-xs text-neutral-400">
+                  Recommended
+                </span>
               )}
               {isConnecting && (
-                <span className="ml-auto text-sm text-neutral-400">Connecting...</span>
+                <span className="ml-auto text-sm text-neutral-400">
+                  Connecting...
+                </span>
               )}
             </Button>
           ))}

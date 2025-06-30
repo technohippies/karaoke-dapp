@@ -20,3 +20,6 @@ export * from './components/song/purchase-slider';
 
 // Account Components
 export * from './components/account/table-creation-modal';
+
+// Wallet Components
+export * from './components/wallet/connect-wallet-sheet';

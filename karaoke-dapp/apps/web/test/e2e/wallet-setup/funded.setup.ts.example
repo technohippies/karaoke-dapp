@@ -1,0 +1,22 @@
+import { defineWalletSetup } from '@synthetixio/synpress'
+import { MetaMask } from '@synthetixio/synpress/playwright'
+
+// Example: Use your own funded test wallet
+// Copy this file to funded.setup.ts and add your seed phrase
+const SEED_PHRASE = 'your twelve word seed phrase goes here for testing only'
+const PASSWORD = 'Tester@1234'
+
+export default defineWalletSetup(PASSWORD, async (context, walletPage) => {
+  const metamask = new MetaMask(context, walletPage, PASSWORD)
+  
+  await metamask.importWallet(SEED_PHRASE)
+  
+  // Optional: Add Base Sepolia network if not auto-detected
+  // await metamask.addNetwork({
+  //   name: 'Base Sepolia',
+  //   rpc: 'https://sepolia.base.org',
+  //   chainId: 84532,
+  //   symbol: 'ETH',
+  //   explorer: 'https://sepolia.basescan.org'
+  // })
+})

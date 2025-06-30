@@ -35,7 +35,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
           {showBack && onBack && (
             <button
               onClick={onBack}
-              className="h-9 w-9 rounded-md bg-neutral-700 text-neutral-50 hover:bg-neutral-600 flex items-center justify-center"
+              className="h-9 w-9 rounded-md bg-neutral-700 text-neutral-50 hover:bg-neutral-600 flex items-center justify-center cursor-pointer transition-colors"
               aria-label="Go back"
             >
               <CaretLeft size={20} weight="bold" />

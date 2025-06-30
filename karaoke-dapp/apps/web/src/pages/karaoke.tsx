@@ -7,21 +7,21 @@ import { parseLRC, getCurrentLyricIndex } from '../utils/lyrics-parser'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 
 // Sample LRC lyrics - in production this would come from LRCLIB API
-const sampleLRC = `[00:01.02] Party girls don't get hurt
-[00:03.11] Can't feel anything, when will I learn?
-[00:05.91] I push it down, I push it down
-[00:12.14] I'm the one for a "good time call"
-[00:14.26] Phone's blowin' up, ringin' my doorbell
-[00:17.02] I feel the love, feel the love
-[00:22.82] One, two, three, one, two, three, drink
-[00:25.53] One, two, three, one, two, three, drink
-[00:28.31] One, two, three, one, two, three, drink
-[00:31.17] Throw 'em back 'til I lose count
-[00:33.82] I'm gonna swing from the chandelier
-[00:41.63] From the chandelier
-[00:44.83] I'm gonna live like tomorrow doesn't exist
-[00:52.78] Like it doesn't exist
-[00:56.05] I'm gonna fly like a bird through the night`
+const sampleLRC = `[00:01.00] Welcome to the karaoke demo
+[00:03.50] This is a test of the timing system
+[00:06.00] Each line appears at the right moment
+[00:08.50] Sing along with the highlighted text
+[00:11.00] The words will guide your performance
+[00:13.50] Keep your voice steady and clear
+[00:16.00] Practice makes perfect every time
+[00:18.50] Let the music flow through you
+[00:21.00] This is your moment to shine
+[00:23.50] Express yourself with confidence
+[00:26.00] The stage is yours tonight
+[00:28.50] Sing from your heart and soul
+[00:31.00] Every note tells a story
+[00:33.50] Make this performance your own
+[00:36.00] Thank you for testing our system`
 
 function KaraokeContent() {
   const navigate = useNavigate()
