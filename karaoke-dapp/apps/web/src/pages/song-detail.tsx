@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, LyricSheet, Button, PurchaseSlider, DownloadSlider } from "@karaoke-dapp/ui"
-import { useNavigate, useParams } from "react-router-dom"
+import { Header, LyricLine, LyricSheet, Button, PurchaseSlider, DownloadSlider, ConnectWalletSheet } from "@karaoke-dapp/ui"
+import { useParams } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
 import { useSongMachine } from "../machines"
-import { useAccount } from "wagmi"
+import { useAccount, useConnect } from "wagmi"
 
 interface LRCLIBResponse {
   id: number
@@ -18,23 +18,24 @@ interface LRCLIBResponse {
 }
 
 export function SongDetailPage() {
-  const navigate = useNavigate()
   const { songId } = useParams()
   const { isConnected } = useAccount()
+  const { connectors, connect, status, error: connectError } = useConnect()
   const [song, setSong] = useState<Song | null>(null)
   const [lyrics, setLyrics] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
-  const dbService = new DatabaseService()
+  // Parse songId safely - always call hooks in the same order
+  const parsedSongId = songId ? parseInt(songId) : 0
   
-  // Initialize the song state machine
+  // Initialize the song state machine - always call this hook
   const {
     checkAccess,
     getButtonState,
     isCheckingAccess,
     error: machineError
-  } = useSongMachine(songId ? parseInt(songId) : 0)
+  } = useSongMachine(parsedSongId)
   
   useEffect(() => {
     async function loadSongAndLyrics() {
@@ -44,6 +45,7 @@ export function SongDetailPage() {
         setLoading(true)
         
         // Load song data from Tableland
+        const dbService = new DatabaseService()
         const songData = await dbService.getSongById(parseInt(songId))
         if (!songData) {
           setError('Song not found')
@@ -81,13 +83,14 @@ export function SongDetailPage() {
   
   // Check access when connected
   useEffect(() => {
-    if (isConnected && songId) {
+    if (isConnected && parsedSongId > 0) {
       checkAccess()
     }
-  }, [isConnected, songId, checkAccess])
+  }, [isConnected, parsedSongId, checkAccess])
   
   const handleAccountClick = () => {
-    navigate('/account')
+    // Account functionality can be handled inline now
+    // Could open an account sheet or show account info
   }
   
   const buttonState = getButtonState()
@@ -123,7 +126,7 @@ export function SongDetailPage() {
         <motion.div 
           className="relative w-full h-96 bg-cover bg-center"
           style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${dbService.getArtworkUrl(song, 'f')}')`
+            backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${new DatabaseService().getArtworkUrl(song, 'f')}')`
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -192,16 +195,19 @@ export function SongDetailPage() {
       <div className="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 p-4">
         <div className="max-w-4xl mx-auto">
           {!isConnected ? (
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={() => {
-                // Trigger wallet connection
-                navigate('/account')
-              }}
+            <ConnectWalletSheet
+              connectors={connectors}
+              onConnect={(connector) => connect({ connector })}
+              isConnecting={status === 'pending'}
+              error={connectError}
             >
-              Connect Wallet to Purchase
-            </Button>
+              <Button 
+                className="w-full" 
+                size="lg"
+              >
+                Connect Wallet to Purchase
+              </Button>
+            </ConnectWalletSheet>
           ) : machineError ? (
             <div className="text-center text-red-400 mb-2">
               {machineError}

@@ -14,6 +14,13 @@ export const songMachine = createMachine({
     currentLineIndex: 0,
     score: 0,
   }),
+  on: {
+    UPDATE_ADDRESS: {
+      actions: assign({
+        userAddress: ({ event }) => event.address,
+      }),
+    },
+  },
   states: {
     idle: {
       on: {

@@ -39,6 +39,7 @@ export type SongEvent =
   | { type: 'DOWNLOAD' }
   | { type: 'START_KARAOKE' }
   | { type: 'RETRY' }
+  | { type: 'UPDATE_ADDRESS'; address: string }
   | { type: 'ERROR'; error: string };
 
 export type KaraokeEvent =

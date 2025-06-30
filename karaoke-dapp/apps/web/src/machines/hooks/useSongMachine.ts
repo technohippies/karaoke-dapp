@@ -1,6 +1,7 @@
 import { useMachine } from '@xstate/react';
 import { useAccount } from 'wagmi';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useCallback } from 'react';
 import { songMachine } from '../song/songMachine';
 import { songServices } from '../song/services';
 import { songGuards } from '../song/guards';
@@ -30,12 +31,19 @@ export function useSongMachine(songId: number) {
     },
   });
 
+  // Update the machine context when address changes
+  useEffect(() => {
+    if (address && state.context.userAddress !== address) {
+      send({ type: 'UPDATE_ADDRESS', address });
+    }
+  }, [address]); // Only depend on address to avoid potential issues
+
   // Helper methods for common actions
-  const checkAccess = () => send({ type: 'CHECK_ACCESS' });
-  const purchase = () => send({ type: 'PURCHASE' });
-  const download = () => send({ type: 'DOWNLOAD' });
-  const startKaraoke = () => send({ type: 'START_KARAOKE' });
-  const retry = () => send({ type: 'RETRY' });
+  const checkAccess = useCallback(() => send({ type: 'CHECK_ACCESS' }), [send]);
+  const purchase = useCallback(() => send({ type: 'PURCHASE' }), [send]);
+  const download = useCallback(() => send({ type: 'DOWNLOAD' }), [send]);
+  const startKaraoke = useCallback(() => send({ type: 'START_KARAOKE' }), [send]);
+  const retry = useCallback(() => send({ type: 'RETRY' }), [send]);
 
   // Computed states for UI
   const isIdle = state.matches('idle');
@@ -50,7 +58,7 @@ export function useSongMachine(songId: number) {
   const hasError = state.matches('error');
 
   // Get button state and text
-  const getButtonState = () => {
+  const getButtonState = useCallback(() => {
     if (isCheckingAccess || isCheckingCache) return { text: 'Loading...', disabled: true };
     if (isUnpurchased) return { text: 'Purchase', disabled: false, action: purchase };
     if (isPurchasing) return { text: 'Purchasing...', disabled: true };
@@ -59,7 +67,7 @@ export function useSongMachine(songId: number) {
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
     if (hasError) return { text: 'Retry', disabled: false, action: retry };
     return { text: 'Loading...', disabled: true };
-  };
+  }, [isCheckingAccess, isCheckingCache, isUnpurchased, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, download, startKaraoke, retry]);
 
   return {
     state,
