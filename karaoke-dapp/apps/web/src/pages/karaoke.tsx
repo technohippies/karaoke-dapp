@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Header, KaraokeDisplay, AudioPlayer, Button } from '@karaoke-dapp/ui'
-import { Microphone, Stop } from '@phosphor-icons/react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { Header, KaraokeDisplay, AudioPlayer, Button, CountdownScreen, MicrophonePermission } from '@karaoke-dapp/ui'
+import { X } from '@phosphor-icons/react'
 import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, getCurrentLyricIndex } from '../utils/lyrics-parser'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
@@ -25,31 +25,51 @@ const sampleLRC = `[00:01.00] Welcome to the karaoke demo
 
 function KaraokeContent() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { songId } = useParams()
   const {
     isPlaying,
     currentTime,
     duration,
     isRecording,
-    recordingTime,
+    hasMidi,
+    hasAudio,
     play,
     pause,
     seek,
     startRecording,
     stopRecording,
-    loadAudio
+    loadAudio,
+    loadMidi
   } = useAudio()
   
   const [lyrics, setLyrics] = useState<KaraokeLyricLine[]>([])
   const [, setActiveLyricIndex] = useState(-1)
   const [lyricsWithScores, setLyricsWithScores] = useState<KaraokeLyricLine[]>([])
-  const [isProcessingRecording, setIsProcessingRecording] = useState(false)
+  const [showCountdown, setShowCountdown] = useState(false)
+  const [isReady, setIsReady] = useState(false)
+  const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
   
-  // Mock audio URL - in production, this would come from the song data
-  const audioUrl = `/songs/${songId}/audio.mp3`
+  // Get data from navigation state
+  const navigationState = location.state as {
+    midiData?: Uint8Array
+    audioUrl?: string
+    lyricsUrl?: string
+  } | null
   
   useEffect(() => {
-    // Parse LRC lyrics
+    // Load MIDI data if available
+    if (navigationState?.midiData) {
+      loadMidi(navigationState.midiData).catch(console.error)
+    }
+    
+    // Load audio if available (for backing track)
+    if (navigationState?.audioUrl) {
+      loadAudio(navigationState.audioUrl).catch(console.error)
+    }
+    
+    // For now, use sample lyrics
+    // TODO: Fetch from lyricsUrl when available
     const parsedLyrics = parseLRC(sampleLRC)
     const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
       id: line.id.toString(),
@@ -60,9 +80,9 @@ function KaraokeContent() {
     setLyrics(karaokeLines)
     setLyricsWithScores(karaokeLines)
     
-    // Load audio when component mounts
-    loadAudio(audioUrl).catch(console.error)
-  }, [audioUrl, loadAudio])
+    // Check microphone permission immediately
+    checkMicrophonePermission()
+  }, []) // Run only once on mount
   
   // Update active lyric based on current time
   useEffect(() => {
@@ -78,107 +98,133 @@ function KaraokeContent() {
     setActiveLyricIndex(newIndex)
   }, [currentTime, lyrics])
   
+  // Handle song completion
+  useEffect(() => {
+    if (isReady && currentTime >= duration && duration > 0 && isRecording) {
+      // Stop recording and process results
+      stopRecording().then((recordingBlob) => {
+        if (recordingBlob) {
+          // Simulate scoring for now
+          const scoredLyrics = lyrics.map(lyric => ({
+            ...lyric,
+            score: Math.random() * 0.8 + 0.2
+          }))
+          setLyricsWithScores(scoredLyrics)
+          
+          // Navigate to completion page
+          setTimeout(() => {
+            navigate(`/karaoke/${songId}/complete`)
+          }, 2000)
+        }
+      })
+    }
+  }, [currentTime, duration, isReady, isRecording, stopRecording, lyrics, navigate, songId])
+  
   const handleAccountClick = () => {
     navigate('/account')
   }
   
-  const handleStartRecording = async () => {
+  const handleCountdownComplete = async () => {
+    setShowCountdown(false)
+    setIsReady(true)
+    play()
+    // Start recording automatically
     await startRecording()
   }
   
-  const handleStopRecording = async () => {
-    setIsProcessingRecording(true)
-    const recordingBlob = await stopRecording()
-    
-    if (recordingBlob) {
-      // In production, send to Deepgram for processing
-      // For now, simulate processing with random scores
-      setTimeout(() => {
-        const scoredLyrics = lyrics.map(lyric => ({
-          ...lyric,
-          score: Math.random() * 0.8 + 0.2 // Random score between 0.2 and 1
-        }))
-        setLyricsWithScores(scoredLyrics)
-        setIsProcessingRecording(false)
-        
-        // Navigate to completion page
-        setTimeout(() => {
-          navigate(`/karaoke/${songId}/complete`)
-        }, 2000)
-      }, 2000)
+  const handleClose = () => {
+    pause()
+    if (isRecording) {
+      stopRecording()
     }
+    navigate(`/s/${songId}`)
+  }
+  
+  const checkMicrophonePermission = async () => {
+    try {
+      // First check if we already have permission using the permissions API
+      if ('permissions' in navigator) {
+        const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName })
+        if (permission.state === 'granted') {
+          setHasMicPermission(true)
+          setShowCountdown(true)
+          return
+        }
+      }
+      
+      // If not granted or can't check, request permission
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream.getTracks().forEach(track => track.stop())
+      setHasMicPermission(true)
+      setShowCountdown(true)
+    } catch {
+      setHasMicPermission(false)
+    }
+  }
+  
+  const handleRequestPermission = async () => {
+    await checkMicrophonePermission()
   }
   
   
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-      <Header onAccountClick={handleAccountClick} />
+      {showCountdown && <CountdownScreen onComplete={handleCountdownComplete} />}
+      <Header 
+        onAccountClick={handleAccountClick}
+        leftContent={
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="text-white hover:bg-white/10"
+          >
+            <X size={24} />
+          </Button>
+        }
+      />
       
       {/* Main karaoke area */}
       <div className="flex-grow flex flex-col">
         <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
           <div className="flex-grow flex items-center justify-center">
-            <KaraokeDisplay
-              lines={lyricsWithScores}
-              currentTime={currentTime * 1000} // Convert to milliseconds
-            />
-          </div>
-        </div>
-      </div>
-      
-      {/* Controls area */}
-      <div className="bg-neutral-800/50 backdrop-blur-lg border-t border-neutral-700">
-        <div className="container mx-auto px-4 py-6 space-y-4">
-          {/* Recording status */}
-          {isRecording && (
-            <div className="text-center text-sm text-red-500">
-              Recording: {recordingTime.toFixed(1)}s
-            </div>
-          )}
-          
-          {isProcessingRecording && (
-            <div className="text-center text-sm text-primary-500">
-              Processing your performance...
-            </div>
-          )}
-          
-          {/* Audio player */}
-          <AudioPlayer
-            isPlaying={isPlaying}
-            currentTime={currentTime}
-            duration={duration}
-            onPlay={play}
-            onPause={pause}
-            onSeek={seek}
-          />
-          
-          {/* Recording controls */}
-          <div className="flex justify-center gap-4">
-            {!isRecording ? (
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={handleStartRecording}
-                disabled={!isPlaying || isProcessingRecording}
-                className="gap-2"
-              >
-                <Microphone size={20} />
-                Start Recording
-              </Button>
+            {hasMicPermission === null || hasMicPermission === false ? (
+              <MicrophonePermission 
+                onRequestPermission={handleRequestPermission}
+                showButton={hasMicPermission === false} // Only show button if explicitly denied
+              />
+            ) : isReady ? (
+              <KaraokeDisplay
+                lines={lyricsWithScores}
+                currentTime={currentTime * 1000} // Convert to milliseconds
+              />
             ) : (
-              <Button
-                size="lg"
-                variant="destructive"
-                onClick={handleStopRecording}
-                className="gap-2"
-              >
-                <Stop size={20} />
-                Stop Recording
-              </Button>
+              <div className="text-white/50 text-xl text-center">
+                <div>Preparing karaoke session...</div>
+                {!hasMidi && !hasAudio && (
+                  <div className="text-sm mt-2">Loading music...</div>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Audio progress bar only */}
+      {isReady && (
+        <div className="bg-neutral-800/50 backdrop-blur-lg border-t border-neutral-700">
+          <div className="container mx-auto px-4 py-4">
+            <AudioPlayer
+              isPlaying={isPlaying}
+              currentTime={currentTime}
+              duration={duration}
+              onPlay={play}
+              onPause={pause}
+              onSeek={seek}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

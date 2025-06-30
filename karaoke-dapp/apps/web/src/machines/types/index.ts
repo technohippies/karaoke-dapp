@@ -43,7 +43,10 @@ export type SongEvent =
   | { type: 'ERROR'; error: string };
 
 export type KaraokeEvent =
-  | { type: 'LOAD_AUDIO' }
+  | { type: 'REQUEST_PERMISSION' }
+  | { type: 'COUNTDOWN_COMPLETE' }
+  | { type: 'CLOSE' }
+  | { type: 'LOAD_AUDIO'; url: string }
   | { type: 'PLAY' }
   | { type: 'PAUSE' }
   | { type: 'STOP' }

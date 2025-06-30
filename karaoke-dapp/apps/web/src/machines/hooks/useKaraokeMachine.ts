@@ -32,8 +32,10 @@ export function useKaraokeMachine({
 
   // Auto-load audio when component mounts
   useEffect(() => {
-    send({ type: 'LOAD_AUDIO' });
-  }, [send]);
+    if (audioUrl) {
+      send({ type: 'LOAD_AUDIO', url: audioUrl });
+    }
+  }, [send, audioUrl]);
 
   // Helper methods
   const play = () => send({ type: 'PLAY' });
