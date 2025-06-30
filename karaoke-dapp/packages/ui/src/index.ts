@@ -13,6 +13,8 @@ export * from './components/karaoke/lyric-sheet';
 export * from './components/karaoke/lyric-line';
 export * from './components/karaoke/karaoke-display';
 export * from './components/karaoke/audio-player';
+export * from './components/karaoke/countdown-screen';
+export * from './components/karaoke/microphone-permission';
 
 // Song Components
 export * from './components/song/download-slider';

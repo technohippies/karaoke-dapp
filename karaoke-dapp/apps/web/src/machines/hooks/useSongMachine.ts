@@ -49,6 +49,7 @@ export function useSongMachine(songId: number) {
   const isIdle = state.matches('idle');
   const isCheckingAccess = state.matches('checkingAccess');
   const isUnpurchased = state.matches('unpurchased');
+  const isApprovingUSDC = state.matches('approvingUSDC');
   const isPurchasing = state.matches('purchasing');
   const isPurchased = state.matches('purchased');
   const isCheckingCache = state.matches('purchased.checkingCache');
@@ -56,18 +57,29 @@ export function useSongMachine(songId: number) {
   const isDownloading = state.matches('purchased.downloading');
   const isReady = state.matches('purchased.ready');
   const hasError = state.matches('error');
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('🎵 Song machine state:', state.value, {
+      hasMidiData: !!state.context.midiData,
+      hasEncryptedCid: !!state.context.encryptedCid,
+      isReady,
+      needsDownload
+    });
+  }, [state.value, state.context.midiData, state.context.encryptedCid, isReady, needsDownload]);
 
   // Get button state and text
   const getButtonState = useCallback(() => {
     if (isCheckingAccess || isCheckingCache) return { text: 'Loading...', disabled: true };
     if (isUnpurchased) return { text: 'Purchase', disabled: false, action: purchase };
+    if (isApprovingUSDC) return { text: 'Approving USDC...', disabled: true };
     if (isPurchasing) return { text: 'Purchasing...', disabled: true };
     if (needsDownload) return { text: 'Download', disabled: false, action: download };
     if (isDownloading) return { text: 'Downloading...', disabled: true };
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
     if (hasError) return { text: 'Retry', disabled: false, action: retry };
     return { text: 'Loading...', disabled: true };
-  }, [isCheckingAccess, isCheckingCache, isUnpurchased, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, download, startKaraoke, retry]);
+  }, [isCheckingAccess, isCheckingCache, isUnpurchased, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, download, startKaraoke, retry]);
 
   return {
     state,
@@ -83,6 +95,7 @@ export function useSongMachine(songId: number) {
     isIdle,
     isCheckingAccess,
     isUnpurchased,
+    isApprovingUSDC,
     isPurchasing,
     isPurchased,
     isCheckingCache,

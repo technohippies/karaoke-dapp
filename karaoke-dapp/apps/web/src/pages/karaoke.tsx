@@ -4,6 +4,8 @@ import { Header, KaraokeDisplay, AudioPlayer, Button, CountdownScreen, Microphon
 import { X } from '@phosphor-icons/react'
 import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, getCurrentLyricIndex } from '../utils/lyrics-parser'
+import { DatabaseService } from '@karaoke-dapp/services/browser'
+import { LyricsService } from '../services/lyrics.service'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 
 // Sample LRC lyrics - in production this would come from LRCLIB API
@@ -49,6 +51,7 @@ function KaraokeContent() {
   const [showCountdown, setShowCountdown] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
+  const [isLoadingLyrics, setIsLoadingLyrics] = useState(true)
   
   // Get data from navigation state
   const navigationState = location.state as {
@@ -58,31 +61,100 @@ function KaraokeContent() {
   } | null
   
   useEffect(() => {
-    // Load MIDI data if available
-    if (navigationState?.midiData) {
-      loadMidi(navigationState.midiData).catch(console.error)
+    const loadSongData = async () => {
+      try {
+        // Load MIDI data if available
+        if (navigationState?.midiData) {
+          console.log('🎹 Loading MIDI data, size:', navigationState.midiData.length)
+          await loadMidi(navigationState.midiData)
+        } else {
+          console.warn('⚠️ No MIDI data in navigation state')
+        }
+        
+        // Load audio if available (for backing track)
+        if (navigationState?.audioUrl) {
+          console.log('🎵 Loading audio from:', navigationState.audioUrl)
+          await loadAudio(navigationState.audioUrl)
+        } else {
+          console.log('ℹ️ No audio URL provided, using MIDI only')
+        }
+        
+        // Fetch song details and lyrics
+        if (songId) {
+          setIsLoadingLyrics(true)
+          const dbService = new DatabaseService()
+          const lyricsService = new LyricsService()
+          
+          const song = await dbService.getSongById(parseInt(songId))
+          if (song) {
+            // Try to fetch lyrics from LRCLIB
+            const lyricsData = await lyricsService.getLyricsForSong(
+              song.lrclib_id,
+              song.title,
+              song.artist,
+              '', // album name not stored in our DB
+              song.duration
+            )
+            
+            if (lyricsData && lyricsData.syncedLyrics) {
+              // Use synced lyrics if available
+              const parsedLyrics = parseLRC(lyricsData.syncedLyrics)
+              const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
+                id: line.id.toString(),
+                text: line.text,
+                startTime: line.startTime * 1000,
+                endTime: line.endTime * 1000
+              }))
+              setLyrics(karaokeLines)
+              setLyricsWithScores(karaokeLines)
+            } else if (lyricsData && lyricsData.plainLyrics) {
+              // Fall back to plain lyrics with estimated timing
+              const lines = lyricsData.plainLyrics.split('\n').filter(line => line.trim())
+              const timePerLine = (song.duration * 1000) / lines.length
+              const karaokeLines: KaraokeLyricLine[] = lines.map((line, index) => ({
+                id: index.toString(),
+                text: line,
+                startTime: index * timePerLine,
+                endTime: (index + 1) * timePerLine
+              }))
+              setLyrics(karaokeLines)
+              setLyricsWithScores(karaokeLines)
+            } else {
+              // Use sample lyrics as fallback
+              console.warn('No lyrics found, using sample lyrics')
+              const parsedLyrics = parseLRC(sampleLRC)
+              const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
+                id: line.id.toString(),
+                text: line.text,
+                startTime: line.startTime * 1000,
+                endTime: line.endTime * 1000
+              }))
+              setLyrics(karaokeLines)
+              setLyricsWithScores(karaokeLines)
+            }
+          }
+          setIsLoadingLyrics(false)
+        }
+      } catch (error) {
+        console.error('Error loading song data:', error)
+        setIsLoadingLyrics(false)
+        
+        // Use sample lyrics as fallback
+        const parsedLyrics = parseLRC(sampleLRC)
+        const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
+          id: line.id.toString(),
+          text: line.text,
+          startTime: line.startTime * 1000,
+          endTime: line.endTime * 1000
+        }))
+        setLyrics(karaokeLines)
+        setLyricsWithScores(karaokeLines)
+      }
     }
     
-    // Load audio if available (for backing track)
-    if (navigationState?.audioUrl) {
-      loadAudio(navigationState.audioUrl).catch(console.error)
-    }
-    
-    // For now, use sample lyrics
-    // TODO: Fetch from lyricsUrl when available
-    const parsedLyrics = parseLRC(sampleLRC)
-    const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
-      id: line.id.toString(),
-      text: line.text,
-      startTime: line.startTime * 1000, // Convert to milliseconds
-      endTime: line.endTime * 1000
-    }))
-    setLyrics(karaokeLines)
-    setLyricsWithScores(karaokeLines)
-    
-    // Check microphone permission immediately
+    loadSongData()
     checkMicrophonePermission()
-  }, []) // Run only once on mount
+  }, [songId]) // Run when songId changes
   
   // Update active lyric based on current time
   useEffect(() => {
@@ -125,11 +197,25 @@ function KaraokeContent() {
   }
   
   const handleCountdownComplete = async () => {
+    console.log('🎬 Countdown complete, starting playback')
     setShowCountdown(false)
     setIsReady(true)
-    play()
+    
+    // Start playback (MIDI and/or audio)
+    try {
+      await play()
+      console.log('▶️ Playback started')
+    } catch (error) {
+      console.error('❌ Error starting playback:', error)
+    }
+    
     // Start recording automatically
-    await startRecording()
+    try {
+      await startRecording()
+      console.log('🎤 Recording started')
+    } catch (error) {
+      console.error('❌ Error starting recording:', error)
+    }
   }
   
   const handleClose = () => {
@@ -203,6 +289,9 @@ function KaraokeContent() {
                 <div>Preparing karaoke session...</div>
                 {!hasMidi && !hasAudio && (
                   <div className="text-sm mt-2">Loading music...</div>
+                )}
+                {isLoadingLyrics && (
+                  <div className="text-sm mt-2">Loading lyrics...</div>
                 )}
               </div>
             )}

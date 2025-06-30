@@ -106,10 +106,15 @@ export class MidiPlayerService implements MidiPlayer {
       throw new Error('No MIDI loaded');
     }
     
+    console.log('🎹 MidiPlayerService.play() called');
+    
     // Start audio context if needed
     if (Tone.context.state === 'suspended') {
+      console.log('🔊 Starting Tone.js audio context');
       await Tone.start();
     }
+    
+    console.log('🎼 Starting transport, scheduled events:', this.scheduledEvents.length);
     
     if (this.state.isPaused) {
       // Resume from pause
@@ -229,6 +234,8 @@ export class MidiPlayerService implements MidiPlayer {
   private scheduleNotes(): void {
     if (!this.midi) return;
     
+    console.log('📋 Scheduling notes for', this.midi.tracks.length, 'tracks');
+    
     this.midi.tracks.forEach((track, trackIndex) => {
       const config = this.trackConfigs.get(trackIndex);
       
@@ -250,6 +257,8 @@ export class MidiPlayerService implements MidiPlayer {
         console.warn(`No instrument found for type: ${instrumentType}`);
         return;
       }
+      
+      console.log(`🎵 Track ${trackIndex} "${track.name}": ${track.notes.length} notes, instrument: ${instrumentType}`);
       
       // Schedule each note
       track.notes.forEach(note => {

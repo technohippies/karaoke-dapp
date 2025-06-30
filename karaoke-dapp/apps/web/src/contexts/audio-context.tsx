@@ -112,10 +112,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [])
   
   const loadMidi = useCallback(async (midiDataArray: Uint8Array) => {
-    if (!midiPlayerRef.current) return
+    if (!midiPlayerRef.current) {
+      console.error('❌ MIDI player not initialized')
+      return
+    }
     
     try {
+      console.log('🎹 Loading MIDI in audio context, size:', midiDataArray.length)
       const parsedData = await midiPlayerRef.current.load(midiDataArray)
+      console.log('✅ MIDI loaded successfully:', {
+        name: parsedData.name,
+        duration: parsedData.duration,
+        tracks: parsedData.tracks.length,
+        tempo: parsedData.tempo
+      })
       setMidiData(parsedData)
       
       // Use MIDI duration if no audio is loaded
@@ -125,20 +135,28 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         pauseTimeRef.current = 0
       }
     } catch (error) {
-      console.error('Error loading MIDI:', error)
+      console.error('❌ Error loading MIDI:', error)
     }
   }, [audioBuffer])
   
   const play = useCallback(async () => {
     if (isPlaying) return
     
+    console.log('🎵 Play called, state:', {
+      hasMidi: !!midiData,
+      hasAudio: !!audioBuffer,
+      midiTracks: midiData?.tracks.length || 0
+    })
+    
     // Play MIDI if available
     if (midiData && midiPlayerRef.current) {
+      console.log('🎹 Starting MIDI playback')
       await midiPlayerRef.current.play()
     }
     
     // Play audio if available
     if (audioContextRef.current && audioBuffer && gainNodeRef.current) {
+      console.log('🔊 Starting audio playback')
       sourceNodeRef.current = audioContextRef.current.createBufferSource()
       sourceNodeRef.current.buffer = audioBuffer
       sourceNodeRef.current.connect(gainNodeRef.current)

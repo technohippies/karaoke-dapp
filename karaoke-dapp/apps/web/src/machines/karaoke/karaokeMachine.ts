@@ -8,7 +8,7 @@ export const karaokeMachine = createMachine({
     events: KaraokeEvent;
   },
   id: 'karaoke',
-  initial: 'initializing',
+  initial: 'checkingPermissions',
   context: ({ input }: { input?: Partial<KaraokeContext> }) => ({
     songId: input?.songId || 0,
     midiData: input?.midiData || new Uint8Array(),
@@ -18,6 +18,29 @@ export const karaokeMachine = createMachine({
     score: 0,
   }),
   states: {
+    checkingPermissions: {
+      description: 'Checking microphone permissions',
+      invoke: {
+        id: 'checkPermissions',
+        src: 'checkMicrophonePermission',
+        onDone: {
+          target: 'countdown',
+        },
+        onError: {
+          target: 'needsPermission',
+        },
+      },
+    },
+    
+    needsPermission: {
+      description: 'Waiting for user to grant microphone permission',
+      on: {
+        REQUEST_PERMISSION: {
+          target: 'checkingPermissions',
+        },
+      },
+    },
+    
     initializing: {
       description: 'Setting up karaoke session',
       initial: 'loadingAudio',
@@ -69,8 +92,17 @@ export const karaokeMachine = createMachine({
     ready: {
       description: 'Ready to start karaoke',
       on: {
-        PLAY: 'playing',
+        PLAY: 'countdown',
         LOAD_AUDIO: 'initializing',
+      },
+    },
+    
+    countdown: {
+      description: 'Countdown before karaoke starts',
+      entry: 'startCountdown',
+      on: {
+        COUNTDOWN_COMPLETE: 'playing',
+        STOP: 'ready',
       },
     },
     
