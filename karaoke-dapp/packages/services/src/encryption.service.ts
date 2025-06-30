@@ -36,8 +36,8 @@ export class EncryptionService {
    * Create access control conditions for the MIDI Decryptor Action
    */
   createMidiDecryptorAccessConditions(
-    contractAddress: string,
-    songId: number,
+    _contractAddress: string,
+    _songId: number,
     midiDecryptorActionCid: string
   ): any[] {
     return [
@@ -82,7 +82,6 @@ export class EncryptionService {
       {
         dataToEncrypt: base64Content,
         accessControlConditions,
-        chain: 'base',
       },
       this.litNodeClient
     );

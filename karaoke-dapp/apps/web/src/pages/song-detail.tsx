@@ -1,123 +1,168 @@
-import React from "react"
-import { Button, DownloadSlider, PurchaseSlider, MediaRow, Header } from "@karaoke-dapp/ui"
-import { Play, Timer, Star } from "@phosphor-icons/react"
+import { useEffect, useState } from "react"
+import { Header, LyricLine, LyricSheet } from "@karaoke-dapp/ui"
 import { useNavigate, useParams } from "react-router-dom"
+import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
+import { motion } from "motion/react"
 
-// Mock lyrics data
-const mockLyrics = [
-  { id: 1, text: "Is this the real life?", time: "0:00" },
-  { id: 2, text: "Is this just fantasy?", time: "0:03" },
-  { id: 3, text: "Caught in a landslide", time: "0:06" },
-  { id: 4, text: "No escape from reality", time: "0:09" },
-  { id: 5, text: "Open your eyes", time: "0:12" },
-  { id: 6, text: "Look up to the skies and see", time: "0:15" },
-  { id: 7, text: "I'm just a poor boy, I need no sympathy", time: "0:19" },
-  { id: 8, text: "Because I'm easy come, easy go", time: "0:24" },
-]
+interface LRCLIBResponse {
+  id: number
+  trackName: string
+  artistName: string
+  albumName: string
+  duration: number
+  instrumental: boolean
+  plainLyrics: string
+  syncedLyrics: string
+}
 
 export function SongDetailPage() {
   const navigate = useNavigate()
-  const { songId, songSlug } = useParams()
-  const [isPurchasing, setIsPurchasing] = React.useState(false)
-  const [isDecrypting, setIsDecrypting] = React.useState(false)
+  const { songId } = useParams()
+  const [song, setSong] = useState<Song | null>(null)
+  const [lyrics, setLyrics] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   
-  // TODO: Fetch song data based on songId
-  // For now, using mock data
+  const dbService = new DatabaseService()
+  
+  useEffect(() => {
+    async function loadSongAndLyrics() {
+      if (!songId) return
+      
+      try {
+        setLoading(true)
+        
+        // Load song data from Tableland
+        const songData = await dbService.getSongById(parseInt(songId))
+        if (!songData) {
+          setError('Song not found')
+          return
+        }
+        setSong(songData)
+        
+        // Fetch lyrics from LRCLIB
+        const lyricsResponse = await fetch(
+          `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`
+        )
+        
+        if (lyricsResponse.ok) {
+          const lyricsData: LRCLIBResponse = await lyricsResponse.json()
+          // Split plain lyrics into lines and filter out empty lines
+          const lyricsLines = lyricsData.plainLyrics
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+          setLyrics(lyricsLines)
+        } else {
+          setLyrics(['Lyrics not available'])
+        }
+        
+      } catch (err) {
+        console.error('Failed to load song or lyrics:', err)
+        setError('Failed to load song data')
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadSongAndLyrics()
+  }, [songId])
   
   const handleAccountClick = () => {
     navigate('/account')
   }
-  
-  const handlePurchase = async () => {
-    setIsPurchasing(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setIsPurchasing(false)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-900 text-white">
+        <Header onAccountClick={handleAccountClick} />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-neutral-400">Loading song...</div>
+        </div>
+      </div>
+    )
   }
-  
-  const handleDownload = async () => {
-    setIsDecrypting(true)
-    await new Promise(resolve => setTimeout(resolve, 3000))
-    setIsDecrypting(false)
+
+  if (error || !song) {
+    return (
+      <div className="min-h-screen bg-neutral-900 text-white">
+        <Header onAccountClick={handleAccountClick} />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-red-400">{error || 'Song not found'}</div>
+        </div>
+      </div>
+    )
   }
-  
-  const handleStartKaraoke = () => {
-    // Navigate to karaoke with the same URL structure
-    navigate(`/k/${songId}/${songSlug}`)
-  }
-  
+
   return (
     <div className="min-h-screen bg-neutral-900 text-white">
       <Header onAccountClick={handleAccountClick} />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Song header */}
-          <div className="flex items-start gap-6">
-            <img 
-              src="https://placehold.co/200x200/purple/white?text=BR"
-              alt="Bohemian Rhapsody"
-              className="w-48 h-48 rounded-lg"
-            />
-            <div className="flex-grow space-y-4">
-              <div>
-                <h1 className="text-4xl font-bold">Bohemian Rhapsody</h1>
-                <p className="text-xl text-neutral-400">Queen</p>
-              </div>
-              
-              <div className="flex items-center gap-6 text-sm text-neutral-400">
-                <div className="flex items-center gap-1">
-                  <Timer size={16} />
-                  <span>5:55</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star weight="fill" size={16} className="text-yellow-500" />
-                  <span>4.8</span>
-                </div>
-                <span>Hard</span>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex gap-3">
-                <Button size="lg" className="gap-2" onClick={handleStartKaraoke}>
-                  <Play size={20} />
-                  Start Karaoke
-                </Button>
-                
-                <PurchaseSlider
-                  songTitle="Bohemian Rhapsody"
-                  price={2}
-                  onPurchase={handlePurchase}
-                  isPurchasing={isPurchasing}
-                >
-                  <Button variant="outline">Buy</Button>
-                </PurchaseSlider>
-                
-                <DownloadSlider
-                  songTitle="Bohemian Rhapsody"
-                  onDownload={handleDownload}
-                  isDecrypting={isDecrypting}
-                >
-                  <Button variant="secondary">MIDI</Button>
-                </DownloadSlider>
-              </div>
-            </div>
-          </div>
-          
-          {/* Lyrics preview */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Lyrics</h2>
-            <div className="space-y-2">
-              {mockLyrics.map((line) => (
-                <MediaRow
-                  key={line.id}
-                  title={line.text}
-                  subtitle={line.time}
-                  className="hover:bg-neutral-800/50"
-                />
-              ))}
-            </div>
+      {/* Hero section with full-width background image */}
+      <motion.div 
+        className="relative w-full h-96 bg-cover bg-center"
+        style={{
+          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${dbService.getArtworkUrl(song, 'f')}')`
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 flex items-end">
+          <div className="w-full max-w-4xl mx-auto px-4 pb-8">
+            <motion.h1 
+              className="text-4xl md:text-5xl font-bold text-white mb-2"
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {song.title}
+            </motion.h1>
+            <motion.p 
+              className="text-xl text-neutral-200"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              {song.artist}
+            </motion.p>
           </div>
         </div>
+      </motion.div>
+      
+      {/* Lyrics section */}
+      <div className="w-full max-w-4xl mx-auto px-4 py-8">
+        <motion.div 
+          className="space-y-3"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.1
+              }
+            }
+          }}
+        >
+          {lyrics.map((line, index) => (
+            <motion.div
+              key={index}
+              variants={{
+                hidden: { y: 20, opacity: 0 },
+                visible: { y: 0, opacity: 1 }
+              }}
+              transition={{ duration: 0.5 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <LyricSheet lyricText={line}>
+                <LyricLine
+                  text={line}
+                  className="text-base"
+                />
+              </LyricSheet>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </div>
   )

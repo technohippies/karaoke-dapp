@@ -42,7 +42,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
       <SheetTrigger asChild>
         {children || <span>{lyricText}</span>}
       </SheetTrigger>
-      <SheetContent side="bottom" className="p-0" style={{ height: '95vh', maxHeight: '700px' }}>
+      <SheetContent side="bottom" className="p-0 rounded-t-xl" style={{ height: '95vh', maxHeight: '700px' }}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <SheetHeader className="px-6 pt-12 pb-4" style={{ flexShrink: 0 }}>
             <SheetTitle className="sr-only">Lyric Details</SheetTitle>
@@ -51,7 +51,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
             </SheetDescription>
           </SheetHeader>
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            <div className="space-y-3 px-6 pb-4">
+            <div className="space-y-3 pb-4 px-6">
             <div className="h-8"></div>
             {sections.map((section) => {
               const getHeight = () => {
@@ -67,7 +67,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
                 <div
                   key={section.id}
                   className={cn(
-                    "relative p-6 rounded-lg bg-neutral-900 overflow-hidden",
+                    "relative py-4 rounded-lg bg-neutral-800 overflow-hidden",
                     getHeight()
                   )}
                 >
@@ -95,7 +95,7 @@ export function LyricSheet({ children, lyricText }: LyricSheetProps) {
             })}
             </div>
           </div>
-          <div style={{ flexShrink: 0, padding: '24px' }}>
+          <div className="px-6 py-6" style={{ flexShrink: 0 }}>
             <Button 
               size="lg" 
               className="w-full"

@@ -5,6 +5,7 @@ export * from './lib/utils'
 export * from './components/ui/button'
 export * from './components/ui/sheet'
 export * from './components/ui/header'
+export * from './components/ui/page-header'
 export * from './components/ui/media-row'
 
 // Karaoke Components

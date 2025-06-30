@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "uploads": {
+    "fc38b33f35229375af642963f15b8a95bb1c371131314b98678c0a2de992e62b": {
+      "cid": "bafkreih4hczt6njcsn226zbjmpyvxcuvxmodoejrgffzqz4mbiw6texgfm",
+      "filename": "song-1-piano-encrypted.json",
+      "fileHash": "fc38b33f35229375af642963f15b8a95bb1c371131314b98678c0a2de992e62b",
+      "encrypted": true,
+      "uploadedAt": "2025-06-29T15:53:51.137Z",
+      "songId": 1
+    },
+    "40c7560d3a09f726b1ed17d0dc5f74364368d0c93b13d07b8da1b588e1fbfe05": {
+      "cid": "bafkreicay5la2oqj64tld3ix2dof65bwinunbsj3cpihxdnbwweod676au",
+      "filename": "song-1-piano-encrypted.json",
+      "fileHash": "40c7560d3a09f726b1ed17d0dc5f74364368d0c93b13d07b8da1b588e1fbfe05",
+      "encrypted": true,
+      "uploadedAt": "2025-06-29T15:54:34.143Z",
+      "songId": 1
+    },
+    "9a15d4a49baa2be1105f841d59bd2702994e20a12bb623d66c3dace22641beca": {
+      "cid": "bafkreie2cxkkjg5kfpqrax4edvm32jyctfhcbijlwyr5m3b5vtrcmqn6zi",
+      "filename": "song-1-piano-encrypted.json",
+      "fileHash": "9a15d4a49baa2be1105f841d59bd2702994e20a12bb623d66c3dace22641beca",
+      "encrypted": true,
+      "uploadedAt": "2025-06-29T15:55:51.757Z",
+      "songId": 1
+    }
+  }
+}

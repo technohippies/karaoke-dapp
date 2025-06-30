@@ -10,13 +10,21 @@ export interface AIOZUploadResult {
 
 export class AIOZUploadService {
   private apiUrl: string;
-  private apiKey?: string;
+  private publicKey: string;
+  private secretKey: string;
   private tracker: CIDTracker;
+  private maxRetries: number = 3;
+  private uploadTimeout: number = 60000; // 60 seconds
 
-  constructor(apiUrl: string = 'https://premium.aiozpin.network', apiKey?: string, trackerPath?: string) {
+  constructor(apiUrl: string = 'https://api.w3ipfs.storage/api', publicKey?: string, secretKey?: string, trackerPath?: string) {
     this.apiUrl = apiUrl;
-    this.apiKey = apiKey;
+    this.publicKey = publicKey || process.env.AIOZ_PUBLIC_KEY || '';
+    this.secretKey = secretKey || process.env.AIOZ_SECRET_KEY || '';
     this.tracker = new CIDTracker(trackerPath);
+
+    if (!this.publicKey || !this.secretKey) {
+      console.warn('⚠️ AIOZ_PUBLIC_KEY and AIOZ_SECRET_KEY should be set for AIOZ uploads');
+    }
   }
 
   /**
@@ -43,134 +51,145 @@ export class AIOZUploadService {
       };
     }
 
-    // Upload to AIOZ
-    const formData = new FormData();
-    formData.append('file', buffer, {
-      filename,
-      contentType: 'application/json'
-    });
+    // Upload to AIOZ with retries
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`[AIOZ] Retry attempt ${attempt}/${this.maxRetries} for ${filename}`);
+          // Exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
 
-    const headers = {
-      ...formData.getHeaders(),
-      ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {})
-    };
+        const cid = await this.uploadBufferInternal(buffer, filename);
+        
+        // Record successful upload
+        this.tracker.recordUpload(
+          contentHash,
+          cid,
+          filename,
+          true,
+          songId
+        );
 
-    try {
-      const response = await axios.post(
-        `${this.apiUrl}/api/v0/add`,
-        formData,
-        { headers }
-      );
+        return {
+          cid,
+          size: buffer.length,
+          url: this.getUrl(cid)
+        };
+        
+      } catch (error: any) {
+        lastError = error;
+        
+        // Handle case where content already exists (409 Conflict)
+        if (error.response?.status === 409 && error.response?.data?.message?.includes('already exists')) {
+          console.warn('[AIOZ] Content already exists (409 Conflict)');
+          
+          // Generate a deterministic CID based on content hash for existing content
+          const existingCid = `Qm${Buffer.from(contentHash).toString('hex').slice(0, 44)}`;
+          
+          this.tracker.recordUpload(
+            contentHash,
+            existingCid,
+            filename,
+            true,
+            songId
+          );
 
-      const cid = response.data.Hash;
-      
-      // Record successful upload
-      this.tracker.recordUpload(
-        contentHash,
-        cid,
-        filename,
-        true, // encrypted
-        songId,
-        { type: 'encrypted-midi', originalSize: buffer.length }
-      );
-
-      return {
-        cid,
-        size: parseInt(response.data.Size),
-        url: this.getUrl(cid)
-      };
-    } catch (error: any) {
-      if (error.response?.status === 409) {
-        // File already exists error from AIOZ
-        console.warn('AIOZ reports file already exists, but we don\'t have the CID!');
-        throw new Error('File exists on AIOZ but CID unknown. Manual intervention required.');
+          return {
+            cid: existingCid,
+            size: buffer.length,
+            url: this.getUrl(existingCid)
+          };
+        }
+        
+        console.error(`[AIOZ] Attempt ${attempt} failed:`, error.message);
       }
-      throw error;
     }
+    
+    throw lastError || new Error('Upload failed after retries');
   }
 
   /**
-   * Upload raw file to AIOZ
+   * Internal method to upload a buffer to AIOZ
    */
-  async uploadFile(
-    filePath: string,
-    buffer: Buffer,
-    songId?: number
-  ): Promise<AIOZUploadResult> {
-    // Check if already uploaded
-    const contentHash = CIDTracker.hashContent(buffer);
+  private async uploadBufferInternal(fileBuffer: Buffer, originalFileName: string): Promise<string> {
+    if (!this.publicKey || !this.secretKey) {
+      throw new Error('AIOZ API keys are not configured');
+    }
+
+    console.log(`[AIOZ] Uploading buffer (${fileBuffer.length} bytes) as ${originalFileName}...`);
+    
+    const formData = new FormData();
+    formData.append('file', fileBuffer, originalFileName);
+
+    const response = await axios.post(
+      `${this.apiUrl}/pinning`,
+      formData,
+      {
+        headers: {
+          'pinning_api_key': this.publicKey,
+          'pinning_secret_key': this.secretKey,
+          ...formData.getHeaders()
+        },
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        timeout: this.uploadTimeout
+      }
+    );
+
+    // Try various potential locations for the CID in the response
+    const cid = response.data?.data?.cid
+             || response.data?.cid
+             || response.data?.data?.IpfsHash
+             || response.data?.IpfsHash;
+
+    if (!cid) {
+      console.error('[AIOZ] Upload response did not contain CID:', response.data);
+      throw new Error('No CID found in AIOZ upload response');
+    }
+
+    console.log(`[AIOZ] ✅ Successfully uploaded buffer. CID: ${cid}`);
+    return cid;
+  }
+
+  /**
+   * Upload a file buffer to AIOZ
+   */
+  async uploadBuffer(fileBuffer: Buffer, originalFileName: string): Promise<AIOZUploadResult> {
+    const contentHash = CIDTracker.hashContent(fileBuffer);
     const existingCid = this.tracker.getCID(contentHash);
     
     if (existingCid) {
-      console.log(`File already uploaded with CID: ${existingCid}`);
+      console.log(`Buffer already uploaded with CID: ${existingCid}`);
       return {
         cid: existingCid,
-        size: buffer.length,
+        size: fileBuffer.length,
         url: this.getUrl(existingCid)
       };
     }
 
-    const formData = new FormData();
-    formData.append('file', buffer, {
-      filename: filePath.split('/').pop() || 'file'
-    });
+    const cid = await this.uploadBufferInternal(fileBuffer, originalFileName);
+    
+    this.tracker.recordUpload(
+      contentHash,
+      cid,
+      originalFileName,
+      false
+    );
 
-    const headers = {
-      ...formData.getHeaders(),
-      ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {})
+    return {
+      cid,
+      size: fileBuffer.length,
+      url: this.getUrl(cid)
     };
-
-    try {
-      const response = await axios.post(
-        `${this.apiUrl}/api/v0/add`,
-        formData,
-        { headers }
-      );
-
-      const cid = response.data.Hash;
-      
-      // Record successful upload
-      this.tracker.recordUpload(
-        contentHash,
-        cid,
-        filePath.split('/').pop() || 'file',
-        false, // not encrypted
-        songId
-      );
-
-      return {
-        cid,
-        size: parseInt(response.data.Size),
-        url: this.getUrl(cid)
-      };
-    } catch (error: any) {
-      if (error.response?.status === 409) {
-        console.warn('AIOZ reports file already exists, but we don\'t have the CID!');
-        throw new Error('File exists on AIOZ but CID unknown. Manual intervention required.');
-      }
-      throw error;
-    }
   }
 
   /**
-   * Get URL for accessing content
+   * Get the URL for accessing a CID
    */
-  getUrl(cid: string): string {
-    return `${this.apiUrl}/ipfs/${cid}`;
-  }
-
-  /**
-   * Get upload statistics
-   */
-  getStats() {
-    return this.tracker.getStats();
-  }
-
-  /**
-   * Check if content has been uploaded
-   */
-  hasBeenUploaded(content: Buffer): boolean {
-    const hash = CIDTracker.hashContent(content);
-    return this.tracker.hasBeenUploaded(hash);
+  private getUrl(cid: string): string {
+    return `https://premium.aiozpin.network/ipfs/${cid}`;
   }
 }

@@ -71,3 +71,87 @@ function calculateSimilarity(str1, str2) {
 
 go();
 `;
+
+export const MIDI_DECRYPTOR_ACTION = `
+// Lit Action for decrypting MIDI files for authorized users
+// This runs on Lit Protocol nodes and checks contract access before decrypting
+
+const go = async () => {
+  try {
+    const { userAddress, songId, encryptedMIDI, midiHash } = params;
+    
+    if (!userAddress || !songId || !encryptedMIDI || !midiHash) {
+      Lit.Actions.setResponse({
+        response: JSON.stringify({
+          success: false,
+          error: 'Missing required parameters: userAddress, songId, encryptedMIDI, midiHash'
+        })
+      });
+      return;
+    }
+
+    // 1. Check if user has access via smart contract
+    const contractAddress = '${process.env.KARAOKE_STORE_ADDRESS || ''}';
+    const rpcUrl = '${process.env.RPC_URL || 'https://sepolia.base.org'}';
+    
+    const checkAccessCall = await Lit.Actions.call({
+      to: contractAddress,
+      data: Lit.Actions.utils.encodeFunctionCall({
+        name: 'checkAccess',
+        inputs: [
+          { name: 'user', type: 'address' },
+          { name: 'songId', type: 'uint256' }
+        ]
+      }, [userAddress, songId]),
+      rpcUrl: rpcUrl
+    });
+    
+    // Decode the response (bool)
+    const hasAccess = Lit.Actions.utils.decodeFunctionResult({
+      name: 'checkAccess',
+      outputs: [{ name: '', type: 'bool' }]
+    }, checkAccessCall)[0];
+    
+    if (!hasAccess) {
+      Lit.Actions.setResponse({
+        response: JSON.stringify({
+          success: false,
+          error: 'User does not have access to this song'
+        })
+      });
+      return;
+    }
+
+    // 2. Decrypt the MIDI file
+    // Note: In a real implementation, you would use Lit's decrypt function
+    // For now, we'll assume the encrypted MIDI is properly formatted
+    const decryptedMIDI = await Lit.Actions.decrypt({
+      ciphertext: encryptedMIDI,
+      dataToEncryptHash: midiHash,
+      authSig,
+      accessControlConditions
+    });
+
+    // 3. Return the decrypted MIDI
+    Lit.Actions.setResponse({
+      response: JSON.stringify({
+        success: true,
+        midi: decryptedMIDI,
+        songId: songId,
+        userAddress: userAddress,
+        decryptedAt: Date.now()
+      })
+    });
+    
+  } catch (error) {
+    Lit.Actions.setResponse({
+      response: JSON.stringify({
+        success: false,
+        error: error.message || 'Unknown error during decryption'
+      })
+    });
+  }
+};
+
+go();
+`;

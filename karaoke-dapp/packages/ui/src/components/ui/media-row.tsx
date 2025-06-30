@@ -36,11 +36,11 @@ const MediaRow = React.forwardRef<HTMLDivElement, MediaRowProps>(
         
         {/* Main content */}
         <div className="flex-grow min-w-0">
-          <div className="text-sm font-medium text-neutral-50 truncate">
+          <div className="text-base font-medium text-neutral-50 truncate">
             {title}
           </div>
           {subtitle && (
-            <div className="text-xs text-neutral-400 truncate mt-0.5">
+            <div className="text-sm text-neutral-400 truncate mt-0.5">
               {subtitle}
             </div>
           )}

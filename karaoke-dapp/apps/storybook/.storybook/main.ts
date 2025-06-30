@@ -16,10 +16,18 @@ const config: StorybookConfig = {
     options: {},
   },
   viteFinal: async (config) => {
-    // Import Tailwind plugin dynamically - v4 auto-detects content
-    const { default: tailwindcss } = await import('@tailwindcss/vite');
-    config.plugins = config.plugins || [];
-    config.plugins.push(tailwindcss());
+    // Import Tailwind PostCSS plugin for better HMR in monorepos
+    const { default: tailwindcss } = await import('@tailwindcss/postcss');
+    
+    // Configure PostCSS with Tailwind
+    config.css = {
+      ...config.css,
+      postcss: {
+        plugins: [
+          tailwindcss()
+        ],
+      }
+    };
     
     // Ensure proper module resolution for workspace packages
     config.resolve = {

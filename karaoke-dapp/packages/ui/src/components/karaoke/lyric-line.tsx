@@ -11,7 +11,7 @@ const LyricLine = React.forwardRef<HTMLDivElement, LyricLineProps>(
       <div
         ref={ref}
         className={cn(
-          "w-full px-3 py-1.5 text-left cursor-pointer select-none transition-all rounded",
+          "w-full px-4 py-3 text-left cursor-pointer select-none transition-all rounded",
           "text-sm font-sans text-neutral-50",
           "bg-neutral-700 hover:bg-neutral-600",
           className

@@ -1,6 +1,6 @@
 import { Database } from '@tableland/sdk';
 
-export const SONGS_TABLE = 'songs_v5_8453_24';
+export const SONGS_TABLE = 'songs_v6_84532_131';
 export const PURCHASES_TABLE = 'purchases_v1_84532_117';
 
 export interface Song {

@@ -19,7 +19,7 @@ export interface CIDDatabase {
 
 export class CIDTracker {
   private dbPath: string;
-  private db: CIDDatabase;
+  private db!: CIDDatabase;
 
   constructor(dbPath?: string) {
     this.dbPath = dbPath || path.join(process.cwd(), 'cid-tracker.json');

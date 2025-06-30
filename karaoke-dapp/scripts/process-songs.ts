@@ -8,10 +8,11 @@ import dotenv from 'dotenv';
 import { EncryptionService } from '../packages/services/src/encryption.service';
 import { AIOZUploadService } from '../packages/services/src/aioz-upload.service';
 import { Database } from '@tableland/sdk';
-import { Wallet } from 'ethers';
+import { Wallet, JsonRpcProvider } from 'ethers';
 import { SONGS_TABLE } from '../packages/db/src/tableland';
 
-dotenv.config();
+// Load .env from parent directory
+dotenv.config({ path: path.join(__dirname, '../..', '.env') });
 
 interface ProcessOptions {
   midi: string;
@@ -35,13 +36,15 @@ class SongProcessor {
   constructor() {
     this.encryptionService = new EncryptionService();
     this.uploadService = new AIOZUploadService(
-      process.env.AIOZ_API_URL || 'https://premium.aiozpin.network',
-      process.env.AIOZ_API_KEY
+      process.env.AIOZ_API_URL || 'https://api.w3ipfs.storage/api',
+      process.env.AIOZ_PUBLIC_KEY,
+      process.env.AIOZ_SECRET_KEY
     );
     
-    // Initialize Tableland with wallet (if provided)
-    if (process.env.TABLELAND_PRIVATE_KEY && process.env.TABLELAND_PRIVATE_KEY !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
-      const wallet = new Wallet(process.env.TABLELAND_PRIVATE_KEY);
+    // Initialize Tableland with wallet and provider
+    if (process.env.PRIVATE_KEY && process.env.PRIVATE_KEY !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      const provider = new JsonRpcProvider(process.env.RPC_URL_SEPOLIA);
+      const wallet = new Wallet(process.env.PRIVATE_KEY, provider);
       this.db = new Database({ signer: wallet });
     } else {
       // For dry runs, we can use a read-only database
@@ -64,8 +67,8 @@ class SongProcessor {
     if (!this.midiDecryptorCid) {
       throw new Error('MIDI_DECRYPTOR_ACTION_CID not set in environment');
     }
-    if (!process.env.TABLELAND_PRIVATE_KEY) {
-      throw new Error('TABLELAND_PRIVATE_KEY not set in environment');
+    if (!process.env.PRIVATE_KEY) {
+      throw new Error('PRIVATE_KEY not set in environment');
     }
   }
 

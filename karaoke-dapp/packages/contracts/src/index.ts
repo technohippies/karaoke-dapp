@@ -186,7 +186,7 @@ export const MusicStoreV2ABI = [
 
 export const CONTRACTS = {
   baseSepolia: {
-    musicStore: '0x0000000000000000000000000000000000000000', // TODO: Add deployed address
+    musicStore: '0x306466a909df4dc0508b68b4511bcf8130abcb43', // KaraokeStore_V0_1_0 on Base Sepolia
     usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia USDC
   },
 } as const;
