@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, LyricSheet, Button, PurchaseSlider, DownloadSlider, ConnectWalletSheet } from "@karaoke-dapp/ui"
+import { Header, LyricLine, LyricSheet, Button, PurchaseSlider, ConnectWalletSheet } from "@karaoke-dapp/ui"
 import { useParams } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
@@ -209,20 +209,23 @@ export function SongDetailPage() {
               </Button>
             </ConnectWalletSheet>
           ) : machineError ? (
-            <div className="text-center text-red-400 mb-2">
-              {machineError}
+            <>
               <Button 
-                className="w-full mt-2" 
+                className="w-full" 
                 size="lg"
                 onClick={() => buttonState.action?.()}
               >
                 Retry
               </Button>
-            </div>
+              <div className="text-left text-red-400 text-sm mt-2 leading-relaxed break-words">
+                {machineError}
+              </div>
+            </>
           ) : buttonState.text === 'Purchase' ? (
             <PurchaseSlider
               songTitle={song.title}
-              price={10}
+              packagePrice={2}
+              packageCredits={2}
               onPurchase={() => buttonState.action?.()}
               isPurchasing={buttonState.disabled}
             >
@@ -235,20 +238,14 @@ export function SongDetailPage() {
               </Button>
             </PurchaseSlider>
           ) : buttonState.text === 'Download' ? (
-            <DownloadSlider
-              songTitle={song.title}
-              onDownload={() => buttonState.action?.()}
-              isDecrypting={buttonState.disabled}
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={() => buttonState.action?.()}
+              disabled={buttonState.disabled}
             >
-              <Button 
-                className="w-full" 
-                size="lg"
-                variant="secondary"
-                disabled={buttonState.disabled}
-              >
-                {buttonState.text}
-              </Button>
-            </DownloadSlider>
+              {buttonState.disabled ? 'Decrypting...' : 'Download'}
+            </Button>
           ) : (
             <Button 
               className="w-full" 

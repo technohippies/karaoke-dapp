@@ -33,7 +33,79 @@ export const songServices = {
     return { hasAccess: false };
   }),
 
-  purchaseSong: fromPromise(async ({ input }: { input: SongContext }) => {
+  approveUSDC: fromPromise(async ({ input }: { input: SongContext }) => {
+    const context = input;
+    if (!context.userAddress) {
+      throw new Error('No user address');
+    }
+
+    // Get the credit pack price in USDC
+    const packPrice = await readContract(wagmiConfig, {
+      address: MUSIC_STORE_ADDRESS,
+      abi: MusicStoreV2ABI,
+      functionName: 'SONG_PACK_PRICE',
+    });
+
+    console.log('Credit pack price (USDC wei):', packPrice);
+    
+    // Define USDC contract ABI (minimal)
+    const USDC_ABI = [
+      {
+        name: 'approve',
+        type: 'function',
+        inputs: [
+          { name: 'spender', type: 'address' },
+          { name: 'amount', type: 'uint256' }
+        ],
+        outputs: [{ type: 'bool' }],
+        stateMutability: 'nonpayable'
+      },
+      {
+        name: 'allowance',
+        type: 'function',
+        inputs: [
+          { name: 'owner', type: 'address' },
+          { name: 'spender', type: 'address' }
+        ],
+        outputs: [{ type: 'uint256' }],
+        stateMutability: 'view'
+      }
+    ] as const;
+    
+    // Check current allowance
+    const allowance = await readContract(wagmiConfig, {
+      address: CONTRACTS.baseSepolia.usdc,
+      abi: USDC_ABI,
+      functionName: 'allowance',
+      args: [context.userAddress as `0x${string}`, MUSIC_STORE_ADDRESS],
+    });
+    
+    console.log('Current USDC allowance:', allowance);
+    
+    // Only approve if allowance is insufficient
+    if (allowance < packPrice) {
+      console.log('Approving USDC spending...');
+      const approveHash = await writeContract(wagmiConfig, {
+        address: CONTRACTS.baseSepolia.usdc,
+        abi: USDC_ABI,
+        functionName: 'approve',
+        args: [MUSIC_STORE_ADDRESS, packPrice],
+      });
+      
+      await waitForTransactionReceipt(wagmiConfig, {
+        hash: approveHash,
+        confirmations: 1,
+      });
+      
+      console.log('USDC approved');
+      return { approved: true, hash: approveHash };
+    } else {
+      console.log('USDC already approved');
+      return { approved: false, hash: null };
+    }
+  }),
+
+  purchaseAndUnlock: fromPromise(async ({ input }: { input: SongContext }) => {
     const context = input;
     if (!context.userAddress) {
       throw new Error('No user address');
@@ -50,70 +122,9 @@ export const songServices = {
 
       console.log('User credits:', credits);
 
-      // If no credits, need to buy a credit pack with USDC
+      // If no credits, buy a credit pack (assumes USDC is already approved)
       if (credits === 0n) {
-        console.log('No credits, need to buy credit pack with USDC...');
-        
-        // Get the credit pack price in USDC
-        const packPrice = await readContract(wagmiConfig, {
-          address: MUSIC_STORE_ADDRESS,
-          abi: MusicStoreV2ABI,
-          functionName: 'SONG_PACK_PRICE',
-        });
-
-        console.log('Credit pack price (USDC wei):', packPrice);
-        
-        // Define USDC contract ABI (minimal)
-        const USDC_ABI = [
-          {
-            name: 'approve',
-            type: 'function',
-            inputs: [
-              { name: 'spender', type: 'address' },
-              { name: 'amount', type: 'uint256' }
-            ],
-            outputs: [{ type: 'bool' }],
-            stateMutability: 'nonpayable'
-          },
-          {
-            name: 'allowance',
-            type: 'function',
-            inputs: [
-              { name: 'owner', type: 'address' },
-              { name: 'spender', type: 'address' }
-            ],
-            outputs: [{ type: 'uint256' }],
-            stateMutability: 'view'
-          }
-        ] as const;
-        
-        // Check current allowance
-        const allowance = await readContract(wagmiConfig, {
-          address: CONTRACTS.baseSepolia.usdc,
-          abi: USDC_ABI,
-          functionName: 'allowance',
-          args: [context.userAddress as `0x${string}`, MUSIC_STORE_ADDRESS],
-        });
-        
-        console.log('Current USDC allowance:', allowance);
-        
-        // If allowance is insufficient, approve USDC spending
-        if (allowance < packPrice) {
-          console.log('Approving USDC spending...');
-          const approveHash = await writeContract(wagmiConfig, {
-            address: CONTRACTS.baseSepolia.usdc,
-            abi: USDC_ABI,
-            functionName: 'approve',
-            args: [MUSIC_STORE_ADDRESS, packPrice],
-          });
-          
-          await waitForTransactionReceipt(wagmiConfig, {
-            hash: approveHash,
-            confirmations: 1,
-          });
-          
-          console.log('USDC approved');
-        }
+        console.log('No credits, buying credit pack...');
 
         // Buy credit pack (this will pull USDC)
         const hash = await writeContract(wagmiConfig, {
@@ -239,61 +250,131 @@ export const songServices = {
 
   createSession: fromPromise(async ({ input }: { input: SongContext }) => {
     const context = input;
+    console.log('🔐 createSession started for user:', context.userAddress);
+    
     if (!context.userAddress) {
+      console.error('❌ No user address provided');
       throw new Error('No user address');
     }
 
-    const encryptionService = new EncryptionService();
-    await encryptionService.connect();
+    try {
+      console.log('🔗 Connecting to encryption service...');
+      const encryptionService = new EncryptionService();
+      await encryptionService.connect();
+      console.log('✅ Encryption service connected');
 
-    const sessionSigs = await encryptionService.getSessionSigs(
-      context.userAddress as `0x${string}`
-    );
+      console.log('📝 Getting session signatures...');
+      const sessionSigs = await encryptionService.getSessionSigs();
+      console.log('✅ Session signatures obtained:', Object.keys(sessionSigs).length, 'signatures');
 
-    // Store session for future use
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionSigs));
+      // Store session for future use
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionSigs));
+      console.log('💾 Session stored in localStorage');
 
-    return sessionSigs;
+      return sessionSigs;
+    } catch (error) {
+      console.error('❌ createSession failed:', error);
+      throw new Error(`Session creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }),
 
   decryptMidi: fromPromise(async ({ input }: { input: SongContext }) => {
     const context = input;
+    console.log('🔓 decryptMidi started with context:', {
+      songId: context.songId,
+      encryptedCid: context.encryptedCid,
+      hasSessionSigs: !!context.sessionSigs,
+      userAddress: context.userAddress
+    });
+
     if (!context.encryptedCid || !context.sessionSigs) {
+      console.error('❌ Missing required data:', {
+        hasEncryptedCid: !!context.encryptedCid,
+        hasSessionSigs: !!context.sessionSigs
+      });
       throw new Error('Missing encrypted CID or session signatures');
     }
 
-    const encryptionService = new EncryptionService();
-    await encryptionService.connect();
+    // Check if this is a mock encrypted CID (development mode)
+    if (context.encryptedCid.startsWith('encrypted-')) {
+      console.log('🧪 Using mock encrypted CID for development:', context.encryptedCid);
+      // Return mock MIDI data for development
+      const mockMidiData = new Uint8Array([
+        0x4d, 0x54, 0x68, 0x64, // "MThd"
+        0x00, 0x00, 0x00, 0x06, // Header length
+        0x00, 0x00, // Format type 0
+        0x00, 0x01, // 1 track
+        0x00, 0x60, // 96 ticks per quarter note
+        0x4d, 0x54, 0x72, 0x6b, // "MTrk"
+        0x00, 0x00, 0x00, 0x04, // Track length
+        0x00, 0xff, 0x2f, 0x00  // End of track
+      ]);
 
-    // Fetch encrypted data from IPFS/AIOZ
-    const response = await fetch(`https://gateway.pinata.cloud/ipfs/${context.encryptedCid}`);
-    const encryptedData = await response.json();
+      // Get audio and lyrics URLs from database
+      const dbService = new DatabaseService();
+      const songData = await dbService.getSongById(context.songId);
 
-    // Decrypt using Lit Protocol
-    const decryptedMidi = await encryptionService.decryptWithAction(
-      encryptedData,
-      context.sessionSigs,
-      context.songId,
-      context.userAddress as `0x${string}`
-    );
+      if (!songData) {
+        throw new Error('Song not found');
+      }
 
-    // Get audio and lyrics URLs from database
-    const dbService = new DatabaseService();
-    const songData = await dbService.getSongById(context.songId);
+      const audioUrl = songData.stems?.vocals || '';
+      const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
 
-    if (!songData) {
-      throw new Error('Song not found');
+      console.log('✅ Mock MIDI decryption successful:', {
+        midiSize: mockMidiData.length,
+        audioUrl,
+        lyricsUrl
+      });
+
+      return {
+        midiData: mockMidiData,
+        audioUrl,
+        lyricsUrl,
+      };
     }
 
-    // Generate URLs based on song data
-    const audioUrl = songData.stems?.vocals || ''; // Use vocals stem as audio
-    const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
+    try {
+      const encryptionService = new EncryptionService();
+      await encryptionService.connect();
 
-    return {
-      midiData: new Uint8Array(decryptedMidi),
-      audioUrl,
-      lyricsUrl,
-    };
+      // Fetch encrypted data from IPFS/AIOZ
+      const response = await fetch(`https://gateway.pinata.cloud/ipfs/${context.encryptedCid}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch encrypted data: ${response.status} ${response.statusText}`);
+      }
+      
+      const encryptedData = await response.json();
+
+      // Decrypt using Lit Protocol
+      const decryptedMidi = await encryptionService.decryptWithAction(
+        encryptedData,
+        context.sessionSigs,
+        context.songId,
+        context.userAddress as `0x${string}`
+      );
+
+      // Get audio and lyrics URLs from database
+      const dbService = new DatabaseService();
+      const songData = await dbService.getSongById(context.songId);
+
+      if (!songData) {
+        throw new Error('Song not found');
+      }
+
+      const audioUrl = songData.stems?.vocals || '';
+      const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
+
+      return {
+        midiData: new Uint8Array(decryptedMidi),
+        audioUrl,
+        lyricsUrl,
+      };
+    } catch (error) {
+      console.error('MIDI decryption failed:', error);
+      throw new Error(`MIDI decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }),
 
   cacheMidi: fromPromise(async ({ input }: { input: SongContext }) => {

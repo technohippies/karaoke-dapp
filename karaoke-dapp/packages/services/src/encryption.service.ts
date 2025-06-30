@@ -1,6 +1,12 @@
 import { LitNodeClient } from '@lit-protocol/lit-node-client';
 import { encryptString, decryptToString } from '@lit-protocol/encryption';
 import type { SessionSigsMap } from '@lit-protocol/types';
+import { LIT_NETWORK, LIT_ABILITY } from '@lit-protocol/constants';
+import { 
+  LitActionResource, 
+  createSiweMessageWithRecaps, 
+  generateAuthSig 
+} from '@lit-protocol/auth-helpers';
 import { ethers } from 'ethers';
 
 export interface EncryptionResult {
@@ -15,7 +21,7 @@ export class EncryptionService {
 
   constructor() {
     this.litNodeClient = new LitNodeClient({
-      litNetwork: 'datil', // production network
+      litNetwork: LIT_NETWORK.Datil, // production network
       debug: false
     });
   }
@@ -128,53 +134,63 @@ export class EncryptionService {
   /**
    * Get session signatures for extended access without repeated signing
    */
-  async getSessionSigs(userAddress: `0x${string}`): Promise<SessionSigsMap> {
+  async getSessionSigs(): Promise<SessionSigsMap> {
     if (!this.connected) {
       await this.connect();
     }
 
+    // Clear any corrupted stored session data
+    console.log('🧹 Clearing any existing Lit session data...');
+    localStorage.removeItem('lit-session-key');
+    localStorage.removeItem('lit-wallet-sig');
+    localStorage.removeItem('lit-session-sigs');
+    
     // Create a wallet instance (in production, this would use the connected wallet)
     const provider = new ethers.BrowserProvider((window as any).ethereum);
-    const signer = await provider.getSigner();
+    const ethersSigner = await provider.getSigner();
 
-    const authNeededCallback = async (params: any) => {
-      const toSign = params.message || params.statement;
-      const signature = await signer.signMessage(toSign);
-      
-      return {
-        sig: signature,
-        derivedVia: 'web3.eth.personal.sign',
-        signedMessage: toSign,
-        address: userAddress,
-      };
-    };
-
+    console.log('🔐 Creating session signatures using proper Lit SDK approach...');
+    
     const sessionSigs = await this.litNodeClient.getSessionSigs({
       chain: 'base',
       expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24 hours
       resourceAbilityRequests: [
         {
-          resource: {
-            resource: '*',
-            resourcePrefix: 'lit-litaction',
-            getResourceKey: () => 'lit-litaction/*',
-            isValidLitAbility: () => true
-          } as any,
-          ability: 'lit-action-execution' as any
+          resource: new LitActionResource('*'),
+          ability: LIT_ABILITY.LitActionExecution,
         },
-        {
-          resource: {
-            resource: '*',
-            resourcePrefix: 'lit-accesscontrolcondition',
-            getResourceKey: () => 'lit-accesscontrolcondition/*',
-            isValidLitAbility: () => true
-          } as any,
-          ability: 'access-control-condition-decryption' as any
-        }
       ],
-      authNeededCallback,
-    });
+      authNeededCallback: async ({ resourceAbilityRequests, expiration, uri }) => {
+        console.log('🔐 authNeededCallback called with proper params:', {
+          resourceAbilityRequests: resourceAbilityRequests?.length || 0,
+          expiration,
+          uri
+        });
+        
+        // Create proper SIWE message using Lit SDK helper
+        const toSign = await createSiweMessageWithRecaps({
+          uri: uri!,
+          expiration: expiration!,
+          resources: resourceAbilityRequests!,
+          walletAddress: await ethersSigner.getAddress(),
+          nonce: await this.litNodeClient.getLatestBlockhash(),
+          litNodeClient: this.litNodeClient,
+        });
 
+        console.log('📝 Proper SIWE message created:', toSign.substring(0, 100) + '...');
+
+        // Generate auth signature using Lit SDK helper
+        const authSig = await generateAuthSig({
+          signer: ethersSigner,
+          toSign,
+        });
+
+        console.log('✅ Auth signature generated successfully');
+        return authSig;
+      },
+    });
+    
+    console.log('✅ Session signatures created successfully with proper SIWE format');
     return sessionSigs;
   }
 
