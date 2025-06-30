@@ -134,8 +134,7 @@ export const songServices = {
       // Immediately fetch and cache the content after unlocking
       console.log('📦 Auto-downloading content after unlock...');
       
-      // Get encrypted CID (for now, using mock)
-      const encryptedCid = `encrypted-${context.songId}`;
+      // Get encrypted CID (for now, using mock) - used for development mode check
       
       // Get audio and lyrics URLs from database
       const dbService = new DatabaseService();
@@ -148,9 +147,36 @@ export const songServices = {
       const audioUrl = songData.stems?.vocals || '';
       const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
 
-      // Generate mock MIDI data (since we're in development mode)
-      const { createMockMidiData } = await import('../../utils/mock-midi');
-      const mockMidiData = createMockMidiData();
+      // Load real MIDI data based on song ID
+      let midiData: Uint8Array;
+      
+      try {
+        // Map song IDs to MIDI files
+        const midiFiles: { [key: number]: string } = {
+          1: '/test-data/midi/demo-song-1/lorde-royals-piano.mid',
+          2: '/test-data/midi/demo-song-1/abba-dancing-queen-piano.mid'
+        };
+        
+        const midiPath = midiFiles[context.songId];
+        if (!midiPath) {
+          console.log('🎵 No MIDI file found for song ID, using mock data');
+          const { createMockMidiData } = await import('../../utils/mock-midi');
+          midiData = createMockMidiData();
+        } else {
+          console.log('🎵 Loading real MIDI file:', midiPath);
+          const response = await fetch(midiPath);
+          if (!response.ok) {
+            throw new Error(`Failed to load MIDI file: ${response.status}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          midiData = new Uint8Array(arrayBuffer);
+          console.log('✅ Real MIDI loaded:', { size: midiData.length, songId: context.songId });
+        }
+      } catch (error) {
+        console.error('❌ Failed to load real MIDI, falling back to mock:', error);
+        const { createMockMidiData } = await import('../../utils/mock-midi');
+        midiData = createMockMidiData();
+      }
 
       // Cache the data immediately
       const { openDB } = await import('idb');
@@ -162,9 +188,9 @@ export const songServices = {
         },
       });
 
-      const cacheKey = `midi-song-${context.songId}-v3`;
+      const cacheKey = `midi-song-${context.songId}-v4`;
       await db.put('midi-cache', {
-        midiData: mockMidiData,
+        midiData: midiData,
         audioUrl,
         lyricsUrl,
         timestamp: Date.now(),
@@ -174,7 +200,7 @@ export const songServices = {
 
       return { 
         tokenId: unlockHash,
-        midiData: mockMidiData,
+        midiData: midiData,
         audioUrl,
         lyricsUrl
       };
@@ -360,7 +386,7 @@ export const songServices = {
         },
       });
       
-      const cacheKey = `midi-song-${context.songId}-v3`; // Bumped version to force re-download
+      const cacheKey = `midi-song-${context.songId}-v4`; // Bumped version to force re-download
       const cachedData = await db.get(MIDI_CACHE_STORE, cacheKey);
       console.log('📦 Cached data found:', !!cachedData);
       
@@ -469,10 +495,7 @@ export const songServices = {
     // Check if this is a mock encrypted CID (development mode)
     if (context.encryptedCid.startsWith('encrypted-')) {
       console.log('🧪 Using mock encrypted CID for development:', context.encryptedCid);
-      // Import the mock MIDI generator
-      const { createMockMidiData } = await import('../../utils/mock-midi');
-      const mockMidiData = createMockMidiData();
-
+      
       // Get audio and lyrics URLs from database
       const dbService = new DatabaseService();
       const songData = await dbService.getSongById(context.songId);
@@ -484,13 +507,44 @@ export const songServices = {
       const audioUrl = songData.stems?.vocals || '';
       const lyricsUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(songData.title)}&artist_name=${encodeURIComponent(songData.artist)}&duration=${songData.duration}`;
 
-      console.log('✅ Mock MIDI decryption successful:', {
-        midiSize: mockMidiData.length,
+      // Load real MIDI data based on song ID
+      let midiData: Uint8Array;
+      
+      try {
+        // Map song IDs to MIDI files
+        const midiFiles: { [key: number]: string } = {
+          1: '/test-data/midi/demo-song-1/lorde-royals-piano.mid',
+          2: '/test-data/midi/demo-song-1/abba-dancing-queen-piano.mid'
+        };
+        
+        const midiPath = midiFiles[context.songId];
+        if (!midiPath) {
+          console.log('🎵 No MIDI file found for song ID, using mock data');
+          const { createMockMidiData } = await import('../../utils/mock-midi');
+          midiData = createMockMidiData();
+        } else {
+          console.log('🎵 Loading real MIDI file:', midiPath);
+          const response = await fetch(midiPath);
+          if (!response.ok) {
+            throw new Error(`Failed to load MIDI file: ${response.status}`);
+          }
+          const arrayBuffer = await response.arrayBuffer();
+          midiData = new Uint8Array(arrayBuffer);
+          console.log('✅ Real MIDI loaded:', { size: midiData.length, songId: context.songId });
+        }
+      } catch (error) {
+        console.error('❌ Failed to load real MIDI, falling back to mock:', error);
+        const { createMockMidiData } = await import('../../utils/mock-midi');
+        midiData = createMockMidiData();
+      }
+
+      console.log('✅ MIDI decryption successful:', {
+        midiSize: midiData.length,
         audioUrl,
         lyricsUrl
       });
 
-      // Cache the mock data immediately
+      // Cache the MIDI data immediately
       const db = await openDB('karaoke-cache', 1, {
         upgrade(db) {
           if (!db.objectStoreNames.contains(MIDI_CACHE_STORE)) {
@@ -499,18 +553,18 @@ export const songServices = {
         },
       });
 
-      const cacheKey = `midi-song-${context.songId}-v3`; // Bump version to force refresh
+      const cacheKey = `midi-song-${context.songId}-v4`; // Bump version to force refresh with real MIDI
       await db.put(MIDI_CACHE_STORE, {
-        midiData: mockMidiData,
+        midiData: midiData,
         audioUrl,
         lyricsUrl,
         timestamp: Date.now(),
       }, cacheKey);
       
-      console.log('💾 Mock MIDI data cached with key:', cacheKey);
+      console.log('💾 MIDI data cached with key:', cacheKey);
 
       return {
-        midiData: mockMidiData,
+        midiData: midiData,
         audioUrl,
         lyricsUrl,
       };
@@ -573,7 +627,7 @@ export const songServices = {
       },
     });
 
-    const cacheKey = `midi-song-${context.songId}-v3`; // Match version with checkCache
+    const cacheKey = `midi-song-${context.songId}-v4`; // Match version with checkCache
     await db.put(MIDI_CACHE_STORE, {
       midiData: context.midiData,
       audioUrl: context.audioUrl,

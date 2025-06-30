@@ -14,7 +14,21 @@ import type {
 
 /**
  * MIDI Player Service
- * Handles MIDI file parsing, scheduling, and playback with multiple instruments
+ * 
+ * Handles MIDI file parsing, scheduling, and playback with multiple instruments.
+ * Uses setTimeout-based scheduling for accurate timing instead of Tone.Transport.
+ * 
+ * Features:
+ * - Multi-track MIDI playback
+ * - Dynamic instrument loading
+ * - Play/pause/stop/seek controls
+ * - Volume control per track
+ * - Solo/mute functionality
+ * 
+ * @example
+ * const player = new MidiPlayerService();
+ * await player.load(midiData);
+ * await player.play();
  */
 export class MidiPlayerService implements MidiPlayer {
   private midi: Midi | null = null;
@@ -29,11 +43,11 @@ export class MidiPlayerService implements MidiPlayer {
     tempo: 120,
   };
   
-  private transport = Tone.Transport;
-  private pauseTime: number = 0;
-  private scheduledEvents: Tone.ToneEvent[] = [];
+  private scheduledEvents: number[] = []; // Timeout IDs
   private options: MidiPlayerOptions;
   private updateTimer: number | null = null;
+  private startTime: number = 0;
+  private pausedAt: number = 0;
   
   constructor(options: MidiPlayerOptions = {}) {
     this.options = {
@@ -44,28 +58,20 @@ export class MidiPlayerService implements MidiPlayer {
       onEnd: options.onEnd,
       onError: options.onError,
     };
-    
-    // Initialize transport settings
-    this.transport.loop = this.options.loop || false;
-    this.transport.loopEnd = '1m'; // Will be updated when MIDI is loaded
   }
   
   async load(midiData: Uint8Array): Promise<ParsedMidiData> {
     try {
       this.state.isLoading = true;
       
-      console.log('🎼 Loading MIDI data, size:', midiData.length);
-      console.log('🎼 First 16 bytes:', Array.from(midiData.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+      // Validate input
+      if (!midiData || midiData.length === 0) {
+        throw new Error('Invalid MIDI data: empty or null');
+      }
       
       // Parse MIDI data
       this.midi = new Midi(midiData);
       
-      console.log('🎼 MIDI parsed:', {
-        name: this.midi.name,
-        tracksCount: this.midi.tracks.length,
-        duration: this.midi.duration,
-        totalNotes: this.midi.tracks.reduce((sum, track) => sum + track.notes.length, 0)
-      });
       
       // Extract metadata
       const parsedData: ParsedMidiData = {
@@ -90,10 +96,6 @@ export class MidiPlayerService implements MidiPlayer {
       this.state.duration = parsedData.duration;
       this.state.tempo = parsedData.tempo;
       
-      // Set transport tempo
-      this.transport.bpm.value = parsedData.tempo;
-      this.transport.loopEnd = `${parsedData.duration}s`;
-      
       // Initialize instruments for tracks
       await this.initializeInstruments(parsedData);
       
@@ -111,48 +113,61 @@ export class MidiPlayerService implements MidiPlayer {
     }
   }
   
+  /**
+   * Start or resume playback
+   * @throws {Error} If no MIDI is loaded
+   */
   async play(): Promise<void> {
     if (!this.midi) {
       throw new Error('No MIDI loaded');
     }
     
-    console.log('🎹 MidiPlayerService.play() called');
-    
     // Start audio context if needed
     if (Tone.context.state === 'suspended') {
-      console.log('🔊 Starting Tone.js audio context');
       await Tone.start();
     }
     
-    console.log('🎼 Starting transport, scheduled events:', this.scheduledEvents.length);
+    // Clear any existing scheduled events
+    this.clearScheduledEvents();
     
+    // Calculate start offset
+    let startOffset = 0;
     if (this.state.isPaused) {
-      // Resume from pause
-      this.transport.start('+0', this.pauseTime);
+      startOffset = this.pausedAt;
     } else {
-      // Start from beginning or current position
-      this.transport.start('+0', this.state.currentTime);
+      startOffset = this.state.currentTime * 1000; // Convert to ms
     }
+    
+    
+    this.startTime = Date.now() - startOffset;
+    
+    // Schedule all notes using setTimeout
+    this.scheduleNotesWithTimeout(startOffset);
     
     this.state.isPlaying = true;
     this.state.isPaused = false;
     this.startUpdateTimer();
   }
   
+  /**
+   * Pause playback (can be resumed)
+   */
   pause(): void {
     if (!this.state.isPlaying) return;
     
-    this.pauseTime = this.transport.seconds;
-    this.transport.pause();
+    this.pausedAt = Date.now() - this.startTime;
+    this.clearScheduledEvents();
     
     this.state.isPlaying = false;
     this.state.isPaused = true;
     this.stopUpdateTimer();
   }
   
+  /**
+   * Stop playback and reset to beginning
+   */
   stop(): void {
-    this.transport.stop();
-    this.transport.seconds = 0;
+    this.clearScheduledEvents();
     
     // Stop all instruments
     this.instruments.forEach(instrument => instrument.stop());
@@ -160,11 +175,16 @@ export class MidiPlayerService implements MidiPlayer {
     this.state.isPlaying = false;
     this.state.isPaused = false;
     this.state.currentTime = 0;
+    this.pausedAt = 0;
     this.stopUpdateTimer();
     
     this.options.onTimeUpdate?.(0);
   }
   
+  /**
+   * Seek to a specific time in seconds
+   * @param time - Time in seconds
+   */
   seek(time: number): void {
     const wasPlaying = this.state.isPlaying;
     
@@ -173,7 +193,6 @@ export class MidiPlayerService implements MidiPlayer {
     }
     
     this.state.currentTime = Math.max(0, Math.min(time, this.state.duration));
-    this.transport.seconds = this.state.currentTime;
     
     if (wasPlaying) {
       this.play();
@@ -182,6 +201,10 @@ export class MidiPlayerService implements MidiPlayer {
     this.options.onTimeUpdate?.(this.state.currentTime);
   }
   
+  /**
+   * Set master volume in decibels
+   * @param volume - Volume in dB (typically -60 to 0)
+   */
   setVolume(volume: number): void {
     this.options.volume = volume;
     this.instruments.forEach(instrument => {
@@ -189,6 +212,11 @@ export class MidiPlayerService implements MidiPlayer {
     });
   }
   
+  /**
+   * Configure individual track settings
+   * @param trackIndex - Track index
+   * @param config - Partial track configuration
+   */
   setTrackConfig(trackIndex: number, config: Partial<TrackConfig>): void {
     const currentConfig = this.trackConfigs.get(trackIndex) || {
       enabled: true,
@@ -202,15 +230,24 @@ export class MidiPlayerService implements MidiPlayer {
     
     // Re-schedule notes if needed
     if (this.midi) {
-      this.clearScheduledEvents();
-      this.scheduleNotes();
+      // Don't reschedule during playback
+      if (this.state.isPlaying) {
+        console.warn('Cannot change track config during playback');
+      }
     }
   }
   
+  /**
+   * Get current player state
+   * @returns Copy of the current state
+   */
   getState(): MidiPlayerState {
     return { ...this.state };
   }
   
+  /**
+   * Clean up resources
+   */
   dispose(): void {
     this.stop();
     this.clearScheduledEvents();
@@ -242,9 +279,14 @@ export class MidiPlayerService implements MidiPlayer {
   }
   
   private scheduleNotes(): void {
+    // This method is called during load to prepare the data
+    // Actual scheduling happens in scheduleNotesWithTimeout
+    if (!this.midi) return;
+  }
+  
+  private scheduleNotesWithTimeout(startOffset: number): void {
     if (!this.midi) return;
     
-    console.log('📋 Scheduling notes for', this.midi.tracks.length, 'tracks');
     
     this.midi.tracks.forEach((track, trackIndex) => {
       const config = this.trackConfigs.get(trackIndex);
@@ -268,33 +310,42 @@ export class MidiPlayerService implements MidiPlayer {
         return;
       }
       
-      console.log(`🎵 Track ${trackIndex} "${track.name}": ${track.notes.length} notes, instrument: ${instrumentType}`);
       
-      // Schedule each note
+      // Schedule each note with setTimeout
       track.notes.forEach(note => {
-        const noteEvent: NoteEvent = {
-          note: note.name,
-          midi: note.midi,
-          time: note.time,
-          duration: note.duration,
-          velocity: note.velocity * (config?.volume ?? 1),
-          channel: track.channel ?? 0,
-        };
+        const noteTimeMs = note.time * 1000;
         
-        const event = new Tone.ToneEvent((time) => {
-          instrument.playNote(noteEvent, time);
-        }, note.time);
-        
-        event.start(0);
-        this.scheduledEvents.push(event);
+        // Only schedule notes that haven't been played yet
+        if (noteTimeMs >= startOffset) {
+          const delay = noteTimeMs - startOffset;
+          
+          const timeoutId = setTimeout(() => {
+            if (this.state.isPlaying) {
+              const noteEvent: NoteEvent = {
+                note: note.name,
+                midi: note.midi,
+                time: note.time,
+                duration: note.duration,
+                velocity: note.velocity * (config?.volume ?? 1),
+                channel: track.channel ?? 0,
+              };
+              
+              // Play the note immediately (we're already at the right time)
+              instrument.playNote(noteEvent, Tone.now());
+            }
+          }, delay) as unknown as number;
+          
+          this.scheduledEvents.push(timeoutId);
+        }
       });
     });
+    
   }
   
   private clearScheduledEvents(): void {
-    this.scheduledEvents.forEach(event => {
-      event.stop();
-      event.dispose();
+    // Clear all setTimeout events
+    this.scheduledEvents.forEach(timeoutId => {
+      clearTimeout(timeoutId);
     });
     this.scheduledEvents = [];
   }
@@ -318,7 +369,7 @@ export class MidiPlayerService implements MidiPlayer {
     
     const update = () => {
       if (this.state.isPlaying) {
-        this.state.currentTime = this.transport.seconds;
+        this.state.currentTime = (Date.now() - this.startTime) / 1000;
         this.options.onTimeUpdate?.(this.state.currentTime);
         
         // Check if reached end

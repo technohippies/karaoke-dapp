@@ -97,21 +97,32 @@ function KaraokeContent() {
         // Fetch song details and lyrics
         if (numericSongId) {
           setIsLoadingLyrics(true)
-          const dbService = new DatabaseService()
           const lyricsService = new LyricsService()
           
-          const song = await dbService.getSongById(numericSongId)
+          let lyricsData = null;
           
-          if (song) {
-            // Try to fetch lyrics from LRCLIB
-            // Fetch lyrics from LRCLIB
-            const lyricsData = await lyricsService.getLyricsForSong(
-              song.lrclib_id,
-              song.title,
-              song.artist,
-              '', // album name not stored in our DB
-              song.duration
-            )
+          // First try to use lyrics URL from navigation state
+          if (navigationState?.lyricsUrl) {
+            console.log('🎵 Using lyrics URL from navigation state:', navigationState.lyricsUrl)
+            lyricsData = await lyricsService.getLyricsFromUrl(navigationState.lyricsUrl)
+          }
+          
+          // If no lyrics URL or fetch failed, try fetching by song details
+          if (!lyricsData && numericSongId) {
+            const dbService = new DatabaseService()
+            const songData = await dbService.getSongById(numericSongId)
+            
+            if (songData) {
+              // Fetch lyrics from LRCLIB
+              lyricsData = await lyricsService.getLyricsForSong(
+                songData.lrclib_id,
+                songData.title,
+                songData.artist,
+                '', // album name not stored in our DB
+                songData.duration
+              )
+            }
+          }
             // Process lyrics data
             
             if (lyricsData && lyricsData.syncedLyrics) {
@@ -129,7 +140,7 @@ function KaraokeContent() {
             } else if (lyricsData && lyricsData.plainLyrics) {
               // Fall back to plain lyrics with estimated timing
               const lines = lyricsData.plainLyrics.split('\n').filter(line => line.trim())
-              const timePerLine = (song.duration * 1000) / lines.length
+              const timePerLine = (lyricsData.duration * 1000) / lines.length
               const karaokeLines: KaraokeLyricLine[] = lines.map((line, index) => ({
                 id: index.toString(),
                 text: line,
@@ -151,7 +162,7 @@ function KaraokeContent() {
               setLyrics(karaokeLines)
               setLyricsWithScores(karaokeLines)
             }
-          }
+          
           setIsLoadingLyrics(false)
         }
       } catch (error) {
@@ -278,6 +289,37 @@ function KaraokeContent() {
     await checkMicrophonePermission()
   }
   
+  
+  // Only show loading state if we're actually loading and don't have navigation state
+  // If we have navigation state with lyrics URL, we should get lyrics from cache immediately
+  if (isLoadingLyrics && !navigationState?.lyricsUrl) {
+    return (
+      <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+        <Header 
+          onAccountClick={handleAccountClick}
+          leftContent={
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              className="text-white/80 hover:text-white"
+            >
+              <X size={24} />
+            </Button>
+          }
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-pulse mb-4">
+              <div className="h-8 w-64 bg-white/10 rounded mx-auto mb-2"></div>
+              <div className="h-6 w-48 bg-white/10 rounded mx-auto"></div>
+            </div>
+            <p className="text-white/60">Loading lyrics...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">

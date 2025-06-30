@@ -25,6 +25,7 @@
     "@tableland/sdk": "^7.2.1",
     "@tanstack/react-query": "^5.51.1",
     "@tonejs/midi": "^2.0.28",
+    "@tonejs/piano": "^0.2.1",
     "@xstate/react": "^6.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

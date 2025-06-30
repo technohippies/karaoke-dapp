@@ -6,8 +6,6 @@ import { Spinner } from "../ui/spinner"
 interface KaraokeScoreProps {
   isLoading?: boolean
   score?: number
-  totalScore?: number
-  accuracy?: number
   songTitle?: string
   artist?: string
   onPractice?: () => void
@@ -17,26 +15,23 @@ interface KaraokeScoreProps {
 export function KaraokeScore({
   isLoading = false,
   score = 0,
-  totalScore = 100,
-  accuracy = 0,
   songTitle,
   artist,
   onPractice,
   className
 }: KaraokeScoreProps) {
-  const percentage = totalScore > 0 ? Math.round((score / totalScore) * 100) : 0
   
-  const getScoreColor = (percentage: number) => {
-    if (percentage >= 90) return "text-green-400"
-    if (percentage >= 70) return "text-yellow-400"
-    if (percentage >= 50) return "text-orange-400"
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-green-400"
+    if (score >= 70) return "text-yellow-400"
+    if (score >= 50) return "text-orange-400"
     return "text-red-400"
   }
 
-  const getScoreMessage = (percentage: number) => {
-    if (percentage >= 90) return "Outstanding!"
-    if (percentage >= 70) return "Great job!"
-    if (percentage >= 50) return "Good effort!"
+  const getScoreMessage = (score: number) => {
+    if (score >= 90) return "Outstanding!"
+    if (score >= 70) return "Great job!"
+    if (score >= 50) return "Good effort!"
     return "Keep practicing!"
   }
 
@@ -112,10 +107,10 @@ export function KaraokeScore({
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
-                className={getScoreColor(percentage)}
+                className={getScoreColor(score)}
                 strokeDasharray={283}
                 initial={{ strokeDashoffset: 283 }}
-                animate={{ strokeDashoffset: 283 - (283 * percentage) / 100 }}
+                animate={{ strokeDashoffset: 283 - (283 * score) / 100 }}
                 transition={{ delay: 0.6, duration: 1.5, ease: "easeOut" }}
               />
             </svg>
@@ -124,20 +119,12 @@ export function KaraokeScore({
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <motion.div 
-                  className={cn("text-4xl font-bold", getScoreColor(percentage))}
+                  className={cn("text-4xl font-bold", getScoreColor(score))}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1.2 }}
                 >
-                  {percentage}%
-                </motion.div>
-                <motion.div 
-                  className="text-sm text-neutral-400"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1.4 }}
-                >
-                  {score}/{totalScore}
+                  {score}
                 </motion.div>
               </div>
             </div>
@@ -150,14 +137,9 @@ export function KaraokeScore({
             animate={{ opacity: 1 }}
             transition={{ delay: 1.6 }}
           >
-            <h3 className={cn("text-2xl font-semibold", getScoreColor(percentage))}>
-              {getScoreMessage(percentage)}
+            <h3 className={cn("text-2xl font-semibold", getScoreColor(score))}>
+              {getScoreMessage(score)}
             </h3>
-            {accuracy > 0 && (
-              <p className="text-neutral-400">
-                Accuracy: {Math.round(accuracy * 100)}%
-              </p>
-            )}
           </motion.div>
         </motion.div>
       </div>

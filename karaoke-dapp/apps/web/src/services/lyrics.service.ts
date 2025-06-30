@@ -10,7 +10,16 @@ interface LRCLIBResponse {
 }
 
 export class LyricsService {
+  private static instance: LyricsService | null = null;
   private baseUrl = 'https://lrclib.net/api';
+  private cache = new Map<string, LRCLIBResponse>();
+  
+  constructor() {
+    if (LyricsService.instance) {
+      return LyricsService.instance;
+    }
+    LyricsService.instance = this;
+  }
 
   /**
    * Fetch lyrics by LRCLIB ID
@@ -78,15 +87,62 @@ export class LyricsService {
     albumName: string = '',
     duration: number
   ): Promise<LRCLIBResponse | null> {
+    // Create cache key
+    const cacheKey = lrclibId ? `id:${lrclibId}` : `search:${trackName}:${artistName}:${duration}`;
+    
+    // Check cache first
+    if (this.cache.has(cacheKey)) {
+      console.log('🎵 Returning cached lyrics for:', cacheKey);
+      return this.cache.get(cacheKey)!;
+    }
+    
+    let result: LRCLIBResponse | null = null;
+    
     // Try fetching by ID first if available
     if (lrclibId) {
-      const lyricsById = await this.getLyricsById(lrclibId);
-      if (lyricsById) {
-        return lyricsById;
+      result = await this.getLyricsById(lrclibId);
+      if (result) {
+        this.cache.set(cacheKey, result);
+        return result;
       }
     }
 
     // Fall back to search
-    return await this.searchLyrics(trackName, artistName, albumName, duration);
+    result = await this.searchLyrics(trackName, artistName, albumName, duration);
+    if (result) {
+      this.cache.set(cacheKey, result);
+    }
+    return result;
+  }
+  
+  /**
+   * Fetch lyrics from URL (for when we already have the URL from navigation state)
+   */
+  async getLyricsFromUrl(url: string): Promise<LRCLIBResponse | null> {
+    // Check cache first
+    const cacheKey = `url:${url}`;
+    if (this.cache.has(cacheKey)) {
+      console.log('🎵 Returning cached lyrics from URL');
+      return this.cache.get(cacheKey)!;
+    }
+    
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn(`Lyrics not found at URL: ${url}`);
+          return null;
+        }
+        throw new Error(`Failed to fetch lyrics: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      this.cache.set(cacheKey, result);
+      return result;
+    } catch (error) {
+      console.error('Error fetching lyrics from URL:', error);
+      return null;
+    }
   }
 }

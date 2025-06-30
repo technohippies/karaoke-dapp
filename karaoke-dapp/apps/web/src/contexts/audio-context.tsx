@@ -61,7 +61,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   // Initialize MIDI player separately to ensure it's ready when needed
   useEffect(() => {
     if (!midiPlayerRef.current) {
-      console.log('🎹 Initializing MIDI player')
       midiPlayerRef.current = new MidiPlayerService({
         volume: midiVolume,
         onTimeUpdate: (time) => {

@@ -1,90 +1,94 @@
 import * as Tone from 'tone';
+import { Piano } from '@tonejs/piano';
 import { BaseInstrument } from './base-instrument';
 import type { InstrumentType, NoteEvent } from '../../types/midi.types';
 
 /**
- * Piano instrument implementation using Tone.js PolySynth
- * Optimized for realistic piano sound with proper ADSR envelope
+ * Piano instrument implementation using @tonejs/piano
+ * High-quality multi-sampled piano sounds
  */
 export class PianoInstrument extends BaseInstrument {
   type: InstrumentType = 'piano';
-  private synth: Tone.PolySynth | null = null;
+  private piano: Piano | null = null;
   
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
     
-    // Create a polyphonic synth with AMSynth voices for richer piano sound
-    this.synth = new Tone.PolySynth({
-      maxPolyphony: 88, // Full piano range
-      voice: Tone.AMSynth,
-      options: {
-        harmonicity: 2.5,
-        oscillator: {
-          type: 'fatsine' as any,
-        },
-        envelope: {
-          attack: 0.003,
-          decay: 0.5,
-          sustain: 0.2,
-          release: 1.5,
-        },
-        modulation: {
-          type: 'square',
-        },
-        modulationEnvelope: {
-          attack: 0.002,
-          decay: 0.2,
-          sustain: 0,
-          release: 0.2,
-        },
-      },
-    });
-    
-    // Apply initial volume
-    this.applyVolume();
-    
-    this.isInitialized = true;
+    try {
+      await Tone.start();
+
+      // Create and load the piano instrument
+      this.piano = new Piano();
+      await this.piano.load();
+
+      // Connect to output and apply initial volume
+      this.piano.toDestination();
+      this.applyVolume();
+      
+      this.isInitialized = true;
+    } catch (error) {
+      console.error('❌ Failed to initialize piano:', error);
+      throw error;
+    }
   }
   
   playNote(note: NoteEvent, when: number): void {
     this.ensureInitialized();
-    if (!this.synth) return;
+    if (!this.piano) return;
     
-    // Scale velocity for more dynamic range
-    const scaledVelocity = note.velocity * 0.8;
-    
-    this.synth.triggerAttackRelease(
-      note.note,
-      note.duration,
-      when,
-      scaledVelocity
-    );
+    try {
+      // Scale velocity for more dynamic range
+      const scaledVelocity = Math.max(0, Math.min(1, note.velocity * 0.8));
+      
+      // Use the piano's keyDown/keyUp methods for note playback
+      this.piano.keyDown({
+        note: note.note,
+        time: when,
+        velocity: scaledVelocity
+      });
+      
+      // Schedule the note off event
+      this.piano.keyUp({
+        note: note.note,
+        time: when + note.duration,
+        velocity: 0
+      });
+    } catch (error) {
+      // Log error but don't throw to prevent playback interruption
+      console.error(`Failed to play note ${note.note}:`, error);
+    }
   }
   
   stop(): void {
-    if (this.synth) {
-      this.synth.releaseAll();
+    if (this.piano) {
+      // Stop all currently playing notes
+      this.piano.stopAll();
     }
   }
   
   dispose(): void {
-    if (this.synth) {
-      this.synth.dispose();
-      this.synth = null;
+    if (this.piano) {
+      this.piano.dispose();
+      this.piano = null;
     }
     this.isInitialized = false;
   }
   
   connect(destination: Tone.ToneAudioNode): void {
     this.ensureInitialized();
-    if (this.synth) {
-      this.synth.connect(destination);
+    if (this.piano) {
+      this.piano.connect(destination);
     }
   }
   
   protected applyVolume(): void {
-    if (this.synth) {
-      this.synth.volume.value = this._volume;
+    if (this.piano) {
+      // Adjust all component volumes based on the main volume
+      const volumeDB = this._volume;
+      this.piano.strings.value = volumeDB;
+      this.piano.harmonics.value = volumeDB - 6; // Slightly quieter harmonics
+      this.piano.keybed.value = volumeDB - 12; // Quieter keybed clicks
+      this.piano.pedal.value = volumeDB - 8; // Quieter pedal sounds
     }
   }
   
@@ -92,17 +96,23 @@ export class PianoInstrument extends BaseInstrument {
    * Piano-specific methods for future enhancements
    */
   
-  // Set pedal (sustain) - for future implementation
+  /**
+   * Set pedal (sustain) - for future implementation
+   */
   setSustainPedal(_on: boolean): void {
-    // TODO: Implement sustain pedal logic
+    // TODO: Implement sustain pedal logic using @tonejs/piano pedal methods
   }
   
-  // Adjust piano brightness/tone
+  /**
+   * Adjust piano brightness/tone by modifying harmonics volume
+   * @param value - Brightness level (0-1)
+   */
   setBrightness(value: number): void {
-    if (this.synth) {
-      // Adjust harmonicity for brightness
-      // @ts-ignore - accessing voice options
-      this.synth.voice.harmonicity.value = 2.5 + (value * 2);
+    if (this.piano) {
+      // Adjust harmonics volume for brightness effect
+      // Higher harmonics = brighter sound
+      const harmonicsBoost = value * 6; // 0-6dB boost for harmonics
+      this.piano.harmonics.value = this._volume - 6 + harmonicsBoost;
     }
   }
 }

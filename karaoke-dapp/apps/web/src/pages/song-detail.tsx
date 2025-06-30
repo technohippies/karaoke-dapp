@@ -5,17 +5,8 @@ import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
 import { useSongMachine } from "../machines"
 import { useAccount, useConnect } from "wagmi"
+import { LyricsService } from "../services/lyrics.service"
 
-interface LRCLIBResponse {
-  id: number
-  trackName: string
-  artistName: string
-  albumName: string
-  duration: number
-  instrumental: boolean
-  plainLyrics: string
-  syncedLyrics: string
-}
 
 function SongDetailContent({ song }: { song: Song }) {
   const { isConnected } = useAccount()
@@ -33,16 +24,19 @@ function SongDetailContent({ song }: { song: Song }) {
   useEffect(() => {
     async function loadLyrics() {
       try {
-        // Fetch lyrics from LRCLIB
-        const lyricsResponse = await fetch(
-          `https://lrclib.net/api/get?track_name=${encodeURIComponent(song.title)}&artist_name=${encodeURIComponent(song.artist)}&duration=${song.duration}`
+        const lyricsService = new LyricsService()
+        
+        // This will cache the lyrics for when we navigate to karaoke
+        const lyricsData = await lyricsService.getLyricsForSong(
+          song.lrclib_id,
+          song.title,
+          song.artist,
+          '', // album name not in DB
+          song.duration
         )
         
-        if (lyricsResponse.ok) {
-          const lyricsData: LRCLIBResponse = await lyricsResponse.json()
-          if (lyricsData.plainLyrics) {
-            setLyrics(lyricsData.plainLyrics.split('\n').filter(line => line.trim()))
-          }
+        if (lyricsData && lyricsData.plainLyrics) {
+          setLyrics(lyricsData.plainLyrics.split('\n').filter(line => line.trim()))
         }
       } catch (err) {
         console.error('Failed to load lyrics:', err)
