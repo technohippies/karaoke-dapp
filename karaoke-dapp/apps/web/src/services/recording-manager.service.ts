@@ -15,16 +15,26 @@ export interface RecordingManagerOptions {
   onError?: (error: Error) => void
 }
 
+interface AudioChunkWithTime {
+  chunk: Blob
+  timestamp: number
+}
+
+interface SegmentWindow {
+  segment: KaraokeSegment
+  cutStartTime: number
+  cutEndTime: number
+  processed: boolean
+}
+
 export class RecordingManager {
   private mediaRecorder: MediaRecorder | null = null
-  private audioChunks: Blob[] = []
-  private currentSegment: KaraokeSegment | null = null
-  private segmentStartTime: number = 0
+  private audioChunks: AudioChunkWithTime[] = []
+  private recordingStartTime: number = 0
   private options: RecordingManagerOptions
   private isRecording: boolean = false
-  private scheduledStops: Map<number, NodeJS.Timeout> = new Map()
-  private pendingSegments: Map<number, { segment: KaraokeSegment, startTime: number, chunks: Blob[], complete?: boolean }> = new Map()
-  private recordingSegmentId: number | null = null // Track which segment is currently being recorded
+  private segmentWindows: SegmentWindow[] = []
+  private processingTimer: NodeJS.Timeout | null = null
   
   constructor(options: RecordingManagerOptions = {}) {
     this.options = options
@@ -53,26 +63,23 @@ export class RecordingManager {
         mimeType: selectedMimeType
       })
       
+      console.log(`🎙️ MediaRecorder initialized with mimeType: ${selectedMimeType}`)
+      
       this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && this.recordingSegmentId !== null) {
-          console.log(`📼 Received audio chunk, size: ${event.data.size}, for recording segment: ${this.recordingSegmentId}`)
-          // Use the segment ID that was active when recording started, not the current one
-          const segmentId = this.recordingSegmentId
-          const pending = this.pendingSegments.get(segmentId)
-          if (pending) {
-            pending.chunks.push(event.data)
-            console.log(`📼 Added chunk to pending segment ${segmentId}, total chunks: ${pending.chunks.length}`)
-          } else {
-            // This shouldn't happen if our logic is correct, but just in case
-            console.warn(`📼 No pending segment found for ${segmentId}, adding to general chunks`)
-            this.audioChunks.push(event.data)
-          }
+        if (event.data.size > 0 && this.isRecording) {
+          const timestamp = Date.now() - this.recordingStartTime
+          this.audioChunks.push({
+            chunk: event.data,
+            timestamp
+          })
+          console.log(`📼 Received audio chunk at ${timestamp}ms, size: ${event.data.size}, total chunks: ${this.audioChunks.length}`)
         }
       }
       
       this.mediaRecorder.onstop = () => {
-        // Process all pending segments when recording stops
-        this.processPendingSegments()
+        console.log('🛑 MediaRecorder stopped')
+        // Process any remaining segments
+        this.processAllSegments()
       }
       
       this.isRecording = false
@@ -81,179 +88,121 @@ export class RecordingManager {
     }
   }
   
-  startSegmentRecording(segment: KaraokeSegment, currentTimeMs: number) {
-    if (!this.mediaRecorder) {
-      console.warn('RecordingManager not initialized yet, skipping segment:', segment.expectedText)
+  startContinuousRecording() {
+    if (!this.mediaRecorder || this.isRecording) {
       return
     }
     
-    // Clear any existing scheduled stop for this segment only
-    const existingStop = this.scheduledStops.get(segment.lyricLine.id)
-    if (existingStop) {
-      clearTimeout(existingStop)
-      this.scheduledStops.delete(segment.lyricLine.id)
-    }
-    
-    // Calculate when to start and stop recording
-    const startDelay = Math.max(0, segment.recordStartTime - currentTimeMs)
-    const stopDelay = segment.recordEndTime - currentTimeMs
-    const duration = segment.recordEndTime - segment.recordStartTime
-    
-    console.log(`📼 Recording schedule for line ${segment.lyricLine.id}:`, {
-      expectedText: segment.expectedText,
-      startDelay: `${startDelay}ms`,
-      stopDelay: `${stopDelay}ms`,
-      duration: `${duration}ms`
-    })
-    
-    // Schedule the start
-    if (startDelay === 0) {
-      this.startRecording(segment)
-    } else {
-      setTimeout(() => {
-        this.startRecording(segment)
-      }, startDelay)
-    }
-    
-    // Schedule the stop
-    const stopTimeout = setTimeout(() => {
-      console.log(`⏰ Stop timeout triggered for line ${segment.lyricLine.id}`)
-      this.stopRecording()
-    }, stopDelay)
-    
-    console.log(`⏰ Scheduled stop for line ${segment.lyricLine.id} in ${stopDelay}ms`)
-    this.scheduledStops.set(segment.lyricLine.id, stopTimeout)
-  }
-  
-  private startRecording(segment: KaraokeSegment) {
-    console.log(`🎤 Starting recording for line ${segment.lyricLine.id}: "${segment.expectedText}"`)
-    
-    if (this.isRecording && this.currentSegment && this.recordingSegmentId !== null) {
-      // Save the current segment data before switching
-      const segmentId = this.recordingSegmentId
-      this.pendingSegments.set(segmentId, {
-        segment: this.currentSegment,
-        startTime: this.segmentStartTime,
-        chunks: [...this.audioChunks]
-      })
-    }
-    
-    this.currentSegment = segment
-    this.recordingSegmentId = segment.lyricLine.id // Set the recording segment ID
-    this.segmentStartTime = Date.now()
+    console.log('🎙️ Starting continuous recording')
+    this.recordingStartTime = Date.now()
     this.audioChunks = []
+    this.mediaRecorder.start(100) // Get chunks every 100ms
+    this.isRecording = true
     
-    // Make sure we have a pending segment entry for the new recording
-    this.pendingSegments.set(segment.lyricLine.id, {
-      segment: segment,
-      startTime: this.segmentStartTime,
-      chunks: []
+    // Start processing timer
+    this.startProcessingTimer()
+  }
+  
+  scheduleSegment(segment: KaraokeSegment, allSegments: KaraokeSegment[]) {
+    // Create a window for this segment using its pre-calculated recording times
+    const window: SegmentWindow = {
+      segment,
+      cutStartTime: segment.recordStartTime, // Already includes 500ms buffer before
+      cutEndTime: segment.recordEndTime,     // Already includes 500ms buffer after
+      processed: false
+    }
+    
+    this.segmentWindows.push(window)
+    
+    console.log(`📝 Scheduled segment ${segment.lyricLine.id}:`, {
+      text: segment.expectedText,
+      cutStart: `${(segment.recordStartTime / 1000).toFixed(2)}s`,
+      cutEnd: `${(segment.recordEndTime / 1000).toFixed(2)}s`,
+      duration: `${((segment.recordEndTime - segment.recordStartTime) / 1000).toFixed(2)}s`
     })
-    
-    if (this.mediaRecorder?.state === 'inactive') {
-      // Start with timeslice to get regular chunks
-      this.mediaRecorder.start(100) // Get chunks every 100ms
-      this.isRecording = true
-      console.log(`🎤 MediaRecorder started for line ${segment.lyricLine.id} with 100ms timeslice`)
-    } else if (this.isRecording) {
-      // If already recording, request data to flush current buffer
-      this.mediaRecorder?.requestData()
-      console.log(`🎤 Switching to line ${segment.lyricLine.id} (recorder already running)`)
-    }
   }
   
-  private stopRecording() {
-    // This method is called when a segment ends, but we don't actually stop the MediaRecorder
-    // We just process the completed segment
-    console.log(`🛑 Segment recording ended for segmentId: ${this.recordingSegmentId}`)
-    
-    if (this.recordingSegmentId !== null) {
-      // Request any buffered data
-      this.mediaRecorder?.requestData()
-      
-      // Mark segment as complete after a small delay to ensure data arrives
-      const segmentId = this.recordingSegmentId
-      setTimeout(() => {
-        const pending = this.pendingSegments.get(segmentId)
-        if (pending) {
-          pending.complete = true
-          this.processCompletedSegments()
-        }
-      }, 100)
+  private startProcessingTimer() {
+    if (this.processingTimer) {
+      clearInterval(this.processingTimer)
     }
+    
+    // Check every 500ms for segments ready to process
+    this.processingTimer = setInterval(() => {
+      this.processReadySegments()
+    }, 500)
   }
   
-  private processCompletedSegments() {
-    console.log(`📊 Processing completed segments`)
+  private processReadySegments() {
+    const currentTime = Date.now() - this.recordingStartTime
     
-    // Process only segments marked as complete
-    const completedIds: number[] = []
-    
-    this.pendingSegments.forEach((data, segmentId) => {
-      if (data.complete && data.chunks.length > 0) {
-        const audioBlob = new Blob(data.chunks, { type: 'audio/webm' })
-        console.log(`🎤 Creating audio blob for line ${segmentId}, size: ${audioBlob.size} bytes`)
-        
-        const recordingSegment: RecordingSegment = {
-          segmentId: `seg-${segmentId}-${Date.now()}`,
-          lyricLineId: segmentId,
-          startTime: data.startTime,
-          endTime: Date.now(),
-          audioBlob,
-          expectedText: data.segment.expectedText,
-          keywords: data.segment.keywords
-        }
-        
-        this.options.onSegmentReady?.(recordingSegment)
-        completedIds.push(segmentId)
+    this.segmentWindows.forEach(window => {
+      // Check if this window's end time has passed and it hasn't been processed
+      if (!window.processed && currentTime >= window.cutEndTime) {
+        this.processSegmentWindow(window)
+        window.processed = true
       }
     })
-    
-    // Remove completed segments
-    completedIds.forEach(id => this.pendingSegments.delete(id))
   }
   
-  private processPendingSegments() {
-    console.log(`📊 Processing ${this.pendingSegments.size} pending segments`)
+  private processSegmentWindow(window: SegmentWindow) {
+    // Find all chunks within this window's time range
+    const segmentChunks = this.audioChunks.filter(chunkData => 
+      chunkData.timestamp >= window.cutStartTime && 
+      chunkData.timestamp <= window.cutEndTime
+    )
     
-    // Process all pending segments
-    this.pendingSegments.forEach((data, segmentId) => {
-      if (data.chunks.length > 0) {
-        const audioBlob = new Blob(data.chunks, { type: 'audio/webm' })
-        console.log(`🎤 Creating audio blob for line ${segmentId}, size: ${audioBlob.size} bytes`)
-        
-        const recordingSegment: RecordingSegment = {
-          segmentId: `seg-${segmentId}-${Date.now()}`,
-          lyricLineId: segmentId,
-          startTime: data.startTime,
-          endTime: Date.now(),
-          audioBlob,
-          expectedText: data.segment.expectedText,
-          keywords: data.segment.keywords
-        }
-        
-        this.options.onSegmentReady?.(recordingSegment)
-      }
+    if (segmentChunks.length === 0) {
+      console.warn(`⚠️ No audio chunks found for segment ${window.segment.lyricLine.id}`)
+      return
+    }
+    
+    // Create audio blob from the chunks
+    const audioBlob = new Blob(
+      segmentChunks.map(c => c.chunk), 
+      { type: 'audio/webm' }
+    )
+    
+    // Check if we have non-silent audio
+    const totalSize = segmentChunks.reduce((sum, c) => sum + c.chunk.size, 0)
+    
+    console.log(`🎤 Processing segment ${window.segment.lyricLine.id}:`, {
+      text: window.segment.expectedText,
+      chunks: segmentChunks.length,
+      size: `${audioBlob.size} bytes`,
+      totalChunkSize: `${totalSize} bytes`,
+      timeRange: `${window.cutStartTime}ms - ${window.cutEndTime}ms`,
+      mimeType: audioBlob.type
     })
     
-    // Clear pending segments
-    this.pendingSegments.clear()
+    const recordingSegment: RecordingSegment = {
+      segmentId: `seg-${window.segment.lyricLine.id}-${Date.now()}`,
+      lyricLineId: window.segment.lyricLine.id,
+      startTime: window.cutStartTime,
+      endTime: window.cutEndTime,
+      audioBlob,
+      expectedText: window.segment.expectedText,
+      keywords: window.segment.keywords
+    }
     
-    // Reset current state
-    this.currentSegment = null
-    this.audioChunks = []
-    this.recordingSegmentId = null
+    this.options.onSegmentReady?.(recordingSegment)
   }
   
-  private clearScheduledStops() {
-    this.scheduledStops.forEach(timeout => clearTimeout(timeout))
-    this.scheduledStops.clear()
+  private processAllSegments() {
+    // Process any remaining unprocessed segments
+    this.segmentWindows.forEach(window => {
+      if (!window.processed) {
+        this.processSegmentWindow(window)
+        window.processed = true
+      }
+    })
   }
   
   dispose() {
-    this.clearScheduledStops()
-    
-    // Don't need to save manually - chunks are already in pendingSegments
+    if (this.processingTimer) {
+      clearInterval(this.processingTimer)
+      this.processingTimer = null
+    }
     
     if (this.mediaRecorder) {
       if (this.mediaRecorder.state === 'recording') {
@@ -266,29 +215,10 @@ export class RecordingManager {
     }
     
     // Process any remaining segments
-    this.processPendingSegments()
+    this.processAllSegments()
     
     this.audioChunks = []
-    this.currentSegment = null
     this.isRecording = false
-    this.recordingSegmentId = null
-    this.pendingSegments.clear()
-  }
-  
-  // Schedule multiple segments at once (useful for pre-scheduling)
-  scheduleSegments(segments: KaraokeSegment[], currentTimeMs: number) {
-    if (!this.mediaRecorder) {
-      console.warn('RecordingManager not initialized yet, cannot schedule segments')
-      return
-    }
-    
-    segments.forEach(segment => {
-      const delay = segment.recordStartTime - currentTimeMs
-      if (delay > 0 && delay < 10000) { // Only schedule segments in the next 10 seconds
-        setTimeout(() => {
-          this.startSegmentRecording(segment, segment.recordStartTime)
-        }, delay)
-      }
-    })
+    this.segmentWindows = []
   }
 }

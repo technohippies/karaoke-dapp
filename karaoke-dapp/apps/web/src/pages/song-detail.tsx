@@ -25,7 +25,6 @@ function SongDetailContent({ song }: { song: Song }) {
   const gradingServiceRef = useRef<KaraokeGradingService | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordingManagerRef = useRef<RecordingManager | null>(null)
-  const scheduledSegmentsRef = useRef<Set<number>>(new Set())
   
   // Now we have the actual songId from the database
   const {
@@ -190,8 +189,16 @@ function SongDetailContent({ song }: { song: Song }) {
   useEffect(() => {
     if (isKaraokePlaying && !isPlaying) {
       console.log('🎵 Starting karaoke playback, hasMidi:', hasMidi)
-      // Reset scheduled segments when starting karaoke
-      scheduledSegmentsRef.current.clear()
+      
+      // Schedule all segments upfront with the new algorithm
+      if (recordingManagerRef.current && karaokeSegmentsRef.current.length > 0) {
+        karaokeSegmentsRef.current.forEach(segment => {
+          recordingManagerRef.current?.scheduleSegment(segment, karaokeSegmentsRef.current)
+        })
+        
+        // Start continuous recording
+        recordingManagerRef.current.startContinuousRecording()
+      }
       
       // Wait for MIDI to be loaded before playing
       if (hasMidi) {
@@ -205,32 +212,10 @@ function SongDetailContent({ song }: { song: Song }) {
       console.log('⏹️ Stopping karaoke playback')
       pause()
       recordingManagerRef.current?.dispose()
-      // Clear scheduled segments when stopping
-      scheduledSegmentsRef.current.clear()
     }
   }, [isKaraokePlaying, isPlaying, play, pause, hasMidi])
   
-  // Schedule upcoming segments as the song progresses
-  useEffect(() => {
-    if (isKaraokePlaying && recordingManagerRef.current) {
-      const currentTimeMs = currentTime * 1000
-      
-      // Find segments that should be scheduled soon and haven't been scheduled yet
-      const upcomingSegments = karaokeSegmentsRef.current.filter(segment => {
-        const timeUntilStart = segment.recordStartTime - currentTimeMs
-        const isInScheduleWindow = timeUntilStart > 0 && timeUntilStart < 5000 // Schedule segments in the next 5 seconds
-        const notYetScheduled = !scheduledSegmentsRef.current.has(segment.lyricLine.id)
-        return isInScheduleWindow && notYetScheduled
-      })
-      
-      if (upcomingSegments.length > 0) {
-        upcomingSegments.forEach(segment => {
-          scheduledSegmentsRef.current.add(segment.lyricLine.id)
-          recordingManagerRef.current?.startSegmentRecording(segment, currentTimeMs)
-        })
-      }
-    }
-  }, [isKaraokePlaying, currentTime])
+  // No longer need to schedule segments during playback - all scheduled upfront
   
   // Handle song completion
   useEffect(() => {
