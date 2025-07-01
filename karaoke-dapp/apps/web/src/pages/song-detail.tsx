@@ -53,9 +53,7 @@ function SongDetailContent({ song }: { song: Song }) {
     pause,
     currentTime,
     duration,
-    isPlaying,
-    startRecording,
-    stopRecording
+    isPlaying
   } = useAudio()
   
   useEffect(() => {

@@ -239,4 +239,25 @@ export class EncryptionService {
 
     return response.response as ArrayBuffer;
   }
+
+  /**
+   * Execute a Lit Action with parameters
+   */
+  async executeLitAction(
+    code: string,
+    jsParams: Record<string, any>,
+    sessionSigs: SessionSigsMap
+  ): Promise<string> {
+    if (!this.connected) {
+      await this.connect();
+    }
+
+    const response = await this.litNodeClient.executeJs({
+      sessionSigs,
+      code,
+      jsParams,
+    });
+
+    return response.response as string;
+  }
 }
