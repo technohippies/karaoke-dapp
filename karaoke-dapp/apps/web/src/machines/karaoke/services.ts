@@ -1,24 +1,33 @@
-import { fromPromise } from 'xstate';
+import { fromPromise, fromCallback } from 'xstate';
 import type { KaraokeContext, LyricLine } from '../types';
 
 export const karaokeServices = {
-  countdownTimer: fromPromise(async ({ emit }) => {
+  countdownTimer: fromCallback(({ sendBack }) => {
     console.log('⏱️ Starting countdown timer');
     let count = 3;
+    let intervalId: NodeJS.Timeout;
     
-    // Send initial countdown
-    emit({ type: 'UPDATE_COUNTDOWN', value: count });
+    // Send initial countdown immediately
+    sendBack({ type: 'UPDATE_COUNTDOWN', value: count });
     
-    while (count > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    // Start countdown interval
+    intervalId = setInterval(() => {
       count--;
       console.log('⏱️ Countdown:', count);
-      emit({ type: 'UPDATE_COUNTDOWN', value: count });
-    }
+      sendBack({ type: 'UPDATE_COUNTDOWN', value: count });
+      
+      if (count <= 0) {
+        clearInterval(intervalId);
+        console.log('⏱️ Countdown complete');
+      }
+    }, 1000);
     
-    console.log('⏱️ Countdown complete');
-    // Small delay before transitioning
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Cleanup function
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
   }),
 
   checkMicrophonePermission: fromPromise(async () => {

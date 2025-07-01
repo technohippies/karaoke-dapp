@@ -106,23 +106,26 @@ export const karaokeMachine = createMachine({
       invoke: {
         id: 'countdownTimer',
         src: 'countdownTimer',
-        onDone: {
-          target: 'playing',
-          actions: () => console.log('✅ Transitioning to playing state'),
-        },
         onError: {
           actions: ({ event }) => console.error('❌ Countdown error:', event),
         },
       },
       on: {
-        UPDATE_COUNTDOWN: {
-          actions: assign({
-            countdown: ({ event }) => {
-              console.log('🔄 UPDATE_COUNTDOWN received:', event.value);
-              return event.value;
-            },
-          }),
-        },
+        UPDATE_COUNTDOWN: [
+          {
+            target: 'playing',
+            guard: ({ event }) => event.value === 0,
+            actions: () => console.log('✅ Transitioning to playing state'),
+          },
+          {
+            actions: assign({
+              countdown: ({ event }) => {
+                console.log('🔄 UPDATE_COUNTDOWN received:', event.value);
+                return event.value;
+              },
+            }),
+          },
+        ],
         STOP: 'ready',
       },
     },
