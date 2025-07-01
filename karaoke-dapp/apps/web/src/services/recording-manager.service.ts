@@ -115,18 +115,10 @@ export class RecordingManager {
       }, startDelay)
     }
     
-    // Schedule the stop - but don't process segments immediately
+    // Schedule the stop
     const stopTimeout = setTimeout(() => {
       console.log(`⏰ Stop timeout triggered for line ${segment.lyricLine.id}`)
-      
-      // Mark this segment as complete and ready to process
-      const pending = this.pendingSegments.get(segment.lyricLine.id)
-      if (pending) {
-        pending.complete = true
-      }
-      
-      // Process only completed segments
-      this.processCompletedSegments()
+      this.stopRecording()
     }, stopDelay)
     
     console.log(`⏰ Scheduled stop for line ${segment.lyricLine.id} in ${stopDelay}ms`)
@@ -165,7 +157,7 @@ export class RecordingManager {
       console.log(`🎤 MediaRecorder started for line ${segment.lyricLine.id} with 100ms timeslice`)
     } else if (this.isRecording) {
       // If already recording, request data to flush current buffer
-      this.mediaRecorder.requestData()
+      this.mediaRecorder?.requestData()
       console.log(`🎤 Switching to line ${segment.lyricLine.id} (recorder already running)`)
     }
   }

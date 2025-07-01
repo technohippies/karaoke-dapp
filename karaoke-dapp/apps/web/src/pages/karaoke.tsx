@@ -35,9 +35,7 @@ function KaraokeContent() {
     isRecording,
     hasMidi,
     hasAudio,
-    play,
     pause,
-    startRecording,
     stopRecording,
     loadAudio,
     loadMidi
@@ -47,7 +45,7 @@ function KaraokeContent() {
   const [, setActiveLyricIndex] = useState(-1)
   const [lyricsWithScores, setLyricsWithScores] = useState<KaraokeLyricLine[]>([])
   const [songId, setSongId] = useState<number | null>(null)
-  const [isReady, setIsReady] = useState(false)
+  const [isReady] = useState(false)
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
   const [isLoadingLyrics, setIsLoadingLyrics] = useState(true)
   
