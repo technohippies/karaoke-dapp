@@ -5,7 +5,7 @@
   "owner": "0x7d3924A73f1242663fD8BbD1f2559fa6081Ba6D1",
   "adminWallet": "0x7d3924A73f1242663fD8BbD1f2559fa6081Ba6D1",
   "permittedActions": {
-    "voiceGrader": "QmdbvQTLFmqDV9XC13GCwdpnti3YMMuAcgYiYAv5nkkQUT",
+    "voiceGrader": "QmYov82aEgcqq1kMaYCoDQzH79PW8Q2pfLiddA96MRTdyX",
     "sessionSettlement": "QmbYP72pWy4NKcuZhNMs66EUf5omXeM5Y65N2eMGomqNeu"
   },
   "hasWalletAuth": true,

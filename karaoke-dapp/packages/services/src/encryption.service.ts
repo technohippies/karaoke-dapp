@@ -3,7 +3,8 @@ import { encryptString, decryptToString } from '@lit-protocol/encryption';
 import type { SessionSigsMap } from '@lit-protocol/types';
 import { LIT_NETWORK, LIT_ABILITY } from '@lit-protocol/constants';
 import { 
-  LitActionResource, 
+  LitActionResource,
+  LitPKPResource, 
   createSiweMessageWithRecaps, 
   generateAuthSig 
 } from '@lit-protocol/auth-helpers';
@@ -21,7 +22,7 @@ export class EncryptionService {
 
   constructor() {
     this.litNodeClient = new LitNodeClient({
-      litNetwork: LIT_NETWORK.Datil, // production network
+      litNetwork: LIT_NETWORK.DatilTest, // Use datil-test to match your PKP deployment
       debug: false
     });
   }
@@ -148,19 +149,24 @@ export class EncryptionService {
     // Create a wallet instance (in production, this would use the connected wallet)
     const provider = new ethers.BrowserProvider((window as any).ethereum);
     const ethersSigner = await provider.getSigner();
+    const walletAddress = await ethersSigner.getAddress();
 
     console.log('🔐 Creating session signatures using proper Lit SDK approach...');
     
-    const sessionSigs = await this.litNodeClient.getSessionSigs({
+    const sessionSigsParams: any = {
       chain: 'base',
       expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // 24 hours
       resourceAbilityRequests: [
+        {
+          resource: new LitPKPResource('*'),
+          ability: LIT_ABILITY.PKPSigning,
+        },
         {
           resource: new LitActionResource('*'),
           ability: LIT_ABILITY.LitActionExecution,
         },
       ],
-      authNeededCallback: async ({ resourceAbilityRequests, expiration, uri }) => {
+      authNeededCallback: async ({ resourceAbilityRequests, expiration, uri }: any) => {
         console.log('🔐 authNeededCallback called with proper params:', {
           resourceAbilityRequests: resourceAbilityRequests?.length || 0,
           expiration,
@@ -172,7 +178,7 @@ export class EncryptionService {
           uri: uri!,
           expiration: expiration!,
           resources: resourceAbilityRequests!,
-          walletAddress: await ethersSigner.getAddress(),
+          walletAddress,
           nonce: await this.litNodeClient.getLatestBlockhash(),
           litNodeClient: this.litNodeClient,
         });
@@ -188,7 +194,9 @@ export class EncryptionService {
         console.log('✅ Auth signature generated successfully');
         return authSig;
       },
-    });
+    };
+
+    const sessionSigs = await this.litNodeClient.getSessionSigs(sessionSigsParams);
     
     console.log('✅ Session signatures created successfully with proper SIWE format');
     return sessionSigs;
@@ -259,5 +267,34 @@ export class EncryptionService {
     });
 
     return response.response as string;
+  }
+
+  /**
+   * Execute a deployed Lit Action by IPFS ID
+   */
+  async executeDeployedLitAction(
+    ipfsId: string,
+    jsParams: Record<string, any>,
+    sessionSigs: SessionSigsMap
+  ): Promise<string> {
+    if (!this.connected) {
+      await this.connect();
+    }
+
+    console.log('🚀 Executing Lit Action:', { ipfsId, jsParamsKeys: Object.keys(jsParams) });
+
+    try {
+      const response = await this.litNodeClient.executeJs({
+        sessionSigs,
+        ipfsId,
+        jsParams,
+      });
+
+      console.log('✅ Lit Action executed successfully:', response);
+      return response.response as string;
+    } catch (error) {
+      console.error('❌ Lit Action execution failed:', error);
+      throw error;
+    }
   }
 }

@@ -7,7 +7,7 @@ export const PKP_PUBLIC_KEY = process.env.LIT_PKP_PUBLIC_KEY!
 export const PKP_ETH_ADDRESS = process.env.LIT_PKP_ETH_ADDRESS!
 
 // Lit Action CIDs
-export const VOICE_GRADER_CID = 'QmdbvQTLFmqDV9XC13GCwdpnti3YMMuAcgYiYAv5nkkQUT' // Nova-3
+export const VOICE_GRADER_CID = 'QmYov82aEgcqq1kMaYCoDQzH79PW8Q2pfLiddA96MRTdyX' // Nova-3 with auto-detect content type
 export const SESSION_SETTLEMENT_CID = 'QmRHZLRQThj9oq4bgMRupjvwQUH4iVyFweHp1WGdYc25oy' // Fixed variable access
 
 export async function createLitClient() {

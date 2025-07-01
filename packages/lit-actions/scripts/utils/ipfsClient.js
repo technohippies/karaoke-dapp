@@ -1,9 +1,13 @@
-const https = require('https');
-const fs = require('fs');
-const FormData = require('form-data');
-const dotenv = require('dotenv');
-const path = require('path');
-const { URL } = require('url');
+import https from 'https';
+import fs from 'fs';
+import FormData from 'form-data';
+import dotenv from 'dotenv';
+import path from 'path';
+import { URL, fileURLToPath } from 'url';
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../../../../.env') });
@@ -107,6 +111,4 @@ class IPFSClient {
     }
 }
 
-module.exports = {
-    ipfsClient: new IPFSClient()
-};
+export const ipfsClient = new IPFSClient();

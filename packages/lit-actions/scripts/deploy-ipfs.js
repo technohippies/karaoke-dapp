@@ -1,7 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
-const ora = require('ora');
-const { ipfsClient } = require('./utils/ipfsClient.js');
+import ora from 'ora';
+import { fileURLToPath } from 'url';
+import { ipfsClient } from './utils/ipfsClient.js';
+
+// ES module __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function uploadToIPFS(filePath) {
     const spinner = ora(`Uploading: ${path.basename(filePath)}`).start();
