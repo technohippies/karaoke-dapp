@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, MicrophonePermission, KaraokeScore } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, KaraokeScore } from "@karaoke-dapp/ui"
 import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
@@ -24,7 +24,8 @@ function SongDetailContent({ song }: { song: Song }) {
   const [lineGrades, setLineGrades] = useState<Map<number, number>>(new Map())
   const recordingManagerRef = useRef<RecordingManager | null>(null)
   const gradingServiceRef = useRef<KaraokeGradingService | null>(null)
-  const karaokeSegmentsRef = useRef<ReturnType<typeof prepareKaraokeSegments>>([])  // Removed local state - will use karaoke machine states instead
+  const karaokeSegmentsRef = useRef<ReturnType<typeof prepareKaraokeSegments>>([])
+  const scheduledSegmentsRef = useRef<Set<number>>(new Set()) // Track which segments have been scheduled
   
   // Now we have the actual songId from the database
   const {
@@ -36,8 +37,6 @@ function SongDetailContent({ song }: { song: Song }) {
     send,
     // Karaoke states
     isInKaraokeMode,
-    isKaraokeCheckingPermissions,
-    isKaraokeNeedsPermission,
     isKaraokeCountdown,
     isKaraokePlaying,
     isKaraokeStopped,
@@ -53,7 +52,8 @@ function SongDetailContent({ song }: { song: Song }) {
     pause,
     currentTime,
     duration,
-    isPlaying
+    isPlaying,
+    hasMidi
   } = useAudio()
   
   useEffect(() => {
@@ -120,18 +120,15 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isInKaraokeMode, state.context.midiData, loadMidi])
   
-  // Initialize recording and grading services when entering karaoke mode
+  // Initialize recording manager when entering karaoke mode
   useEffect(() => {
     if (isInKaraokeMode && !recordingManagerRef.current) {
       // Initialize recording manager
       recordingManagerRef.current = new RecordingManager({
         onSegmentReady: async (segment) => {
-          console.log(`📼 Segment ready for line ${segment.lyricLineId}`)
-          
           // Grade the segment if grading service is ready
           if (gradingServiceRef.current) {
             const result = await gradingServiceRef.current.gradeSegment(segment)
-            console.log(`📊 Grading result:`, result)
             
             // Update line color based on score
             setLineGrades(prev => new Map(prev).set(result.lyricLineId, result.similarity))
@@ -142,30 +139,16 @@ function SongDetailContent({ song }: { song: Song }) {
         }
       })
       
-      // Initialize grading service with proper session signatures
-      if (address) {
-        // Get session signatures from song machine context
-        const sessionSigs = state.context.sessionSigs
-        
-        if (sessionSigs) {
-          gradingServiceRef.current = new KaraokeGradingService({
-            sessionSigs,
-            userAddress: address,
-            sessionId: `karaoke-${song.id}-${Date.now()}`,
-            language: 'en'
-          })
-          
-          gradingServiceRef.current.initialize().catch(console.error)
-        } else {
-          console.warn('⚠️ No session signatures available for grading service')
-        }
-      }
-      
       // Get microphone stream and initialize recording
-      navigator.mediaDevices.getUserMedia({ audio: true })
+      navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      })
         .then(stream => {
           recordingManagerRef.current?.initialize(stream)
-          console.log('🎤 Recording manager initialized')
         })
         .catch(console.error)
     }
@@ -178,33 +161,67 @@ function SongDetailContent({ song }: { song: Song }) {
         gradingServiceRef.current = null
       }
     }
-  }, [isInKaraokeMode, address, song.id])
+  }, [isInKaraokeMode])
+  
+  // Initialize grading service when session signatures become available
+  useEffect(() => {
+    if (isInKaraokeMode && address && karaokeState?.context?.sessionSigs && !gradingServiceRef.current) {
+      console.log('🔐 Initializing grading service with session signatures')
+      gradingServiceRef.current = new KaraokeGradingService({
+        sessionSigs: karaokeState.context.sessionSigs,
+        userAddress: address,
+        sessionId: `karaoke-${song.id}-${Date.now()}`,
+        language: 'en'
+      })
+      
+      gradingServiceRef.current.initialize().then(() => {
+        console.log('✅ Grading service initialized successfully')
+      }).catch(error => {
+        console.error('❌ Failed to initialize grading service:', error)
+      })
+    }
+  }, [isInKaraokeMode, address, song.id, karaokeState?.context?.sessionSigs])
   
   // Handle karaoke state transitions
   useEffect(() => {
     if (isKaraokePlaying && !isPlaying) {
-      console.log('🎵 Starting karaoke playback')
-      play()
+      console.log('🎵 Starting karaoke playback, hasMidi:', hasMidi)
+      // Reset scheduled segments when starting karaoke
+      scheduledSegmentsRef.current.clear()
+      
+      // Wait for MIDI to be loaded before playing
+      if (hasMidi) {
+        console.log('🎵 MIDI is ready, starting playback')
+        play()
+      } else {
+        console.log('⏳ Waiting for MIDI to load...')
+        // Will be triggered again when hasMidi changes
+      }
     } else if (!isKaraokePlaying && isPlaying) {
       console.log('⏹️ Stopping karaoke playback')
       pause()
       recordingManagerRef.current?.dispose()
+      // Clear scheduled segments when stopping
+      scheduledSegmentsRef.current.clear()
     }
-  }, [isKaraokePlaying, isPlaying, play, pause])
+  }, [isKaraokePlaying, isPlaying, play, pause, hasMidi])
   
   // Schedule upcoming segments as the song progresses
   useEffect(() => {
     if (isKaraokePlaying && recordingManagerRef.current) {
       const currentTimeMs = currentTime * 1000
       
-      // Find segments that should be scheduled soon
+      // Find segments that should be scheduled soon and haven't been scheduled yet
       const upcomingSegments = karaokeSegmentsRef.current.filter(segment => {
         const timeUntilStart = segment.recordStartTime - currentTimeMs
-        return timeUntilStart > 0 && timeUntilStart < 5000 // Schedule segments in the next 5 seconds
+        const isInScheduleWindow = timeUntilStart > 0 && timeUntilStart < 5000 // Schedule segments in the next 5 seconds
+        const notYetScheduled = !scheduledSegmentsRef.current.has(segment.lyricLine.id)
+        return isInScheduleWindow && notYetScheduled
       })
       
       if (upcomingSegments.length > 0) {
         upcomingSegments.forEach(segment => {
+          scheduledSegmentsRef.current.add(segment.lyricLine.id)
           recordingManagerRef.current?.startSegmentRecording(segment, currentTimeMs)
         })
       }
@@ -229,16 +246,8 @@ function SongDetailContent({ song }: { song: Song }) {
   
   // Handle karaoke mode
   if (isInKaraokeMode) {
-    console.log('🎤 Karaoke mode states:', {
-      isKaraokeCheckingPermissions,
-      isKaraokeNeedsPermission,
-      isKaraokeCountdown,
-      isKaraokePlaying,
-      karaokeCountdownValue
-    });
-    
-    // Show countdown or permission request
-    if (isKaraokeCheckingPermissions || isKaraokeNeedsPermission || isKaraokeCountdown) {
+    // Show countdown
+    if (isKaraokeCountdown) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
@@ -262,24 +271,6 @@ function SongDetailContent({ song }: { song: Song }) {
             countdown={karaokeCountdownValue}
           />
         </div>
-      )
-    }
-    
-    // Show mic permission if needed
-    if (isKaraokeNeedsPermission) {
-      return (
-        <MicrophonePermission
-          onRequestPermission={async () => {
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-              stream.getTracks().forEach(track => track.stop())
-              // Permission granted, send event to move to countdown
-              karaokeActor?.send({ type: 'REQUEST_PERMISSION' })
-            } catch {
-              // Permission denied, stay on this screen
-            }
-          }}
-        />
       )
     }
     
