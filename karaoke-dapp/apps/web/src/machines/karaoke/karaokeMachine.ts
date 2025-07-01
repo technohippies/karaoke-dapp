@@ -1,5 +1,4 @@
 import { createMachine, assign, fromPromise } from 'xstate';
-
 import type { KaraokeContext, KaraokeEvent } from '../types';
 
 export const karaokeMachine = createMachine({
@@ -8,7 +7,8 @@ export const karaokeMachine = createMachine({
     events: KaraokeEvent;
   },
   id: 'karaoke',
-  initial: 'checkingPermissions',
+  // Skip permission check since we already checked in the parent component
+  initial: 'countdown',
   context: ({ input }: { input?: Partial<KaraokeContext> }) => ({
     songId: input?.songId || 0,
     midiData: input?.midiData || new Uint8Array(),
@@ -16,6 +16,7 @@ export const karaokeMachine = createMachine({
     lyricsUrl: input?.lyricsUrl,
     currentLineIndex: 0,
     score: 0,
+    countdown: undefined,
   }),
   states: {
     checkingPermissions: {

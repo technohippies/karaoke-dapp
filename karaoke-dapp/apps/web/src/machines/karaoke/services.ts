@@ -3,12 +3,15 @@ import type { KaraokeContext, LyricLine } from '../types';
 
 export const karaokeServices = {
   checkMicrophonePermission: fromPromise(async () => {
+    console.log('🎤 Checking microphone permission...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Immediately stop the stream after getting permission
       stream.getTracks().forEach(track => track.stop());
+      console.log('✅ Microphone permission granted');
       return { hasPermission: true };
     } catch (error) {
+      console.log('❌ Microphone permission denied:', error);
       throw new Error('Microphone permission denied');
     }
   }),

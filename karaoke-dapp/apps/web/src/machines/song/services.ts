@@ -7,6 +7,8 @@ import { openDB } from 'idb';
 import type { SongContext } from '../types';
 import type { SessionSigsMap } from '@lit-protocol/types';
 import { karaokeMachine } from '../karaoke/karaokeMachine';
+import { karaokeServices } from '../karaoke/services';
+import { karaokeActions, karaokeGuards } from '../karaoke/actions';
 
 const MUSIC_STORE_ADDRESS = CONTRACTS.baseSepolia.musicStore;
 const SESSION_STORAGE_KEY = 'lit-session-sigs';
@@ -637,6 +639,10 @@ export const songServices = {
     }, cacheKey);
   }),
 
-  // Add karaokeMachine as an actor
-  karaokeMachine: karaokeMachine,
+  // Add karaokeMachine as an actor with its services and actions
+  karaokeMachine: karaokeMachine.provide({
+    actors: karaokeServices,
+    actions: karaokeActions,
+    guards: karaokeGuards,
+  }),
 };

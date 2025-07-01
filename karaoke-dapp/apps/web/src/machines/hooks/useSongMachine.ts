@@ -50,16 +50,24 @@ export function useSongMachine(songId: number) {
   
   // Karaoke states - check if karaoke machine is invoked
   const isInKaraokeMode = state.matches('karaoke');
-  const karaokeActor = state.children.karaokeMachine;
+  const karaokeActor = isInKaraokeMode ? state.children.karaokeMachine : undefined;
   const karaokeState = karaokeActor?.getSnapshot();
   
-  // Karaoke sub-states
-  const isKaraokeCheckingPermissions = karaokeState?.matches('checkingPermissions') ?? false;
-  const isKaraokeNeedsPermission = karaokeState?.matches('needsPermission') ?? false;
-  const isKaraokeCountdown = karaokeState?.matches('countdown') ?? false;
-  const isKaraokePlaying = karaokeState?.matches('playing') ?? false;
-  const isKaraokePaused = karaokeState?.matches('paused') ?? false;
-  const isKaraokeStopped = karaokeState?.matches('stopped') ?? false;
+  // Debug logging
+  if (karaokeState) {
+    console.log('🎤 Karaoke state:', karaokeState.value, { 
+      countdown: karaokeState.context.countdown,
+      context: karaokeState.context 
+    });
+  }
+  
+  // Karaoke sub-states - only check if karaokeState exists
+  const isKaraokeCheckingPermissions = karaokeState ? karaokeState.matches('checkingPermissions') : false;
+  const isKaraokeNeedsPermission = karaokeState ? karaokeState.matches('needsPermission') : false;
+  const isKaraokeCountdown = karaokeState ? karaokeState.matches('countdown') : false;
+  const isKaraokePlaying = karaokeState ? karaokeState.matches('playing') : false;
+  const isKaraokePaused = karaokeState ? karaokeState.matches('paused') : false;
+  const isKaraokeStopped = karaokeState ? karaokeState.matches('stopped') : false;
   const karaokeCountdownValue = karaokeState?.context?.countdown;
 
   // Get button state and text
@@ -112,6 +120,7 @@ export function useSongMachine(songId: number) {
     isKaraokeStopped,
     karaokeCountdownValue,
     karaokeActor,
+    karaokeState,
     // Helpers
     getButtonState,
     error: state.context.error,

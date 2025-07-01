@@ -36,7 +36,8 @@ function SongDetailContent({ song }: { song: Song }) {
     isKaraokePlaying,
     isKaraokeStopped,
     karaokeCountdownValue,
-    karaokeActor
+    karaokeActor,
+    karaokeState
   } = useSongMachine(song.id)
   
   // Audio context
@@ -165,8 +166,15 @@ function SongDetailContent({ song }: { song: Song }) {
     if (isKaraokeNeedsPermission) {
       return (
         <MicrophonePermission
-          onRequestPermission={() => {
-            karaokeActor?.send({ type: 'REQUEST_PERMISSION' })
+          onRequestPermission={async () => {
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+              stream.getTracks().forEach(track => track.stop())
+              // Permission granted, send event to move to countdown
+              karaokeActor?.send({ type: 'REQUEST_PERMISSION' })
+            } catch {
+              // Permission denied, stay on this screen
+            }
           }}
         />
       )
@@ -207,7 +215,7 @@ function SongDetailContent({ song }: { song: Song }) {
           <Header onAccountClick={handleAccountClick} />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <KaraokeScore
-              score={karaokeActor?.getSnapshot()?.context?.score || 0}
+              score={karaokeState?.context?.score || 0}
               songTitle={song.title}
               artist={song.artist}
               onPractice={() => karaokeActor?.send({ type: 'RESTART' })}
