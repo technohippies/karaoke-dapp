@@ -14,34 +14,12 @@ export const karaokeMachine = createMachine({
     midiData: input?.midiData || new Uint8Array(),
     audioUrl: input?.audioUrl,
     lyricsUrl: input?.lyricsUrl,
+    sessionSigs: input?.sessionSigs,
     currentLineIndex: 0,
     score: 0,
     countdown: undefined,
   }),
   states: {
-    checkingPermissions: {
-      description: 'Checking microphone permissions',
-      invoke: {
-        id: 'checkPermissions',
-        src: 'checkMicrophonePermission',
-        onDone: {
-          target: 'countdown',
-        },
-        onError: {
-          target: 'needsPermission',
-        },
-      },
-    },
-    
-    needsPermission: {
-      description: 'Waiting for user to grant microphone permission',
-      on: {
-        REQUEST_PERMISSION: {
-          target: 'checkingPermissions',
-        },
-      },
-    },
-    
     initializing: {
       description: 'Setting up karaoke session',
       initial: 'loadingAudio',
@@ -119,10 +97,7 @@ export const karaokeMachine = createMachine({
           },
           {
             actions: assign({
-              countdown: ({ event }) => {
-                console.log('🔄 UPDATE_COUNTDOWN received:', event.value);
-                return event.value;
-              },
+              countdown: ({ event }) => event.value,
             }),
           },
         ],
@@ -131,34 +106,11 @@ export const karaokeMachine = createMachine({
     },
     
     playing: {
-      description: 'Karaoke session active',
-      entry: ['startPlayback', 'startLyricSync'],
-      exit: ['stopPlayback', 'stopLyricSync'],
-      initial: 'playingOnly',
-      states: {
-        playingOnly: {
-          description: 'Playing without recording',
-          on: {
-            START_RECORDING: {
-              target: 'recording',
-              guard: 'canRecord',
-            },
-          },
-        },
-        
-        recording: {
-          description: 'Playing and recording user voice',
-          entry: 'startRecording',
-          exit: 'stopRecordingAndProcess',
-          on: {
-            STOP_RECORDING: {
-              target: 'playingOnly',
-            },
-          },
-        },
-      },
+      description: 'Karaoke session active - playing and recording',
+      entry: ['startPlayback', 'startLyricSync', 'startRecording'],
+      exit: ['stopPlayback', 'stopLyricSync', 'stopRecordingAndProcess'],
       on: {
-        PAUSE: 'paused',
+        COMPLETE: 'stopped',
         STOP: 'stopped',
         NEXT_LINE: {
           actions: assign({
@@ -166,21 +118,6 @@ export const karaokeMachine = createMachine({
               Math.min(context.currentLineIndex + 1, (context.lyrics?.length || 1) - 1),
           }),
         },
-        PREVIOUS_LINE: {
-          actions: assign({
-            currentLineIndex: ({ context }) => 
-              Math.max(context.currentLineIndex - 1, 0),
-          }),
-        },
-      },
-    },
-    
-    paused: {
-      description: 'Karaoke session paused',
-      entry: 'pausePlayback',
-      on: {
-        PLAY: 'playing',
-        STOP: 'stopped',
       },
     },
     

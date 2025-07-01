@@ -6,10 +6,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list']
+  ],
   timeout: 120 * 1000, // 2 minutes for blockchain operations
   use: {
-    baseURL: 'http://localhost:3001',
+    baseURL: 'http://localhost:4000',
     trace: 'on-first-retry',
     actionTimeout: 30 * 1000, // 30 seconds for UI actions
   },
@@ -20,8 +23,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    port: 3001,
+    command: 'npm run dev -- --port 4000',
+    port: 4000,
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
     stdout: 'pipe',

@@ -1,3 +1,7 @@
+---
+description: System architecture, data flow, and security model for the Karaoke Turbo platform including blockchain integration and decentralized storage.
+---
+
 # Architecture Overview
 
 The Karaoke Turbo platform is built with a modular, decentralized architecture that separates concerns while maintaining performance and security.
@@ -24,7 +28,8 @@ The Karaoke Turbo platform is built with a modular, decentralized architecture t
 
 ## Data Flow
 
-<Mermaid graph="
+<Mermaid>
+<pre>
 sequenceDiagram
     participant U as User
     participant W as Web App
@@ -41,7 +46,8 @@ sequenceDiagram
     L->>S: Fetch Encrypted MIDI
     L-->>W: Decrypted MIDI
     W->>W: Start Karaoke Session
-" />
+</pre>
+</Mermaid>
 
 ## State Management
 

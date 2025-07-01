@@ -39,22 +39,17 @@ export function useKaraokeMachine({
 
   // Helper methods
   const play = () => send({ type: 'PLAY' });
-  const pause = () => send({ type: 'PAUSE' });
   const stop = () => send({ type: 'STOP' });
   const nextLine = () => send({ type: 'NEXT_LINE' });
-  const previousLine = () => send({ type: 'PREVIOUS_LINE' });
-  const startRecording = () => send({ type: 'START_RECORDING' });
-  const stopRecording = () => send({ type: 'STOP_RECORDING' });
   const submitScore = () => send({ type: 'SUBMIT_SCORE' });
   const restart = () => send({ type: 'RESTART' });
 
   // Computed states
   const isInitializing = state.matches('initializing');
   const isReady = state.matches('ready');
+  const isCountdown = state.matches('countdown');
   const isPlaying = state.matches('playing');
-  const isPaused = state.matches('paused');
   const isStopped = state.matches('stopped');
-  const isRecording = state.matches('playing.recording');
   const isReviewing = state.matches('stopped.reviewing');
   const isSubmitting = state.matches('stopped.submitting');
   const hasError = state.matches('error');
@@ -75,21 +70,16 @@ export function useKaraokeMachine({
     actorRef,
     // Actions
     play,
-    pause,
     stop,
     nextLine,
-    previousLine,
-    startRecording,
-    stopRecording,
     submitScore,
     restart,
     // States
     isInitializing,
     isReady,
+    isCountdown,
     isPlaying,
-    isPaused,
     isStopped,
-    isRecording,
     isReviewing,
     isSubmitting,
     hasError,

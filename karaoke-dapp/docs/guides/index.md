@@ -1,3 +1,7 @@
+---
+description: Development setup guide for Karaoke Turbo including environment configuration, project structure, and common development tasks.
+---
+
 # Getting Started Guide
 
 Welcome to Karaoke Turbo development! This guide will help you set up the project locally and understand the development workflow.

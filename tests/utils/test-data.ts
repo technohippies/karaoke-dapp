@@ -6,9 +6,9 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-// Load actual test audio file
+// Load actual test audio file (WebM format - same as browser MediaRecorder)
 function getTestAudioBase64(): string {
-  const audioPath = join(__dirname, '../../test-data/speech-audio/hi_nice_to_meet_you_whats_up.mp3')
+  const audioPath = join(__dirname, '../../test-data/speech-audio/hi_nice_to_meet_you_whats_up.webm')
   const audioBuffer = readFileSync(audioPath)
   return audioBuffer.toString('base64')
 }

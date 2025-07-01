@@ -1,0 +1,5221 @@
+# Karaoke Turbo - Complete Documentation
+
+> Full documentation compiled for AI/LLM consumption
+
+
+---
+
+# DEPLOYMENT_GUIDE
+
+# Deployment Guide
+
+This guide walks through deploying all components needed for the Karaoke dApp.
+
+## Prerequisites
+
+1. Base Sepolia ETH for gas
+2. USDC on Base Sepolia for testing
+3. Private key that will own the Tableland songs table
+4. Node.js 18+ and Bun installed
+
+## Step 1: Deploy KaraokeStore Contract
+
+1. Navigate to contracts directory:
+   ```bash
+   cd packages/contracts
+   ```
+
+2. Deploy to Base Sepolia:
+   ```bash
+   forge script script/Deploy.s.sol --rpc-url base-sepolia --broadcast
+   ```
+
+3. Note the deployed contract address
+
+## Step 2: Deploy MIDI Decryptor Lit Action
+
+1. Set environment variable:
+   ```bash
+   export KARAOKE_STORE_ADDRESS=<your-contract-address>
+   ```
+
+2. Deploy the Lit Action:
+   ```bash
+   cd packages/lit-actions
+   bun run scripts/deploy-midi-decryptor.js
+   ```
+
+3. Note the action CID from output
+
+## Step 3: Configure Environment
+
+Create `.env` file in karaoke-dapp:
+```env
+# Lit Protocol
+LIT_NETWORK=datil
+MIDI_DECRYPTOR_ACTION_CID=<action-cid-from-step-2>
+
+# Contract
+KARAOKE_STORE_ADDRESS=<contract-address-from-step-1>
+
+# AIOZ
+AIOZ_API_URL=https://premium.aiozpin.network
+
+# Tableland (your private key that owns the songs table)
+TABLELAND_PRIVATE_KEY=<your-private-key>
+
+# Chain
+CHAIN_ID=84532
+RPC_URL=https://sepolia.base.org
+```
+
+## Step 4: Process a Test Song
+
+1. Ensure you have a MIDI file:
+   ```
+   test-data/midi/Lorde - Royals/piano.mid
+   ```
+
+2. Process and upload:
+   ```bash
+   bun run process-song --midi "../test-data/midi/Lorde - Royals/piano.mid" --song-id 1
+   ```
+
+3. Verify in Tableland:
+   ```bash
+   bun run verify-song --song-id 1
+   ```
+
+## Step 5: Test the Full Flow
+
+1. Purchase song access (interact with contract):
+   ```solidity
+   // Buy credits
+   karaokeStore.buyCreditPack() // costs 2 USDC
+   
+   // Unlock song
+   karaokeStore.unlockSong(1)
+   ```
+
+2. Test decryption:
+   ```bash
+   bun run test-decrypt \
+     --cid <cid-from-processing> \
+     --song-id 1 \
+     --private-key <user-private-key>
+   ```
+
+## Deployment Checklist
+
+- [ ] Deploy KaraokeStore contract
+- [ ] Fund contract deployer with Base Sepolia ETH
+- [ ] Deploy MIDI Decryptor Lit Action
+- [ ] Configure environment variables
+- [ ] Process at least one test song
+- [ ] Verify song in Tableland
+- [ ] Test purchase flow
+- [ ] Test decryption flow
+
+## Troubleshooting
+
+### "No access to this song"
+- Ensure user has purchased the song via contract
+- Check `karaokeStore.checkAccess(userAddress, songId)`
+
+### "Invalid Lit PKP signature"
+- Ensure LIT_PKP_ADDRESS is set correctly in contract
+- Check that PKP is properly configured
+
+### AIOZ Upload Issues
+- Check CID tracker (`cid-tracker.json`) for duplicates
+- Ensure AIOZ network is accessible
+- Try different AIOZ gateway if needed
+
+## Production Considerations
+
+1. **Contract Upgrades**: Use proxy pattern for upgradeable contracts
+2. **Key Management**: Use hardware wallet for Tableland private key
+3. **Monitoring**: Set up alerts for failed decryptions
+4. **Backup**: Regular backups of CID tracker database
+---
+
+# MIDI_PROCESSING
+
+# MIDI Processing Pipeline
+
+This document explains how to encrypt and upload MIDI files for the Karaoke dApp.
+
+## Overview
+
+The pipeline:
+1. Encrypts MIDI files using Lit Protocol
+2. Uploads encrypted data to AIOZ Network (IPFS)
+3. Updates Tableland with the CID
+4. Tracks uploads to prevent duplicates
+
+## Setup
+
+1. Copy `.env.example` to `.env` and fill in the values:
+```bash
+cp .env.example .env
+```
+
+2. Required environment variables:
+- `MIDI_DECRYPTOR_ACTION_CID`: The CID of your deployed MIDI Decryptor Lit Action
+- `KARAOKE_STORE_ADDRESS`: Your deployed KaraokeStore contract address
+- `TABLELAND_PRIVATE_KEY`: Private key that owns the songs table
+
+## Usage
+
+### Process a Single Song
+
+```bash
+# Process the test MIDI file for song ID 1
+bun run process-song --midi "test-data/midi/Lorde - Royals/piano.mid" --song-id 1
+
+# Dry run (no upload/update)
+bun run process-song --midi "test-data/midi/Lorde - Royals/piano.mid" --song-id 1 --dry-run
+```
+
+### Verify a Song
+
+Check if a song has been properly updated in Tableland:
+
+```bash
+bun run verify-song --song-id 1
+```
+
+## CID Tracking
+
+The system automatically tracks uploaded CIDs in `cid-tracker.json` to:
+- Prevent duplicate uploads (AIOZ rejects duplicates)
+- Maintain a record of all uploads
+- Allow recovery if Tableland update fails
+
+## Testing the Full Flow
+
+1. **Process a song**:
+   ```bash
+   bun run process-song --midi "test-data/midi/Lorde - Royals/piano.mid" --song-id 1
+   ```
+
+2. **Purchase access** (via your dApp or contract interaction)
+
+3. **Test decryption** (via the MIDI Decryptor Lit Action)
+
+## Troubleshooting
+
+### "File exists on AIOZ but CID unknown"
+This happens when:
+- The file was uploaded before but not tracked
+- The `cid-tracker.json` was deleted
+
+Solution: Manually add the CID to `cid-tracker.json`
+
+### Lit Protocol Connection Issues
+- Ensure you're using the correct network (`datil` for production)
+- Check that the MIDI_DECRYPTOR_ACTION_CID is correct
+
+### Tableland Update Fails
+- Verify you own the table with the private key
+- Check that the song ID exists in the table
+- Ensure you have enough gas on Base
+---
+
+# TESTING_FLOW
+
+# Testing the MIDI Processing Flow
+
+This document outlines how to test the complete MIDI encryption and upload flow.
+
+## Current Status
+
+✅ **Working Components:**
+- CID tracking system to prevent duplicate uploads
+- Lit Protocol encryption (using MIDI Decryptor Action as authorized party)
+- AIOZ upload simulation (dry run mode)
+- Processing script with proper error handling
+
+## Test Flow
+
+### 1. Dry Run Test (Working)
+
+```bash
+bun run process-song -- --midi "../test-data/midi/Lorde - Royals/piano.mid" --song-id 1 --dry-run
+```
+
+This will:
+- Read the MIDI file
+- Encrypt it using Lit Protocol
+- Simulate upload (no actual AIOZ call)
+- Show the CID that would be generated
+
+### 2. Full Processing (Requires Configuration)
+
+To run the full flow, you need:
+
+1. **Deploy MIDI Decryptor Action** to Lit Protocol
+2. **Deploy KaraokeStore Contract** to Base Sepolia
+3. **Configure Environment**:
+   ```env
+   MIDI_DECRYPTOR_ACTION_CID=<your-action-cid>
+   KARAOKE_STORE_ADDRESS=<your-contract-address>
+   TABLELAND_PRIVATE_KEY=<table-owner-private-key>
+   ```
+
+4. **Run Processing**:
+   ```bash
+   bun run process-song --midi "../test-data/midi/Lorde - Royals/piano.mid" --song-id 1
+   ```
+
+### 3. Verify Upload
+
+```bash
+bun run verify-song --song-id 1
+```
+
+## Architecture Summary
+
+```
+MIDI File → Lit Encryption → Encrypted JSON → AIOZ Upload → CID → Tableland Update
+    ↓             ↓                ↓              ↓           ↓
+piano.mid   Access Control   {ciphertext,    IPFS Hash   stems: {
+            (Action Only)     hash, ACL}                  piano: "Qm..."
+                                                         }
+```
+
+## Key Points
+
+1. **Encryption**: Only the MIDI Decryptor Lit Action can decrypt
+2. **Storage**: Encrypted data stored on AIOZ (IPFS)
+3. **Access Control**: Contract tracks who can access songs
+4. **No Re-encryption**: Contract updates don't require re-encrypting files
+
+## Next Steps
+
+1. Deploy the MIDI Decryptor Action
+2. Get AIOZ API credentials (if required)
+3. Deploy contract to Base Sepolia
+4. Run full processing flow
+5. Test decryption via Lit Action
+---
+
+# Database
+
+> Database architecture documentation covering Tableland decentralized SQL database, IndexedDB client storage, schemas, queries, and data management patterns.
+
+# Database Architecture
+
+The Karaoke Turbo platform uses a hybrid database architecture combining decentralized SQL (Tableland) for metadata and local IndexedDB for caching and offline functionality.
+
+## Database Overview
+
+<Mermaid>
+<pre>
+graph TD
+    A[Web App] --> B[Database Service]
+    B --> C[Tableland SQL]
+    B --> D[IndexedDB Cache]
+    
+    C --> E[Songs Table]
+    C --> F[Purchases Table]
+    
+    D --> G[MIDI Cache]
+    D --> H[Session Store]
+    D --> I[SRS Data]
+    
+    E --> J[Base Sepolia]
+    F --> J
+</pre>
+</Mermaid>
+
+## Tableland (Decentralized SQL)
+
+Tableland provides decentralized, verifiable SQL database functionality on Base Sepolia.
+
+### Network Configuration
+
+**Chain ID:** 84532 (Base Sepolia)  
+**Registry Address:** Tableland protocol registry on Base  
+**Gateway URL:** `https://testnets.tableland.network`
+
+### Tables
+
+#### Songs Table
+
+**Table Name:** `songs_v7_84532_132`  
+**Purpose:** Store song metadata and IPFS content references
+
+```sql
+CREATE TABLE songs_v7_84532_132 (
+  id INTEGER PRIMARY KEY,
+  isrc TEXT NOT NULL UNIQUE,
+  iswc TEXT,
+  title TEXT NOT NULL,
+  artist TEXT NOT NULL,
+  duration INTEGER NOT NULL,
+  stems TEXT NOT NULL,        -- JSON: {midi: "ipfs://...", lyrics: "ipfs://..."}
+  language TEXT NOT NULL,
+  genius_id INTEGER,
+  lrclib_id INTEGER,
+  artwork_hash TEXT,          -- IPFS hash for artwork
+  slug TEXT NOT NULL UNIQUE   -- URL-friendly identifier
+);
+```
+
+**Indexes:**
+- Primary key on `id`
+- Unique constraint on `isrc`
+- Unique constraint on `slug`
+
+#### Purchases Table
+
+**Table Name:** `purchases_v1_84532_117`  
+**Purpose:** Track user song purchases and access grants
+
+```sql
+CREATE TABLE purchases_v1_84532_117 (
+  id INTEGER PRIMARY KEY,
+  user_address TEXT NOT NULL,
+  song_id INTEGER NOT NULL,
+  purchase_type TEXT NOT NULL,    -- 'credit_unlock', 'direct_purchase'
+  transaction_hash TEXT NOT NULL,
+  block_number INTEGER NOT NULL,
+  timestamp INTEGER NOT NULL,
+  FOREIGN KEY (song_id) REFERENCES songs_v7_84532_132(id)
+);
+```
+
+**Indexes:**
+- Primary key on `id`
+- Index on `user_address` for user lookups
+- Index on `song_id` for song access queries
+- Index on `transaction_hash` for tx verification
+
+### Tableland Operations
+
+#### Database Service Implementation
+
+```typescript
+// packages/db/src/tableland.ts
+import { Database } from "@tableland/sdk"
+
+export class TablelandService {
+  private db: Database
+  
+  constructor() {
+    this.db = new Database({
+      chainId: 84532,  // Base Sepolia
+    })
+  }
+  
+  async getSong(id: number): Promise<Song | null> {
+    const { results } = await this.db
+      .prepare(`SELECT * FROM songs_v7_84532_132 WHERE id = ?`)
+      .bind(id)
+      .all()
+    
+    return results[0] ? this.parseRow(results[0]) : null
+  }
+  
+  async getSongBySlug(slug: string): Promise<Song | null> {
+    const { results } = await this.db
+      .prepare(`SELECT * FROM songs_v7_84532_132 WHERE slug = ?`)
+      .bind(slug)
+      .all()
+    
+    return results[0] ? this.parseRow(results[0]) : null
+  }
+  
+  async getUserPurchases(userAddress: string): Promise<Purchase[]> {
+    const { results } = await this.db
+      .prepare(`
+        SELECT p.*, s.title, s.artist 
+        FROM purchases_v1_84532_117 p
+        JOIN songs_v7_84532_132 s ON p.song_id = s.id
+        WHERE p.user_address = ?
+        ORDER BY p.timestamp DESC
+      `)
+      .bind(userAddress)
+      .all()
+    
+    return results.map(this.parsePurchaseRow)
+  }
+}
+```
+
+#### Query Patterns
+
+**Common Queries:**
+
+```sql
+-- Get all songs with pagination
+SELECT * FROM songs_v7_84532_132 
+ORDER BY title 
+LIMIT 20 OFFSET 0;
+
+-- Search songs by artist
+SELECT * FROM songs_v7_84532_132 
+WHERE artist LIKE '%Lorde%' 
+ORDER BY title;
+
+-- Get user's purchased songs
+SELECT s.* FROM songs_v7_84532_132 s
+JOIN purchases_v1_84532_117 p ON s.id = p.song_id
+WHERE p.user_address = '0x...'
+ORDER BY p.timestamp DESC;
+
+-- Get popular songs (by purchase count)
+SELECT s.*, COUNT(p.id) as purchase_count
+FROM songs_v7_84532_132 s
+LEFT JOIN purchases_v1_84532_117 p ON s.id = p.song_id
+GROUP BY s.id
+ORDER BY purchase_count DESC
+LIMIT 10;
+```
+
+### Data Integrity
+
+**Validation Rules:**
+- ISRC codes must be valid format (CC-XXX-YY-NNNNN)
+- Stems JSON must contain valid IPFS hashes
+- Slugs must be URL-safe and unique
+- Duration must be positive integer (seconds)
+
+**Constraints:**
+- Foreign key relationships enforced
+- Unique constraints on business identifiers
+- NOT NULL constraints on required fields
+
+## IndexedDB (Client Storage)
+
+IndexedDB provides local, persistent storage for caching and offline functionality.
+
+### Database Structure
+
+#### Karaoke Cache Database
+
+**Database Name:** `karaoke-cache`  
+**Version:** 1
+
+```typescript
+// Store definitions
+interface CacheStores {
+  midi: {
+    key: number        // song ID
+    value: {
+      songId: number
+      data: Uint8Array  // Decrypted MIDI data
+      timestamp: number
+      size: number
+    }
+  }
+  
+  lyrics: {
+    key: number        // song ID  
+    value: {
+      songId: number
+      lines: LyricLine[]
+      timestamp: number
+    }
+  }
+  
+  audio: {
+    key: number        // song ID
+    value: {
+      songId: number
+      buffer: ArrayBuffer
+      sampleRate: number
+      timestamp: number
+    }
+  }
+}
+```
+
+#### Main Application Database
+
+**Database Name:** `karaoke-dapp`  
+**Version:** 1
+
+```typescript
+interface AppStores {
+  sessions: {
+    key: string        // session ID
+    value: {
+      id: string
+      songId: number
+      userAddress: string
+      startTime: number
+      endTime?: number
+      score?: number
+      recordings: AudioSegment[]
+    }
+  }
+  
+  srs: {
+    key: string        // word + language
+    value: {
+      word: string
+      language: string
+      easeFactor: number
+      repetitions: number
+      interval: number
+      nextReview: number
+    }
+  }
+  
+  settings: {
+    key: string        // setting key
+    value: any         // setting value
+  }
+}
+```
+
+### IndexedDB Operations
+
+#### Cache Management
+
+```typescript
+// packages/db/src/idb.ts
+export class IndexedDBService {
+  private cache: IDBDatabase
+  
+  async cacheMIDI(songId: number, data: Uint8Array): Promise<void> {
+    const tx = this.cache.transaction(['midi'], 'readwrite')
+    const store = tx.objectStore('midi')
+    
+    await store.put({
+      songId,
+      data,
+      timestamp: Date.now(),
+      size: data.length
+    }, songId)
+  }
+  
+  async getCachedMIDI(songId: number): Promise<Uint8Array | null> {
+    const tx = this.cache.transaction(['midi'], 'readonly')
+    const store = tx.objectStore('midi')
+    const result = await store.get(songId)
+    
+    if (!result) return null
+    
+    // Check if cache is still valid (24 hours)
+    const maxAge = 24 * 60 * 60 * 1000
+    if (Date.now() - result.timestamp > maxAge) {
+      this.clearCachedMIDI(songId)
+      return null
+    }
+    
+    return result.data
+  }
+  
+  async getCacheSize(): Promise<number> {
+    const tx = this.cache.transaction(['midi'], 'readonly')
+    const store = tx.objectStore('midi')
+    const cursor = await store.openCursor()
+    
+    let totalSize = 0
+    while (cursor) {
+      totalSize += cursor.value.size
+      await cursor.continue()
+    }
+    
+    return totalSize
+  }
+}
+```
+
+#### Session Management
+
+```typescript
+export class SessionStore {
+  async saveSession(session: KaraokeSession): Promise<void> {
+    const tx = this.db.transaction(['sessions'], 'readwrite')
+    const store = tx.objectStore('sessions')
+    await store.put(session, session.id)
+  }
+  
+  async getRecentSessions(limit: number = 10): Promise<KaraokeSession[]> {
+    const tx = this.db.transaction(['sessions'], 'readonly')
+    const store = tx.objectStore('sessions')
+    const index = store.index('timestamp')
+    
+    const sessions = []
+    const cursor = await index.openCursor(null, 'prev')
+    
+    while (cursor && sessions.length < limit) {
+      sessions.push(cursor.value)
+      await cursor.continue()
+    }
+    
+    return sessions
+  }
+}
+```
+
+## Data Flow Architecture
+
+### Read Operations
+
+<Mermaid>
+<pre>
+sequenceDiagram
+    participant App as Web App
+    participant DB as Database Service  
+    participant IDB as IndexedDB
+    participant TL as Tableland
+
+    App->>DB: getSong(id)
+    DB->>IDB: Check cache
+    
+    alt Cache Hit
+        IDB-->>DB: Cached data
+        DB-->>App: Song data
+    else Cache Miss
+        DB->>TL: Query Tableland
+        TL-->>DB: Song metadata
+        DB->>IDB: Cache result
+        DB-->>App: Song data
+    end
+</pre>
+</Mermaid>
+
+### Write Operations
+
+<Mermaid>
+<pre>
+sequenceDiagram
+    participant App as Web App
+    participant DB as Database Service
+    participant TL as Tableland
+    participant Contract as Smart Contract
+
+    App->>Contract: unlockSong(songId)
+    Contract-->>App: Transaction success
+    
+    App->>DB: recordPurchase(txHash, songId)
+    DB->>TL: INSERT INTO purchases
+    TL-->>DB: Success
+    
+    DB->>App: Purchase recorded
+</pre>
+</Mermaid>
+
+## Performance Optimization
+
+### Caching Strategy
+
+**Multi-Level Caching:**
+1. **Memory Cache**: In-memory objects for current session
+2. **IndexedDB**: Persistent browser storage
+3. **Service Worker**: Network request caching
+4. **Tableland**: Decentralized persistence
+
+### Query Optimization
+
+**Indexing Strategy:**
+- Primary keys for direct lookups
+- Secondary indexes on frequently queried fields
+- Composite indexes for multi-field queries
+
+**Pagination:**
+```sql
+-- Efficient pagination with offset
+SELECT * FROM songs_v7_84532_132 
+ORDER BY id 
+LIMIT 20 OFFSET ?;
+
+-- Cursor-based pagination (preferred for large datasets)
+SELECT * FROM songs_v7_84532_132 
+WHERE id > ? 
+ORDER BY id 
+LIMIT 20;
+```
+
+### Cache Management
+
+**Cache Invalidation:**
+- Time-based expiration (24 hours for MIDI)
+- Size-based eviction (LRU policy)
+- Manual cache clearing for updates
+
+**Storage Limits:**
+- IndexedDB: 10MB soft limit, expandable
+- Memory cache: 50MB maximum
+- Automatic cleanup when storage full
+
+## Data Migration
+
+### Schema Versioning
+
+```typescript
+// Database migration handler
+export class MigrationService {
+  async migrateToVersion(version: number): Promise<void> {
+    switch (version) {
+      case 1:
+        await this.createInitialSchema()
+        break
+      case 2:
+        await this.addPurchaseTimestamp()
+        break
+      case 3:
+        await this.addSongGenreField()
+        break
+    }
+  }
+  
+  private async createInitialSchema(): Promise<void> {
+    // Create initial tables and indexes
+  }
+}
+```
+
+### Data Export/Import
+
+```typescript
+// Export user data for backup
+export async function exportUserData(userAddress: string): Promise<UserDataExport> {
+  const purchases = await tableland.getUserPurchases(userAddress)
+  const sessions = await indexedDB.getUserSessions(userAddress)
+  const srsData = await indexedDB.getSRSData(userAddress)
+  
+  return {
+    version: '1.0',
+    userAddress,
+    timestamp: Date.now(),
+    purchases,
+    sessions,
+    srsData
+  }
+}
+```
+
+## Security Considerations
+
+### Data Protection
+
+**Sensitive Data Handling:**
+- User addresses stored as checksummed hex
+- Session data encrypted in IndexedDB
+- No private keys stored locally
+
+**Access Control:**
+- Read access controlled by smart contract
+- Write access requires transaction signing
+- Cache isolation between users
+
+### Privacy
+
+**Data Minimization:**
+- Only necessary metadata stored
+- User sessions expire automatically
+- Optional data collection with consent
+
+## Monitoring and Analytics
+
+### Performance Metrics
+
+```typescript
+// Database performance monitoring
+export class DatabaseMetrics {
+  async recordQueryTime(query: string, duration: number): Promise<void> {
+    // Record query performance
+  }
+  
+  async getCacheHitRate(): Promise<number> {
+    // Calculate cache efficiency
+  }
+  
+  async getStorageUsage(): Promise<StorageStats> {
+    // Monitor storage consumption
+  }
+}
+```
+
+### Error Tracking
+
+**Common Issues:**
+- Network connectivity to Tableland
+- IndexedDB quota exceeded
+- Cache corruption or inconsistency
+- Query timeout errors
+
+### Health Checks
+
+```typescript
+export async function databaseHealthCheck(): Promise<HealthReport> {
+  const checks = await Promise.allSettled([
+    testTablelandConnection(),
+    testIndexedDBAccess(),
+    validateCacheIntegrity(),
+    checkStorageQuota()
+  ])
+  
+  return {
+    tableland: checks[0].status === 'fulfilled',
+    indexedDB: checks[1].status === 'fulfilled', 
+    cache: checks[2].status === 'fulfilled',
+    storage: checks[3].status === 'fulfilled',
+    timestamp: Date.now()
+  }
+}
+```
+---
+
+# Index
+
+# API Reference
+
+This section documents all the services, interfaces, and APIs used in the Karaoke Turbo platform.
+
+## Service Architecture
+
+The application is built with a service-oriented architecture where different concerns are separated into focused services:
+
+<Mermaid>
+<pre>
+graph TD
+    A[Web App] --> B[Audio Services]
+    A --> C[Database Services]  
+    A --> D[Encryption Services]
+    A --> E[Recording Services]
+    
+    B --> F[Tone.js Engine]
+    C --> G[IndexedDB]
+    C --> H[Tableland]
+    D --> I[Lit Protocol]
+    E --> J[Web Audio API]
+</pre>
+</Mermaid>
+
+## Core Services
+
+### Audio Management
+- **[MidiPlayerService](/api/audio-services#midiplayer)** - MIDI playback with Tone.js
+- **[AudioContext](/api/audio-services#audiocontext)** - React context for audio state
+- **[InstrumentFactory](/api/audio-services#instruments)** - Musical instrument synthesis
+
+### Recording & Analysis  
+- **[RecordingManagerService](/api/karaoke-services#recording)** - Audio recording during karaoke
+- **[KaraokeGradingService](/api/karaoke-services#grading)** - Real-time performance analysis
+- **[LyricsParser](/api/karaoke-services#lyrics)** - LRC file parsing and processing
+
+### Data Management
+- **[DatabaseService](/api/database#database)** - Song metadata and user data
+- **[IndexedDBWrapper](/api/database#indexeddb)** - Local storage management
+- **[TablelandService](/api/database#tableland)** - Decentralized database operations
+
+### Encryption & Security
+- **[EncryptionService](/api/encryption#encryption)** - Lit Protocol integration
+- **[SessionManager](/api/encryption#sessions)** - Temporary access management
+- **[PKPService](/api/encryption#pkp)** - Programmable key pair operations
+
+## Common Interfaces
+
+### Song Data
+
+```typescript
+interface Song {
+  id: number
+  title: string
+  artist: string
+  duration: number
+  artwork_url: string
+  lrclib_id: string
+  created_at: string
+  updated_at: string
+}
+```
+
+### Karaoke Session
+
+```typescript
+interface KaraokeSession {
+  songId: number
+  userAddress: string
+  sessionId: string
+  startTime: number
+  duration: number
+  score?: number
+  lineScores: LineScore[]
+}
+
+interface LineScore {
+  lineId: number
+  accuracy: number
+  timing: number
+  pronunciation: number
+}
+```
+
+### Audio Processing
+
+```typescript
+interface AudioSegment {
+  data: Float32Array
+  startTime: number
+  endTime: number
+  sampleRate: number
+  lyricLineId: number
+}
+
+interface ProcessedSegment extends AudioSegment {
+  transcription?: string
+  confidence?: number
+  similarity?: number
+}
+```
+
+### Encryption Context
+
+```typescript
+interface EncryptionContext {
+  sessionSigs: SessionSigs
+  userAddress: string
+  songId: number
+  accessControlConditions: any[]
+}
+
+interface DecryptionResult {
+  midiData: Uint8Array
+  audioUrl: string
+  lyricsUrl: string
+}
+```
+
+## Error Handling
+
+All services implement consistent error handling with specific error types:
+
+```typescript
+// Base service error
+class ServiceError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public service: string
+  ) {
+    super(message)
+    this.name = 'ServiceError'
+  }
+}
+
+// Service-specific errors
+class AudioError extends ServiceError {
+  constructor(message: string, code: string) {
+    super(message, code, 'AudioService')
+  }
+}
+
+class EncryptionError extends ServiceError {
+  constructor(message: string, code: string) {
+    super(message, code, 'EncryptionService')
+  }
+}
+
+class DatabaseError extends ServiceError {
+  constructor(message: string, code: string) {
+    super(message, code, 'DatabaseService')
+  }
+}
+```
+
+### Common Error Codes
+
+| Code | Description | Service |
+|------|-------------|---------|
+| `MIDI_LOAD_FAILED` | Failed to load MIDI file | Audio |
+| `PERMISSION_DENIED` | Microphone access denied | Recording |
+| `DECRYPTION_FAILED` | Lit Protocol decryption error | Encryption |
+| `SESSION_EXPIRED` | User session no longer valid | Encryption |
+| `SONG_NOT_FOUND` | Song not in database | Database |
+| `NETWORK_ERROR` | Network connectivity issue | All |
+
+## Configuration
+
+Services are configured through environment variables and runtime options:
+
+```typescript
+interface ServiceConfig {
+  // Audio configuration
+  audioSampleRate: number
+  audioBufferSize: number
+  
+  // Encryption configuration
+  litNetwork: 'datil' | 'serrano' | 'manzano'
+  actionCid: string
+  
+  // Database configuration
+  tablelandChainId: number
+  tablelandApiUrl: string
+  
+  // Network configuration
+  rpcUrl: string
+  chainId: number
+}
+```
+
+## Performance Considerations
+
+### Caching Strategy
+
+Services implement multi-level caching:
+
+1. **Memory Cache**: In-memory caching for frequently accessed data
+2. **IndexedDB**: Persistent local storage for large files
+3. **Service Worker**: Network request caching
+4. **CDN**: Static asset caching
+
+### Lazy Loading
+
+Services are loaded on-demand to reduce initial bundle size:
+
+```typescript
+// Dynamic service loading
+const loadAudioService = () => import('./audio-service')
+const loadEncryptionService = () => import('./encryption-service')
+```
+
+### Resource Management
+
+Services properly manage resources:
+
+```typescript
+class AudioService {
+  private resources: MediaStream[] = []
+  
+  dispose() {
+    this.resources.forEach(stream => {
+      stream.getTracks().forEach(track => track.stop())
+    })
+    this.resources = []
+  }
+}
+```
+
+## Testing
+
+All services include comprehensive unit tests:
+
+```typescript
+describe('AudioService', () => {
+  let service: AudioService
+  
+  beforeEach(() => {
+    service = new AudioService()
+  })
+  
+  afterEach(() => {
+    service.dispose()
+  })
+  
+  it('should load MIDI file successfully', async () => {
+    const midiData = new Uint8Array([/* test data */])
+    await service.loadMidi(midiData)
+    expect(service.isLoaded()).toBe(true)
+  })
+})
+```
+
+## Integration Examples
+
+### Basic Usage
+
+```typescript
+import { 
+  AudioService, 
+  DatabaseService, 
+  EncryptionService 
+} from '@karaoke-dapp/services'
+
+// Initialize services
+const audio = new AudioService()
+const database = new DatabaseService()
+const encryption = new EncryptionService()
+
+// Load and play a song
+const song = await database.getSong(1)
+const { midiData } = await encryption.decryptSong(1, sessionSigs)
+await audio.loadMidi(midiData)
+audio.play()
+```
+
+### React Integration
+
+```typescript
+function KaraokePlayer({ songId }: { songId: number }) {
+  const { loadMidi, play, currentTime } = useAudio()
+  const { state, send } = useSongMachine(songId)
+  
+  useEffect(() => {
+    if (state.context.midiData) {
+      loadMidi(state.context.midiData)
+    }
+  }, [state.context.midiData])
+  
+  return (
+    <div>
+      <button onClick={play}>Play</button>
+      <div>Time: {currentTime}</div>
+    </div>
+  )
+}
+```
+
+## Navigation
+
+Browse the detailed API documentation:
+
+- **[Audio Services](/api/audio-services)** - MIDI playback and audio processing
+- **[Karaoke Services](/api/karaoke-services)** - Recording and performance analysis  
+- **[Database](/api/database)** - Data management and storage
+- **[Encryption](/api/encryption)** - Security and access control
+---
+
+# Index
+
+> System architecture, data flow, and security model for the Karaoke Turbo platform including blockchain integration and decentralized storage.
+
+# Architecture Overview
+
+The Karaoke Turbo platform is built with a modular, decentralized architecture that separates concerns while maintaining performance and security.
+
+## System Components
+
+### Frontend Layer
+- **React Application**: Main user interface
+- **State Machines**: XState for complex state management
+- **Audio Engine**: Tone.js + Web Audio API for MIDI playback and recording
+
+### Blockchain Layer  
+- **Smart Contracts**: Credit system and access control on Base network
+- **Wallet Integration**: Wagmi for Web3 connectivity
+
+### Storage Layer
+- **Encrypted Files**: MIDI and audio stored on IPFS/Arweave
+- **Metadata**: Song information in Tableland database
+- **Local Cache**: IndexedDB for performance
+
+### Encryption Layer
+- **Lit Protocol**: Programmable key pairs for access control
+- **Session Signatures**: Temporary access for karaoke sessions
+
+## Data Flow
+
+<Mermaid>
+<pre>
+sequenceDiagram
+    participant U as User
+    participant W as Web App
+    participant C as Smart Contract
+    participant L as Lit Protocol
+    participant S as Storage
+
+    U->>W: Connect Wallet
+    U->>C: Purchase Credits
+    U->>W: Select Song
+    W->>C: Check Access
+    C-->>W: Access Confirmed
+    W->>L: Request Decryption
+    L->>S: Fetch Encrypted MIDI
+    L-->>W: Decrypted MIDI
+    W->>W: Start Karaoke Session
+</pre>
+</Mermaid>
+
+## State Management
+
+The application uses XState for managing complex state transitions:
+
+### Song Machine States
+- `idle` → `checkingAccess` → `purchased` → `karaoke`
+- Handles: purchasing, downloading, decryption, session management
+
+### Karaoke Machine States  
+- `countdown` → `playing` → `stopped` → `reviewing`
+- Handles: audio playback, recording, scoring, submission
+
+## Security Model
+
+### Access Control
+1. **Purchase Verification**: Smart contract validates USDC payment
+2. **Song Access**: PKP verifies ownership before decryption
+3. **Session Security**: Time-limited signatures for karaoke sessions
+
+### Data Protection
+- MIDI files encrypted with Lit Protocol
+- User recordings stored locally (optional blockchain submission)
+- No sensitive data in smart contracts
+
+## Performance Considerations
+
+### Audio Optimization
+- MIDI files loaded and cached locally
+- Web Audio API for low-latency playback
+- Streaming recording for real-time processing
+
+### Blockchain Efficiency
+- Batched transactions where possible
+- Credit system reduces per-song gas costs
+- Layer 2 (Base) for lower fees
+
+### Caching Strategy
+- IndexedDB for decrypted MIDI files
+- Service worker for offline capability
+- Tableland for fast metadata queries
+
+## Scalability
+
+The architecture is designed to scale both technically and economically:
+
+### Technical Scaling
+- **Horizontal**: Multiple storage providers (IPFS, Arweave, AIOZ)
+- **Vertical**: Optimized audio processing and state machines
+- **Caching**: Multi-layer caching reduces load
+
+### Economic Scaling
+- **Credit Packs**: Bulk purchasing reduces transaction costs
+- **Revenue Splits**: Automatic distribution to artists and platform
+- **Voice Credits**: Separate economy for AI-powered features
+---
+
+# State Machines
+
+> XState implementation details for song lifecycle and karaoke session management including state transitions, context, and machine composition.
+
+# State Machines
+
+Karaoke Turbo uses XState for managing complex application state. This provides predictable state transitions, clear debugging, and robust error handling.
+
+## Architecture Overview
+
+The application uses a hierarchical state machine pattern with two main machines:
+
+<Mermaid>
+<pre>
+stateDiagram-v2
+    [*] --> SongMachine
+    SongMachine --> KaraokeMachine : START_KARAOKE
+    KaraokeMachine --> SongMachine : EXIT / COMPLETE
+    
+    state SongMachine {
+        [*] --> idle
+        idle --> checkingAccess
+        checkingAccess --> purchased
+        checkingAccess --> unpurchased
+        purchased --> karaoke
+        karaoke --> purchased
+    }
+    
+    state KaraokeMachine {
+        [*] --> countdown
+        countdown --> playing
+        playing --> stopped
+        stopped --> [*]
+    }
+</pre>
+</Mermaid>
+
+## Song State Machine
+
+Manages the lifecycle of song access, purchase, and preparation.
+
+### States
+
+#### `idle`
+Initial state when component loads.
+
+**Entry Actions:** None  
+**Available Events:** `CHECK_ACCESS`
+
+#### `checkingAccess`
+Verifies if user has purchased the song.
+
+**Entry Actions:** 
+- Invoke `checkAccess` service
+- Show loading indicator
+
+**Transitions:**
+- `onDone` → `purchased` (if user has access)
+- `onDone` → `canUnlock` (if user has credits)
+- `onDone` → `unpurchased` (if no access)
+- `onError` → `error`
+
+#### `purchased`
+User has access to the song. Contains sub-states for download management.
+
+**Sub-states:**
+- `checkingCache` - Verify if MIDI is cached locally
+- `needsDownload` - MIDI not cached, show download button
+- `downloading` - Downloading and decrypting MIDI
+- `ready` - Song ready to play
+
+#### `karaoke`
+Karaoke session is active. Spawns the karaoke machine as a child actor.
+
+**Entry Actions:**
+- Spawn `karaokeMachine` actor
+- Pass song data and session signatures
+
+**Child Actor:** `karaokeMachine`
+**Events:** `EXIT` to return to purchased state
+
+### Context
+
+```typescript
+interface SongContext {
+  songId: number
+  userAddress?: string
+  tokenId?: number
+  credits?: number
+  midiData?: Uint8Array
+  audioUrl?: string
+  lyricsUrl?: string
+  sessionSigs?: SessionSigs
+  encryptedCid?: string
+  error?: string
+  lastKaraokeScore?: number
+}
+```
+
+### Events
+
+```typescript
+type SongEvent =
+  | { type: 'CHECK_ACCESS' }
+  | { type: 'PURCHASE' }
+  | { type: 'UNLOCK' }
+  | { type: 'DOWNLOAD' }
+  | { type: 'START_KARAOKE' }
+  | { type: 'EXIT' }
+  | { type: 'RETRY' }
+  | { type: 'UPDATE_ADDRESS'; address: string }
+```
+
+### Services
+
+#### `checkAccess`
+Verifies user's access to the song via smart contract.
+
+```typescript
+const checkAccess = async ({ context }: { context: SongContext }) => {
+  const contract = getKaraokeStoreContract()
+  const hasAccess = await contract.hasSongAccess(
+    context.userAddress, 
+    context.songId
+  )
+  
+  if (hasAccess) {
+    const tokenId = await contract.getSongToken(context.userAddress, context.songId)
+    return { hasAccess: true, tokenId }
+  }
+  
+  const credits = await contract.creditBalance(context.userAddress)
+  return { hasAccess: false, credits }
+}
+```
+
+#### `unlockSong`
+Uses user credits to unlock a song.
+
+```typescript
+const unlockSong = async ({ context }: { context: SongContext }) => {
+  const contract = getKaraokeStoreContract()
+  const tx = await contract.unlockSong(context.songId)
+  await tx.wait()
+  
+  // Check if MIDI data is immediately available (cached)
+  const cached = await checkCachedMidi(context.songId)
+  return {
+    tokenId: await contract.getSongToken(context.userAddress, context.songId),
+    ...cached
+  }
+}
+```
+
+## Karaoke State Machine
+
+Manages the karaoke session from countdown to completion.
+
+### States
+
+#### `countdown`
+3-second countdown before karaoke starts.
+
+**Entry Actions:**
+- Set countdown to 3
+- Start countdown timer
+
+**Events:**
+- `UPDATE_COUNTDOWN` - Updates countdown value
+- `STOP` - Cancel and return to ready
+
+#### `playing`
+Active karaoke session with audio playback and recording.
+
+**Entry Actions:**
+- `startPlayback` - Begin MIDI playback
+- `startLyricSync` - Sync lyrics with audio
+- `startRecording` - Begin voice recording
+
+**Exit Actions:**
+- `stopPlayback` - Stop audio
+- `stopLyricSync` - Stop lyric sync
+- `stopRecordingAndProcess` - Stop and process recording
+
+**Events:**
+- `COMPLETE` - Song finished, move to stopped
+- `STOP` - User stopped, move to stopped
+- `NEXT_LINE` / `PREVIOUS_LINE` - Navigate lyrics
+
+#### `stopped`
+Karaoke session completed, showing results.
+
+**Entry Actions:**
+- Calculate final score based on performance
+
+**Sub-states:**
+- `reviewing` - Show score and options
+- `submitting` - Submit score to blockchain (optional)
+- `submitted` - Score submitted successfully
+
+### Context
+
+```typescript
+interface KaraokeContext {
+  songId: number
+  midiData: Uint8Array
+  audioUrl?: string
+  lyricsUrl?: string
+  sessionSigs?: SessionSigs
+  currentLineIndex: number
+  score: number
+  countdown?: number
+  lyrics?: LyricLine[]
+  audioBuffer?: AudioBuffer
+  error?: string
+}
+```
+
+### Events
+
+```typescript
+type KaraokeEvent =
+  | { type: 'PLAY' }
+  | { type: 'STOP' }
+  | { type: 'COMPLETE' }
+  | { type: 'RESTART' }
+  | { type: 'UPDATE_COUNTDOWN'; value: number }
+  | { type: 'NEXT_LINE' }
+  | { type: 'PREVIOUS_LINE' }
+  | { type: 'SUBMIT_SCORE' }
+```
+
+### Actions
+
+#### `startPlayback`
+Initialize and start MIDI audio playback.
+
+```typescript
+const startPlayback = () => {
+  const audioContext = getAudioContext()
+  audioContext.play()
+}
+```
+
+#### `startRecording`
+Begin recording user's voice during karaoke.
+
+```typescript
+const startRecording = ({ context }: { context: KaraokeContext }) => {
+  const recordingManager = getRecordingManager()
+  recordingManager.start()
+  
+  // Schedule segments based on lyrics timing
+  const segments = prepareKaraokeSegments(context.lyrics)
+  segments.forEach(segment => {
+    recordingManager.scheduleSegment(segment)
+  })
+}
+```
+
+## Machine Composition
+
+The song machine invokes the karaoke machine as a child actor:
+
+```typescript
+karaoke: {
+  invoke: {
+    id: 'karaokeMachine',
+    src: karaokeMachine,
+    input: ({ context }) => ({
+      songId: context.songId,
+      midiData: context.midiData,
+      audioUrl: context.audioUrl,
+      lyricsUrl: context.lyricsUrl,
+      sessionSigs: context.sessionSigs,
+    }),
+    onDone: {
+      target: 'purchased.ready',
+      actions: assign({
+        lastKaraokeScore: ({ event }) => event.output?.score,
+      }),
+    },
+    onError: {
+      target: 'purchased.ready',
+      actions: assign({
+        error: ({ event }) => event.error.message,
+      }),
+    },
+  },
+}
+```
+
+## React Integration
+
+### Custom Hooks
+
+#### `useSongMachine`
+Provides song state and actions to React components.
+
+```typescript
+export function useSongMachine(songId: number) {
+  const { address } = useAccount()
+  
+  const [state, send] = useMachine(songMachine, {
+    input: { songId, userAddress: address },
+  })
+  
+  // Derived state
+  const isInKaraokeMode = state.matches('karaoke')
+  const isKaraokePlaying = state.matches('karaoke') && 
+    state.children.karaokeMachine?.getSnapshot().matches('playing')
+  
+  // Actions
+  const checkAccess = useCallback(() => {
+    send({ type: 'CHECK_ACCESS' })
+  }, [send])
+  
+  return {
+    state,
+    send,
+    isInKaraokeMode,
+    isKaraokePlaying,
+    checkAccess,
+    // ... other derived state and actions
+  }
+}
+```
+
+#### `useKaraokeMachine`
+Direct access to karaoke machine state (when needed).
+
+```typescript
+export function useKaraokeMachine(input: KaraokeContext) {
+  const [state, send] = useMachine(karaokeMachine, { input })
+  
+  const isCountingDown = state.matches('countdown')
+  const isPlaying = state.matches('playing')
+  const countdownValue = state.context.countdown
+  
+  return {
+    state,
+    send,
+    isCountingDown,
+    isPlaying,
+    countdownValue,
+  }
+}
+```
+
+### Component Usage
+
+```typescript
+function SongPage({ songId }: { songId: number }) {
+  const {
+    state,
+    send,
+    isInKaraokeMode,
+    isKaraokePlaying,
+    checkAccess,
+  } = useSongMachine(songId)
+  
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
+  
+  if (isInKaraokeMode) {
+    return <KaraokeView />
+  }
+  
+  return (
+    <div>
+      {state.matches('purchased.ready') && (
+        <button onClick={() => send({ type: 'START_KARAOKE' })}>
+          Start Karaoke
+        </button>
+      )}
+    </div>
+  )
+}
+```
+
+## Testing State Machines
+
+XState provides excellent testing utilities:
+
+```typescript
+import { createActor } from 'xstate'
+import { songMachine } from './song-machine'
+
+describe('Song Machine', () => {
+  it('should transition from idle to checkingAccess', () => {
+    const actor = createActor(songMachine, {
+      input: { songId: 1, userAddress: '0x123...' }
+    })
+    
+    actor.start()
+    expect(actor.getSnapshot().value).toBe('idle')
+    
+    actor.send({ type: 'CHECK_ACCESS' })
+    expect(actor.getSnapshot().value).toBe('checkingAccess')
+  })
+  
+  it('should handle purchase flow', async () => {
+    const actor = createActor(songMachine)
+    actor.start()
+    
+    // Mock services
+    actor.send({ type: 'CHECK_ACCESS' })
+    // ... test transitions
+  })
+})
+```
+
+## Debugging
+
+### XState DevTools
+
+The machines are configured for debugging:
+
+```typescript
+const songMachine = createMachine({
+  // ... machine definition
+}, {
+  devTools: process.env.NODE_ENV === 'development'
+})
+```
+
+### State Inspection
+
+```typescript
+// Log state changes
+const [state, send] = useMachine(songMachine, {
+  inspect: (event) => {
+    console.log('State Machine Event:', event)
+  }
+})
+
+// Current state information
+console.log('Current state:', state.value)
+console.log('Context:', state.context)
+console.log('Can transition?', state.can({ type: 'START_KARAOKE' }))
+```
+
+## Best Practices
+
+1. **Single Responsibility**: Each machine handles one domain
+2. **Immutable Context**: Use assign() for context updates
+3. **Side Effects in Services**: Keep actions pure
+4. **Error Boundaries**: Handle all possible error states
+5. **Testing**: Test all state transitions and edge cases
+---
+
+# Deployment
+
+> Smart contract deployment information including addresses, networks, and deployment procedures for the Karaoke Turbo platform on Base Sepolia.
+
+# Contract Deployment
+
+This document provides comprehensive information about deployed smart contracts, their addresses, and deployment procedures.
+
+## Deployed Contracts
+
+### KaraokeStore_V0_1_0 (MusicStoreV2)
+
+**Network:** Base Sepolia  
+**Address:** `0x306466a909df4dc0508b68b4511bcf8130abcb43`  
+**Chain ID:** 84532  
+**Explorer:** [BaseScan Sepolia](https://sepolia.basescan.org/address/0x306466a909df4dc0508b68b4511bcf8130abcb43)
+
+#### Contract Features
+
+- **Credit System**: Purchase credit packs for song unlocking
+- **USDC Integration**: Payments via USDC token with permit support
+- **Access Control**: Contract-based verification for Lit Protocol
+- **Voice Credits**: Separate credit system for AI-powered karaoke grading
+- **Multi-song Support**: Batch operations for multiple song access
+
+#### Key Functions
+
+```solidity
+// Purchase 100 credits for 2 USDC
+function purchaseCreditPack() external
+
+// Unlock a song for 1 credit
+function unlockSong(uint256 songId) external
+
+// Check if user has access to a song
+function checkAccess(address user, uint256 songId) external view returns (bool)
+
+// Check access to multiple songs
+function checkMultiAccess(address user, uint256[] calldata songIds) 
+    external view returns (bool[] memory)
+
+// Voice session settlement with Lit Protocol signatures
+function settleVoiceSession(bytes calldata signature, uint256 amount) external
+```
+
+### USDC Token Contract
+
+**Network:** Base Sepolia  
+**Address:** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`  
+**Decimals:** 6  
+**Symbol:** USDC
+
+This is the official USDC test token for Base Sepolia, used for all platform transactions.
+
+## Deployment Information
+
+### Current Deployment
+
+The contracts are deployed and operational on Base Sepolia testnet:
+
+- **Gas Limit**: Standard deployment with sufficient gas buffer
+- **Verification**: Contract source code verified on BaseScan
+- **Upgradability**: Not upgradeable (immutable deployment)
+- **Owner**: Multi-sig or EOA (check contract for current owner)
+
+### Network Configuration
+
+```typescript
+const baseSepoliaConfig = {
+  chainId: 84532,
+  rpcUrl: 'https://sepolia.base.org',
+  blockExplorer: 'https://sepolia.basescan.org',
+  nativeCurrency: {
+    name: 'Ethereum',
+    symbol: 'ETH',
+    decimals: 18
+  }
+}
+```
+
+## Deployment Scripts
+
+### Songs Table Deployment
+
+**Script:** `scripts/deploy-songs-table.ts`
+
+Deploys the Tableland database table for song metadata:
+
+```bash
+bun run deploy-songs-table
+```
+
+**Creates table:** `songs_v7_84532_132`
+
+### MIDI Decryptor Deployment
+
+**Script:** `scripts/deploy-midi-decryptor.ts`
+
+Deploys the Lit Protocol action for MIDI decryption:
+
+```bash
+bun run deploy-midi-decryptor
+```
+
+**Outputs:** Lit Action CID for environment configuration
+
+## Integration Guide
+
+### Contract Integration
+
+```typescript
+import { getKaraokeStoreContract } from '@karaoke-dapp/contracts'
+
+// Get contract instance
+const contract = getKaraokeStoreContract()
+
+// Check user access
+const hasAccess = await contract.checkAccess(userAddress, songId)
+
+// Purchase credits
+const tx = await contract.purchaseCreditPack()
+await tx.wait()
+```
+
+### Environment Variables
+
+Required for contract interaction:
+
+```env
+# Contract addresses
+KARAOKE_STORE_ADDRESS=0x306466a909df4dc0508b68b4511bcf8130abcb43
+
+# Network configuration
+CHAIN_ID=84532
+RPC_URL=https://sepolia.base.org
+
+# Lit Protocol integration
+LIT_PKP_ETH_ADDRESS=<pkp-address>
+MIDI_DECRYPTOR_ACTION_CID=<action-cid>
+```
+
+## Access Control Model
+
+### Song Access Flow
+
+<Mermaid>
+<pre>
+sequenceDiagram
+    participant U as User
+    participant W as Web App  
+    participant C as Contract
+    participant L as Lit Action
+    participant S as IPFS
+
+    U->>W: Request song access
+    W->>C: checkAccess(user, songId)
+    C-->>W: Access status
+    
+    alt Has Access
+        W->>L: Request decryption with PKP
+        L->>C: Verify access on-chain
+        C-->>L: Access confirmed
+        L->>S: Fetch encrypted MIDI
+        L-->>W: Decrypted MIDI data
+    else No Access  
+        W->>C: purchaseCreditPack()
+        C->>C: Transfer 2 USDC, mint 100 credits
+        W->>C: unlockSong(songId)
+        C->>C: Burn 1 credit, grant access
+    end
+</pre>
+</Mermaid>
+
+### Credit Economics
+
+| Action | Cost | Credits Granted/Used |
+|--------|------|---------------------|
+| Credit Pack Purchase | 2 USDC | +100 credits |
+| Song Unlock | 1 credit | -1 credit |
+| Voice Pack Purchase | 1 USDC | +10 voice credits |
+| AI Grading Session | 1 voice credit | -1 voice credit |
+
+## Security Considerations
+
+### Access Control
+
+- **On-chain Verification**: All access checks happen on-chain
+- **Lit Protocol Integration**: PKP-based decryption with contract verification
+- **No Admin Functions**: Contract is immutable once deployed
+- **USDC Permit**: Gasless token approvals for better UX
+
+### Audit Status
+
+The contracts have not undergone a formal security audit. Consider this when using in production:
+
+- **Testnet Only**: Currently deployed only on testnets
+- **Code Review**: Internal code review completed
+- **Test Coverage**: Comprehensive test suite in place
+- **Formal Audit**: Recommended before mainnet deployment
+
+## Monitoring and Analytics
+
+### Contract Events
+
+Key events emitted by the contract:
+
+```solidity
+event CreditPackPurchased(address indexed user, uint256 amount, uint256 credits);
+event SongUnlocked(address indexed user, uint256 indexed songId);
+event VoiceSessionSettled(address indexed user, uint256 amount);
+```
+
+### Metrics to Track
+
+- Credit pack purchases per day
+- Song unlock frequency
+- User retention and engagement
+- USDC volume processed
+- Gas usage optimization
+
+## Troubleshooting
+
+### Common Issues
+
+**Transaction Reverts:**
+- Check USDC balance and allowance
+- Verify user has sufficient credits
+- Ensure correct network (Base Sepolia)
+
+**Access Denied:**
+- Verify song exists in contract
+- Check if user has unlocked the song
+- Confirm Lit Protocol session is valid
+
+**Gas Estimation Failures:**
+- Use updated RPC endpoint
+- Check network congestion
+- Verify contract address is correct
+
+### Support Resources
+
+- **Contract Source**: View on BaseScan Sepolia
+- **Integration Examples**: See `/packages/contracts/src/index.ts`
+- **Test Suite**: Reference test files for usage patterns
+- **Discord**: Community support for integration help
+---
+
+# Index
+
+> Smart contract documentation for KaraokeStore including credit system, access control, revenue distribution, and deployment procedures on Base network.
+
+# Smart Contracts
+
+The Karaoke Turbo platform uses smart contracts on the Base network to manage song access, payments, and user credits with advanced features for karaoke grading and voice credits.
+
+## Contract Architecture
+
+<Mermaid>
+<pre>
+graph TD
+    A[User] --> B[KaraokeStore Contract]
+    B --> C[USDC Token]
+    B --> D[Credit System]
+    B --> E[Voice Credits]
+    
+    D --> F[Song Access]
+    E --> G[AI Grading]
+    
+    F --> H[Lit Protocol]
+    G --> I[Voice Sessions]
+    
+    C --> J[Base Sepolia]
+    H --> K[MIDI Decryption]
+    I --> L[Performance Scoring]
+</pre>
+</Mermaid>
+
+The platform uses a comprehensive contract design focused on:
+- **Dual Credit System**: Regular credits for songs, voice credits for AI features
+- **USDC Payment Processing**: Gasless transactions with permit support
+- **Decentralized Verification**: On-chain access control for Lit Protocol
+- **Voice Session Management**: AI-powered karaoke grading integration
+- **Revenue Distribution**: Automatic payment splitting
+
+## KaraokeStore_V0_1_0 (MusicStoreV2)
+
+### Contract Address
+
+**Base Sepolia**: `0x306466a909df4dc0508b68b4511bcf8130abcb43`  
+**Explorer**: [View on BaseScan](https://sepolia.basescan.org/address/0x306466a909df4dc0508b68b4511bcf8130abcb43)
+
+### Core Functions
+
+#### Credit Management
+
+```solidity
+// Purchase 100 regular credits for 2 USDC
+function purchaseCreditPack() external
+
+// Purchase 10 voice credits for 1 USDC
+function purchaseVoicePack() external
+
+// Unlock a song for 1 regular credit
+function unlockSong(uint256 songId) external
+
+// Check user's regular credit balance
+function creditBalance(address user) external view returns (uint256)
+
+// Check user's voice credit balance  
+function voiceCreditBalance(address user) external view returns (uint256)
+```
+
+#### Access Control
+
+```solidity
+// Check if user has access to a specific song
+function checkAccess(address user, uint256 songId) external view returns (bool)
+
+// Check access to multiple songs (batch operation)
+function checkMultiAccess(address user, uint256[] calldata songIds) 
+    external view returns (bool[] memory)
+
+// Get all songs a user has access to
+function getUserSongs(address user) external view returns (uint256[] memory)
+
+// Check if user owns a specific song token
+function getSongToken(address user, uint256 songId) external view returns (uint256)
+```
+
+#### Voice Session Management
+
+```solidity
+// Settle voice session with Lit Protocol signature
+function settleVoiceSession(
+    bytes calldata signature, 
+    uint256 amount
+) external
+
+// Get voice session history for user
+function getVoiceSessions(address user) 
+    external view returns (VoiceSession[] memory)
+```
+
+#### USDC Integration with Permit
+
+```solidity
+// Purchase credits using USDC permit (gasless)
+function purchaseCreditPackWithPermit(
+    uint256 value,
+    uint256 deadline,
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+) external
+
+// Purchase voice pack with permit
+function purchaseVoicePackWithPermit(
+    uint256 value,
+    uint256 deadline,  
+    uint8 v,
+    bytes32 r,
+    bytes32 s
+) external
+```
+
+### Events
+
+```solidity
+event CreditPackPurchased(
+    address indexed user, 
+    uint256 amount, 
+    uint256 credits
+);
+
+event VoicePackPurchased(
+    address indexed user,
+    uint256 amount, 
+    uint256 voiceCredits
+);
+
+event SongUnlocked(
+    address indexed user, 
+    uint256 indexed songId,
+    uint256 tokenId
+);
+
+event VoiceSessionSettled(
+    address indexed user,
+    uint256 amount,
+    bytes signature
+);
+```
+
+### Integration with Lit Protocol
+
+The contract serves as the authoritative source for Lit Protocol access control:
+
+```javascript
+// Lit Action verifies access on-chain before decryption
+const accessControlConditions = [{
+  contractAddress: KARAOKE_STORE_ADDRESS,
+  functionName: "checkAccess",
+  functionParams: [":userAddress", songId.toString()],
+  functionAbi: {
+    name: "checkAccess",
+    type: "function", 
+    inputs: [
+      { type: "address", name: "user" },
+      { type: "uint256", name: "songId" }
+    ],
+    outputs: [{ type: "bool" }]
+  },
+  chain: "baseSepolia",
+  returnValueTest: {
+    comparator: "=",
+    value: "true"
+  }
+}]
+```
+
+## Credit Economics
+
+### Credit System Structure
+
+| Credit Type | Purchase Cost | Credits Granted | Usage |
+|-------------|---------------|-----------------|-------|
+| Regular Credits | 2 USDC | 100 credits | Song unlocking |
+| Voice Credits | 1 USDC | 10 voice credits | AI karaoke grading |
+
+### Cost Per Usage
+
+| Action | Credit Cost | USD Equivalent |
+|--------|-------------|----------------|
+| Unlock Song | 1 credit | $0.02 |
+| AI Grading Session | 1 voice credit | $0.10 |
+
+### Revenue Distribution
+
+```solidity
+// Revenue split (configurable by governance)
+struct RevenueSplit {
+    uint256 artistShare;    // e.g., 70%
+    uint256 platformShare;  // e.g., 25%  
+    uint256 stakingRewards; // e.g., 5%
+}
+```
+
+## Advanced Features
+
+### Multi-Song Access
+
+```typescript
+// Check access to multiple songs efficiently
+const songIds = [1, 2, 3, 4, 5]
+const accessResults = await contract.checkMultiAccess(userAddress, songIds)
+
+// Returns: [true, false, true, false, true]
+// User has access to songs 1, 3, and 5
+```
+
+### Voice Session Integration
+
+```typescript
+// Voice session workflow
+async function processVoiceSession(userAddress: string, score: number) {
+  // 1. User performs karaoke (off-chain)
+  // 2. AI processes performance and generates score
+  // 3. Create settlement signature with Lit Protocol
+  const signature = await createVoiceSessionSignature(userAddress, score)
+  
+  // 4. Submit to contract for credit deduction and scoring
+  const tx = await contract.settleVoiceSession(signature, 1) // 1 voice credit
+  await tx.wait()
+}
+```
+
+### Gasless Transactions
+
+```typescript
+// USDC permit for gasless credit purchases
+import { permit } from '@/utils/permit'
+
+async function purchaseCreditsGasless() {
+  const { v, r, s, deadline } = await permit.signUSDCPermit(
+    userAddress,
+    KARAOKE_STORE_ADDRESS,
+    ethers.parseUnits("2", 6), // 2 USDC
+    deadline
+  )
+  
+  // Purchase without requiring ETH for gas
+  await contract.purchaseCreditPackWithPermit(
+    ethers.parseUnits("2", 6),
+    deadline,
+    v, r, s
+  )
+}
+```
+
+## Usage Examples
+
+### React Hook Integration
+
+```typescript
+function useKaraokeStore() {
+  const { address } = useAccount()
+  const contract = useContract({
+    address: KARAOKE_STORE_ADDRESS,
+    abi: karaokeStoreABI,
+  })
+  
+  const [credits, setCredits] = useState(0)
+  const [voiceCredits, setVoiceCredits] = useState(0)
+  
+  // Fetch balances
+  useEffect(() => {
+    if (!address || !contract) return
+    
+    Promise.all([
+      contract.creditBalance(address),
+      contract.voiceCreditBalance(address)
+    ]).then(([regular, voice]) => {
+      setCredits(Number(regular))
+      setVoiceCredits(Number(voice))
+    })
+  }, [address, contract])
+  
+  // Purchase functions
+  const purchaseCredits = useCallback(async () => {
+    const tx = await contract.purchaseCreditPack()
+    await tx.wait()
+    // Refresh balances
+  }, [contract])
+  
+  const unlockSong = useCallback(async (songId: number) => {
+    const tx = await contract.unlockSong(songId)
+    await tx.wait()
+    return tx.hash
+  }, [contract])
+  
+  return {
+    credits,
+    voiceCredits,
+    purchaseCredits,
+    unlockSong,
+    contract
+  }
+}
+```
+
+### Song Access Component
+
+```tsx
+function SongAccessButton({ songId }: { songId: number }) {
+  const { address } = useAccount()
+  const { unlockSong } = useKaraokeStore()
+  const [hasAccess, setHasAccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  
+  // Check access on mount
+  useEffect(() => {
+    if (!address) return
+    
+    contract.checkAccess(address, songId)
+      .then(setHasAccess)
+  }, [address, songId])
+  
+  const handleUnlock = async () => {
+    setLoading(true)
+    try {
+      await unlockSong(songId)
+      setHasAccess(true)
+    } catch (error) {
+      console.error('Failed to unlock song:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  if (hasAccess) {
+    return <Button>🎤 Start Karaoke</Button>
+  }
+  
+  return (
+    <Button onClick={handleUnlock} disabled={loading}>
+      {loading ? 'Unlocking...' : 'Unlock Song (1 credit)'}
+    </Button>
+  )
+}
+```
+
+## Security Considerations
+
+### Access Control Security
+
+- **On-chain Verification**: All access checks happen on-chain, preventing manipulation
+- **Non-transferable Credits**: Credits bound to purchasing address
+- **Immutable Contract**: No admin functions or upgradeability
+- **Audit Status**: Internal code review completed, formal audit recommended
+
+### Economic Security
+
+- **Stable Pricing**: USDC prevents volatile token pricing issues
+- **Fixed Exchange Rate**: Predictable credit costs
+- **Anti-Gaming**: Voice sessions require cryptographic proofs
+- **Rate Limiting**: Prevents credit farming attacks
+
+### Integration Security
+
+```solidity
+// Access control conditions for Lit Protocol
+function verifyLitAccess(address user, uint256 songId) external view returns (bool) {
+    require(msg.sender == LIT_PROTOCOL_VERIFIER, "Unauthorized");
+    return checkAccess(user, songId);
+}
+```
+
+## Monitoring and Analytics
+
+### Contract Events Tracking
+
+```typescript
+// Listen for contract events
+contract.on('SongUnlocked', (user, songId, tokenId) => {
+  analytics.track('Song Unlocked', {
+    user,
+    songId: songId.toString(),
+    tokenId: tokenId.toString(),
+    timestamp: Date.now()
+  })
+})
+
+contract.on('CreditPackPurchased', (user, amount, credits) => {
+  analytics.track('Credits Purchased', {
+    user,
+    amountUSDC: ethers.formatUnits(amount, 6),
+    creditsReceived: credits.toString()
+  })
+})
+```
+
+### Performance Metrics
+
+Key metrics to monitor:
+- **Daily Active Users**: Unique addresses interacting
+- **Credit Purchase Volume**: USDC volume and frequency
+- **Song Unlock Rate**: Most popular content
+- **Voice Session Usage**: AI feature adoption
+- **Revenue Attribution**: Artist vs platform earnings
+
+## Deployment Information
+
+### Current Deployment
+
+- **Network**: Base Sepolia (testnet)
+- **Address**: `0x306466a909df4dc0508b68b4511bcf8130abcb43`
+- **Deploy Block**: Check BaseScan for deployment details
+- **Verification**: Source code verified on BaseScan
+
+### Production Readiness
+
+**Mainnet Deployment Checklist:**
+- [ ] Formal security audit
+- [ ] Gas optimization review  
+- [ ] Revenue split governance setup
+- [ ] Emergency pause mechanisms
+- [ ] Multi-sig admin controls
+- [ ] Insurance coverage evaluation
+
+### Future Enhancements
+
+**Planned Features:**
+- **NFT Integration**: Song ownership NFTs for collectors
+- **Governance Token**: Community voting on platform decisions
+- **Staking Rewards**: Reduced fees for token stakers  
+- **Cross-chain Support**: Polygon, Arbitrum integration
+- **Dynamic Pricing**: Market-driven credit costs
+---
+
+# Deployment
+
+# Deployment Guide
+
+This guide walks through deploying all components needed for the Karaoke dApp to production.
+
+## Prerequisites
+
+### Required Assets
+
+- **Base Sepolia/Mainnet ETH** for gas fees
+- **USDC on Base** for testing payments
+- **Private key** that will own the Tableland songs table
+- **Node.js 18+** and **Bun** installed
+- **Forge** (Foundry) for smart contract deployment
+
+### Development Tools
+
+- Git repository access
+- Environment configuration
+- Test wallet with Base network configured
+
+## Deployment Steps
+
+### 1. Deploy Smart Contracts
+
+First, deploy the KaraokeStore contract to Base network:
+
+```bash
+# Navigate to contracts directory
+cd packages/contracts
+
+# Set environment variables
+export PRIVATE_KEY=0xYourPrivateKey
+export RPC_URL=https://sepolia.base.org  # or mainnet
+export USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e  # Base Sepolia
+
+# Deploy to Base Sepolia
+forge script script/Deploy.s.sol --rpc-url $RPC_URL --broadcast --verify
+
+# For mainnet deployment
+forge script script/Deploy.s.sol --rpc-url base --broadcast --verify
+```
+
+**Save the deployed contract address** - you'll need it for subsequent steps.
+
+### 2. Deploy Lit Protocol Actions
+
+Deploy the MIDI decryptor action to Lit Protocol:
+
+```bash
+# Set contract address from step 1
+export KARAOKE_STORE_ADDRESS=0xYourContractAddress
+
+# Deploy the Lit Action
+cd packages/lit-actions
+bun run deploy
+
+# Note the returned action CID
+```
+
+### 3. Set Up Tableland Database
+
+Create the songs metadata table:
+
+```bash
+# Set environment for Tableland
+export TABLELAND_PRIVATE_KEY=0xYourPrivateKey
+
+# Deploy songs table
+bun run deploy-songs-table
+
+# Note the table name and ID
+```
+
+### 4. Configure Environment Variables
+
+Create production environment configuration:
+
+```env
+# Production Environment Configuration
+
+# Lit Protocol
+LIT_NETWORK=serrano  # or manzano for mainnet
+MIDI_DECRYPTOR_ACTION_CID=QmYourActionCIDFromStep2
+
+# Smart Contract
+KARAOKE_STORE_ADDRESS=0xYourContractAddressFromStep1
+
+# Storage Network
+AIOZ_API_URL=https://premium.aiozpin.network
+AIOZ_GATEWAY_URL=https://premium.w3q.link
+
+# Database
+TABLELAND_PRIVATE_KEY=0xYourPrivateKey
+TABLELAND_TABLE_NAME=songs_84532_123  # From step 3
+
+# Network Configuration
+CHAIN_ID=84532  # Base Sepolia (8453 for mainnet)
+RPC_URL=https://sepolia.base.org
+
+# Application
+NODE_ENV=production
+VITE_APP_NAME=Karaoke Turbo
+```
+
+### 5. Process Initial Song Catalog
+
+Upload and encrypt your initial song collection:
+
+```bash
+# Process a song (example)
+bun run process-song \
+  --midi "../test-data/midi/lorde-royals/piano.mid" \
+  --song-id 1 \
+  --title "Royals" \
+  --artist "Lorde"
+
+# Verify the song was processed correctly
+bun run verify-song --song-id 1
+```
+
+**Song Processing Steps:**
+1. MIDI file analysis and validation
+2. Encryption with Lit Protocol
+3. Upload to AIOZ storage network
+4. Metadata insertion into Tableland
+5. Access control configuration
+
+### 6. Build and Deploy Frontend
+
+Build the application for production:
+
+```bash
+# Build all packages
+bun run build
+
+# Build production bundle
+cd apps/web
+bun run build
+
+# Preview production build locally
+bun run preview
+```
+
+### 7. Deploy to Hosting Platform
+
+#### Vercel Deployment
+
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy to Vercel
+cd apps/web
+vercel --prod
+
+# Set environment variables in Vercel dashboard
+```
+
+#### Netlify Deployment
+
+```bash
+# Install Netlify CLI
+npm i -g netlify-cli
+
+# Deploy to Netlify
+cd apps/web
+netlify deploy --prod --dir=dist
+```
+
+#### Self-Hosted Deployment
+
+```bash
+# Copy build files to server
+scp -r dist/* user@yourserver.com:/var/www/karaoke-turbo/
+
+# Configure nginx/apache
+# Ensure environment variables are set on server
+```
+
+## Production Configuration
+
+### Smart Contract Verification
+
+Verify your contract on Basescan:
+
+```bash
+forge verify-contract \
+  --chain base-sepolia \
+  --constructor-args $(cast abi-encode "constructor(address,address)" $USDC_ADDRESS $LIT_PKP_ADDRESS) \
+  $CONTRACT_ADDRESS \
+  src/KaraokeStore_V0_1_0.sol:KaraokeStore_V0_1_0
+```
+
+### Security Setup
+
+1. **Private Key Management**
+   - Use hardware wallets for production
+   - Implement key rotation
+   - Separate keys for different functions
+
+2. **Environment Security**
+   - Never commit private keys to git
+   - Use environment variable injection
+   - Implement secret rotation
+
+3. **Network Security**
+   - Use HTTPS only
+   - Implement proper CORS policies
+   - Rate limiting on API endpoints
+
+### Monitoring Setup
+
+Set up monitoring for production:
+
+```bash
+# Contract event monitoring
+# Monitor CreditsPurchased events
+# Monitor SongUnlocked events
+# Track revenue distribution
+
+# Application monitoring
+# Performance metrics
+# Error tracking
+# User analytics
+```
+
+## Testing Production Deployment
+
+### Integration Testing
+
+Run the complete integration test:
+
+```bash
+bun run test-integration
+```
+
+This tests:
+1. ✅ Contract deployment and configuration
+2. ✅ Lit Action functionality
+3. ✅ Song processing pipeline
+4. ✅ Purchase and unlock flow
+5. ✅ Decryption and playback
+
+### Manual Testing Checklist
+
+- [ ] Wallet connection works
+- [ ] Credit purchase completes successfully  
+- [ ] Song unlocking deducts credits
+- [ ] MIDI decryption and playback work
+- [ ] Karaoke recording functions
+- [ ] Revenue splits are correctly distributed
+- [ ] Error handling works gracefully
+
+## Maintenance
+
+### Regular Tasks
+
+1. **Monitor Contract Balance**
+   ```bash
+   # Check if contract needs USDC withdrawal
+   cast call $CONTRACT_ADDRESS "usdcBalance()(uint256)" --rpc-url $RPC_URL
+   ```
+
+2. **Update Song Catalog**
+   ```bash
+   # Add new songs
+   bun run process-song --midi "new-song.mid" --song-id 10
+   ```
+
+3. **Backup Data**
+   - Export Tableland data
+   - Backup CID tracking
+   - Save deployment configurations
+
+### Upgrades
+
+The smart contract is not upgradeable. For major updates:
+
+1. Deploy new contract version
+2. Pause old contract
+3. Migrate user balances (if needed)
+4. Update frontend to use new contract
+5. Communicate changes to users
+
+## Troubleshooting
+
+### Common Deployment Issues
+
+**"No access to this song"**
+- Verify user purchased the song via contract
+- Check `hasSongAccess(userAddress, songId)` call
+- Ensure Lit PKP is properly configured
+
+**"Invalid Lit PKP signature"**
+- Verify `LIT_PKP_ADDRESS` in contract matches deployed PKP
+- Check PKP permissions and capabilities
+- Ensure action CID is correct
+
+**"AIOZ Upload Failed"**
+- Check network connectivity to AIOZ
+- Verify API credentials
+- Try alternative AIOZ gateway
+
+**"Transaction Reverted"**
+- Check gas limits and prices
+- Verify USDC allowance and balance
+- Ensure contract is not paused
+
+### Performance Optimization
+
+1. **CDN Setup**: Serve static assets via CDN
+2. **Caching**: Implement service worker caching
+3. **Bundle Optimization**: Tree shaking and code splitting
+4. **Image Optimization**: Compress and serve appropriate formats
+
+## Production Checklist
+
+- [ ] Smart contract deployed and verified
+- [ ] Lit Actions deployed with correct CID
+- [ ] Tableland database configured
+- [ ] Environment variables set securely
+- [ ] Initial song catalog processed
+- [ ] Frontend built and deployed
+- [ ] SSL certificates configured
+- [ ] Monitoring and alerts set up
+- [ ] Backup procedures documented
+- [ ] Team access and permissions configured
+
+## Support
+
+For production support:
+- Check the [troubleshooting section](#troubleshooting)
+- Review contract events on Basescan
+- Monitor Lit Protocol network status
+- Check AIOZ network health
+---
+
+# Development Commands
+
+> Complete reference for all development commands, scripts, and workflows in the Karaoke Turbo project including setup, testing, deployment, and maintenance tasks.
+
+# Development Commands Reference
+
+This comprehensive guide covers all available commands for developing, testing, and maintaining the Karaoke Turbo platform.
+
+## Quick Reference
+
+### Essential Commands
+
+```bash
+# Start development
+bun install              # Install dependencies
+bun run dev             # Start web app (port 3000)
+
+# Documentation  
+bun run docs:dev        # Start docs server (port 5174)
+bun run docs:build      # Build docs with LLM files
+
+# Testing
+bun run test:e2e        # End-to-end tests
+bun run test-integration # Full system integration test
+
+# Deployment
+bun run deploy-songs-table    # Deploy Tableland table
+bun run deploy-midi-decryptor # Deploy Lit Action
+```
+
+## Root Package Commands
+
+### Development
+
+```bash
+# Core development workflow
+bun install                    # Install all workspace dependencies
+bun run dev                   # Start documentation server (port 5174)
+bun run build                 # Build all packages in dependency order
+bun run lint                  # Run ESLint across all packages  
+bun run format               # Format code with Prettier
+bun run typecheck            # TypeScript compilation check
+```
+
+### Documentation
+
+```bash
+# VitePress documentation
+bun run docs:dev             # Development server with hot reload
+bun run docs:build           # Build static documentation site
+bun run docs:preview         # Preview built documentation
+bun run docs:llms            # Generate LLM-friendly documentation files
+```
+
+### Song Management
+
+```bash
+# MIDI processing and encryption
+bun run process-song         # Encrypt and upload MIDI files to IPFS
+bun run verify-song          # Verify song exists in Tableland database
+bun run test-decrypt         # Test MIDI decryption without purchase
+```
+
+### Deployment & Infrastructure
+
+```bash
+# Smart contract and service deployment
+bun run deploy-songs-table   # Create Tableland songs table
+bun run deploy-midi-decryptor # Upload Lit Action to IPFS
+bun run test-integration     # Validate entire system integration
+```
+
+## Web Application Commands
+
+### Development Server
+
+```bash
+cd apps/web
+
+# Development
+bun run dev                  # Vite dev server (localhost:3000)
+bun run build               # Production build
+bun run preview             # Preview production build
+bun run typecheck           # TypeScript validation
+bun run lint               # ESLint checking
+```
+
+### Testing
+
+```bash
+# End-to-end testing with Playwright + Synpress
+bun run test:e2e            # Run all E2E tests headless
+bun run test:e2e:ui         # Interactive test runner with UI
+bun run test:e2e:headed     # Run tests in headed browser mode
+bun run test:e2e:debug      # Debug mode with browser inspection
+
+# Crypto wallet testing
+bun run synpress            # Synpress-specific wallet tests
+```
+
+### Advanced Testing
+
+```bash
+# Specific test execution
+bunx playwright test purchase.spec.ts          # Run single test file
+bunx playwright test --grep "purchase flow"    # Run tests matching pattern
+bunx playwright test --debug                   # Step-through debugging
+bunx playwright test --ui                      # Visual test runner
+
+# Test reports and analysis
+bunx playwright show-report                    # View test results
+bunx playwright test --reporter=html           # Generate HTML report
+```
+
+## Storybook Commands
+
+### Component Development
+
+```bash
+cd apps/storybook
+
+# Storybook development
+bun run dev                 # Start Storybook server (port 6006)
+bun run build              # Build static Storybook
+bun run preview            # Preview built Storybook
+```
+
+### Component Testing
+
+```bash
+# Visual testing and documentation
+bun run test-storybook     # Run Storybook tests (if configured)
+bun run chromatic          # Visual regression testing (if setup)
+```
+
+## Package-Specific Commands
+
+### UI Package (`packages/ui`)
+
+```bash
+cd packages/ui
+
+bun run build              # Build component library
+bun run dev               # Development mode with watch
+bun run lint              # Lint components  
+bun run typecheck         # TypeScript validation
+bun run storybook         # Local Storybook instance
+```
+
+### Services Package (`packages/services`)
+
+```bash
+cd packages/services
+
+bun run build             # Build services library
+bun run dev              # Development mode
+bun run test             # Unit tests
+bun run lint             # ESLint checking
+bun run typecheck        # TypeScript validation
+```
+
+### Contracts Package (`packages/contracts`)
+
+```bash
+cd packages/contracts
+
+bun run build            # Build contract interfaces
+bun run typecheck        # Validate TypeScript
+bun run lint            # ESLint checking
+```
+
+## Song Processing Pipeline
+
+### MIDI Processing
+
+```bash
+# Complete song processing workflow
+bun run process-song        # Interactive song processing wizard
+bun run process-song --file path/to/song.mid  # Process specific MIDI file
+bun run process-song --batch ./songs/         # Batch process directory
+```
+
+### Verification & Testing
+
+```bash
+# Song validation
+bun run verify-song --id 1              # Verify song by ID in database
+bun run verify-song --slug "lorde-royals" # Verify by slug
+bun run test-decrypt --song-id 1         # Test decryption for specific song
+```
+
+### Content Management
+
+```bash
+# IPFS and content management
+bun run upload-to-aioz       # Manual IPFS upload
+bun run check-cid-tracker    # Verify CID tracking file
+bun run cleanup-cache        # Clear local processing cache
+```
+
+## Database Commands
+
+### Tableland Operations
+
+```bash
+# Database deployment and management
+bun run deploy-songs-table          # Deploy songs table to Tableland
+bun run deploy-purchases-table      # Deploy purchases tracking table
+bun run verify-tableland-schema     # Validate table schemas
+```
+
+### Data Management
+
+```bash
+# Database queries and maintenance
+bun run query-songs              # Interactive song database queries
+bun run backup-tableland-data    # Export table data
+bun run sync-local-cache         # Sync IndexedDB with Tableland
+```
+
+## Lit Protocol Commands
+
+### Action Deployment
+
+```bash
+# Lit Protocol action management
+bun run deploy-midi-decryptor       # Deploy MIDI decryption action
+bun run test-lit-action            # Test action execution
+bun run update-action-cid          # Update environment with new CID
+```
+
+### PKP Management
+
+```bash
+# Programmable Key Pair operations
+bun run generate-pkp               # Generate new PKP for testing
+bun run test-pkp-access           # Validate PKP access control
+bun run rotate-pkp                # Rotate PKP keys (advanced)
+```
+
+## Testing Commands
+
+### Integration Testing
+
+```bash
+# System-wide testing
+bun run test-integration           # Full system integration test
+bun run test-contracts            # Smart contract interaction tests
+bun run test-encryption           # Lit Protocol encryption tests
+bun run test-database             # Database connectivity tests
+bun run test-ipfs                 # IPFS upload/download tests
+```
+
+### Performance Testing
+
+```bash
+# Performance and load testing
+bun run benchmark-decrypt         # MIDI decryption performance
+bun run benchmark-database        # Database query performance  
+bun run test-load                # Simulate concurrent users
+bun run test-memory-usage         # Memory usage analysis
+```
+
+### Network Testing
+
+```bash
+# Network and connectivity testing
+bun run test-base-sepolia         # Base Sepolia network connectivity
+bun run test-lit-network          # Lit Protocol network status
+bun run test-tableland-endpoints  # Tableland API connectivity
+bun run test-aioz-network         # AIOZ Network IPFS endpoints
+```
+
+## Build & Deployment Commands
+
+### Production Builds
+
+```bash
+# Build for production
+bun run build                     # Build all packages
+bun run build:web                # Build web app only
+bun run build:storybook          # Build component library docs
+bun run build:docs               # Build documentation site
+```
+
+### Deployment Preparation
+
+```bash
+# Pre-deployment tasks
+bun run lint:fix                 # Auto-fix linting issues
+bun run format:check             # Verify code formatting
+bun run typecheck:strict         # Strict TypeScript checking
+bun run test:ci                  # CI-friendly test run
+```
+
+### Environment Management
+
+```bash
+# Environment setup and validation
+bun run setup:env               # Interactive environment setup
+bun run validate:env            # Validate environment variables
+bun run check:dependencies      # Verify dependency health
+bun run check:networks          # Validate network connectivity
+```
+
+## Maintenance Commands
+
+### Cache Management
+
+```bash
+# Clear various caches
+bun run clear:turbo              # Clear Turbo build cache
+bun run clear:vite               # Clear Vite cache
+bun run clear:playwright         # Clear Playwright cache
+bun run clear:indexeddb          # Clear browser IndexedDB
+```
+
+### Dependency Management
+
+```bash
+# Package management
+bun install                      # Install dependencies
+bun update                       # Update dependencies
+bun run check:outdated           # Check for outdated packages
+bun run audit                    # Security audit
+```
+
+### Development Tools
+
+```bash
+# Development utilities
+bun run analyze:bundle           # Bundle size analysis
+bun run check:types              # TypeScript error checking
+bun run validate:config          # Validate configuration files
+bun run doctor                   # Health check for development environment
+```
+
+## Turbo Commands
+
+### Workspace Management
+
+```bash
+# Turbo workspace operations
+bunx turbo build                 # Build with caching
+bunx turbo build --force         # Force rebuild without cache
+bunx turbo build --filter=web    # Build specific package
+bunx turbo dev --parallel        # Run dev scripts in parallel
+```
+
+### Cache Operations
+
+```bash
+# Turbo cache management
+bunx turbo prune                 # Remove unused cache
+bunx turbo clean                 # Clean all build outputs
+bunx turbo run build --dry-run   # Preview build execution
+```
+
+## Debugging Commands
+
+### Development Debugging
+
+```bash
+# Debug development issues
+bun run debug:web               # Debug web app with inspector
+bun run debug:storybook         # Debug Storybook components
+bun run debug:tests             # Debug test execution
+```
+
+### Network Debugging
+
+```bash
+# Network and service debugging
+bun run debug:contracts         # Debug contract interactions
+bun run debug:lit-protocol      # Debug Lit Protocol issues
+bun run debug:tableland         # Debug database connections
+bun run debug:ipfs              # Debug IPFS operations
+```
+
+## CI/CD Commands
+
+### Continuous Integration
+
+```bash
+# CI-specific commands
+bun run ci:install              # CI-optimized dependency install
+bun run ci:build                # CI build with error handling
+bun run ci:test                 # CI test suite
+bun run ci:deploy               # CI deployment process
+```
+
+### Quality Assurance
+
+```bash
+# Code quality checks
+bun run qa:lint                 # Comprehensive linting
+bun run qa:format               # Code formatting check
+bun run qa:types                # TypeScript error checking
+bun run qa:security             # Security vulnerability scan
+```
+
+## Environment-Specific Commands
+
+### Development Environment
+
+```bash
+# Development-specific operations
+NODE_ENV=development bun run dev
+NODE_ENV=development bun run test:e2e
+```
+
+### Production Environment
+
+```bash
+# Production-specific operations  
+NODE_ENV=production bun run build
+NODE_ENV=production bun run preview
+```
+
+### Testing Environment
+
+```bash
+# Test environment operations
+NODE_ENV=test bun run test-integration
+NODE_ENV=test bun run validate:env
+```
+
+## Command Aliases
+
+### Commonly Used Shortcuts
+
+```bash
+# Convenient aliases (add to your shell profile)
+alias kdev="bun run dev"                    # Start development
+alias ktest="bun run test:e2e"              # Run tests
+alias kbuild="bun run build"                # Build project
+alias kdocs="bun run docs:dev"              # Start docs
+alias kstory="cd apps/storybook && bun run dev"  # Start Storybook
+```
+
+## Troubleshooting Commands
+
+### Common Issues
+
+```bash
+# Fix common development issues
+bun run fix:permissions         # Fix file permissions
+bun run fix:node-modules         # Reinstall dependencies
+bun run fix:cache               # Clear all caches
+bun run fix:env                 # Reset environment configuration
+```
+
+### Health Checks
+
+```bash
+# System health validation
+bun run health:check            # Overall system health
+bun run health:network          # Network connectivity
+bun run health:services         # External service status
+bun run health:dependencies     # Dependency compatibility
+```
+---
+
+# Environment Setup
+
+> Complete environment setup guide covering development environment configuration, required services, API keys, and deployment preparation for Karaoke Turbo.
+
+# Environment Setup Guide
+
+This comprehensive guide covers setting up your development environment for the Karaoke Turbo platform, including all required services, API keys, and configuration.
+
+## Prerequisites
+
+### System Requirements
+
+- **Node.js**: Version 18+ (recommended: use Node 20)
+- **Bun**: Latest version (1.0+) as package manager
+- **Git**: For version control
+- **Browser**: Chrome/Chromium for testing (MetaMask support)
+
+### Development Tools
+
+```bash
+# Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# Verify installation
+bun --version
+node --version
+```
+
+## Environment Variables
+
+### Required Variables
+
+Create `.env` file in the project root with these required variables:
+
+```env
+# Blockchain Configuration
+CHAIN_ID=84532
+RPC_URL=https://sepolia.base.org
+
+# Smart Contracts  
+KARAOKE_STORE_ADDRESS=0x306466a909df4dc0508b68b4511bcf8130abcb43
+
+# Lit Protocol Configuration
+LIT_NETWORK=datil
+MIDI_DECRYPTOR_ACTION_CID=QmYourActionCIDHere
+LIT_PKP_PUBLIC_KEY=0x04YourPKPPublicKeyHere
+LIT_PKP_ETH_ADDRESS=0xYourPKPEthAddressHere
+
+# AIOZ Network (IPFS)
+AIOZ_API_URL=https://premium.aiozpin.network
+AIOZ_API_KEY=your-aioz-api-key-optional
+
+# Tableland Database
+TABLELAND_PRIVATE_KEY=0xYourTablelandPrivateKeyHere
+
+# Development
+NODE_ENV=development
+VITE_DEV_MODE=true
+```
+
+### Environment Templates
+
+The project provides template files:
+
+- **`.env.example`**: Complete example with all variables
+- **`.env.test`**: Test environment configuration  
+- **`.env.local.example`**: Local development overrides
+
+### Variable Descriptions
+
+#### Blockchain Configuration
+
+```env
+# Base Sepolia testnet
+CHAIN_ID=84532
+RPC_URL=https://sepolia.base.org
+
+# Alternative RPC endpoints (if needed)
+# RPC_URL=https://base-sepolia.g.alchemy.com/v2/your-key
+# RPC_URL=https://sepolia.base.org
+```
+
+#### Smart Contract Addresses
+
+```env
+# Main karaoke store contract
+KARAOKE_STORE_ADDRESS=0x306466a909df4dc0508b68b4511bcf8130abcb43
+
+# USDC token on Base Sepolia
+USDC_TOKEN_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
+
+# Optional: Override default addresses for testing
+# KARAOKE_STORE_ADDRESS=0xYourTestContractAddress
+```
+
+#### Lit Protocol Configuration
+
+```env
+# Network selection (datil for testnet)
+LIT_NETWORK=datil
+
+# MIDI decryption action (deployed to IPFS)
+MIDI_DECRYPTOR_ACTION_CID=QmYourMIDIDecryptorActionCID
+
+# PKP (Programmable Key Pair) for access control
+LIT_PKP_PUBLIC_KEY=0x04PublicKeyForYourPKPHere
+LIT_PKP_ETH_ADDRESS=0xEthereumAddressForYourPKPHere
+
+# Optional: PKP token ID for advanced usage
+# LIT_PKP_TOKEN_ID=123456
+```
+
+#### AIOZ Network (IPFS)
+
+```env
+# AIOZ Network endpoint
+AIOZ_API_URL=https://premium.aiozpin.network
+
+# Optional: API key for premium features
+AIOZ_API_KEY=your-premium-api-key
+
+# Fallback IPFS gateway
+IPFS_GATEWAY_URL=https://gateway.pinata.cloud
+```
+
+#### Database Configuration
+
+```env
+# Private key for Tableland operations (separate from main wallet)
+TABLELAND_PRIVATE_KEY=0xPrivateKeyForTablelandOperations
+
+# Table names (auto-discovered, but can override)
+SONGS_TABLE_NAME=songs_v7_84532_132
+PURCHASES_TABLE_NAME=purchases_v1_84532_117
+```
+
+## Service Setup
+
+### 1. Base Sepolia Network
+
+**Network Details:**
+- **Chain ID**: 84532
+- **RPC URL**: https://sepolia.base.org
+- **Explorer**: https://sepolia.basescan.org
+- **Faucet**: [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet)
+
+**Setup Steps:**
+1. Add Base Sepolia to MetaMask
+2. Get testnet ETH from faucet
+3. Get testnet USDC from [Circle Faucet](https://faucet.circle.com/)
+
+### 2. Lit Protocol
+
+**Network**: Datil (testnet)  
+**Documentation**: [Lit Protocol Docs](https://developer.litprotocol.com/)
+
+**Setup Process:**
+
+```bash
+# Deploy MIDI decryption action
+bun run deploy-midi-decryptor
+
+# This will output:
+# ✅ Action deployed to IPFS: QmYourActionCIDHere
+# Add this CID to your .env file as MIDI_DECRYPTOR_ACTION_CID
+```
+
+**PKP Requirements:**
+- Generate PKP through Lit Protocol dashboard
+- Fund PKP address with small amount of ETH
+- Add PKP public key and address to environment
+
+### 3. AIOZ Network (IPFS)
+
+**Network**: AIOZ Network premium IPFS  
+**Documentation**: [AIOZ Network Docs](https://docs.aioz.network/)
+
+**Setup Options:**
+
+**Option A: Free Tier**
+```env
+AIOZ_API_URL=https://premium.aiozpin.network
+# No API key needed for basic usage
+```
+
+**Option B: Premium Tier**
+1. Sign up at [AIOZ Network](https://aioz.network/)
+2. Get API key from dashboard
+3. Add to environment variables
+
+### 4. Tableland Database
+
+**Network**: Base Sepolia  
+**Documentation**: [Tableland Docs](https://docs.tableland.xyz/)
+
+**Setup Process:**
+
+```bash
+# Deploy songs table
+bun run deploy-songs-table
+
+# This will create tables and output table names
+# Add table names to environment if needed
+```
+
+**Private Key Setup:**
+1. Create dedicated wallet for Tableland operations
+2. Fund with small amount of ETH for gas
+3. Add private key to `.env`
+
+## Development Wallet Setup
+
+### MetaMask Configuration
+
+**Network Setup:**
+1. Open MetaMask
+2. Add Custom Network:
+   - **Network Name**: Base Sepolia
+   - **RPC URL**: https://sepolia.base.org
+   - **Chain ID**: 84532
+   - **Currency Symbol**: ETH
+   - **Block Explorer**: https://sepolia.basescan.org
+
+### Test Funds
+
+**Get ETH for Gas:**
+1. Visit [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet)
+2. Connect wallet and request ETH
+3. Wait for transaction confirmation
+
+**Get USDC for Testing:**
+1. Visit [Circle USDC Faucet](https://faucet.circle.com/)
+2. Select Base Sepolia network
+3. Request USDC tokens
+4. Import USDC token in MetaMask:
+   - **Contract Address**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+   - **Symbol**: USDC
+   - **Decimals**: 6
+
+## Local Development Setup
+
+### Step-by-Step Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/your-org/karaoke-turbo.git
+cd karaoke-turbo
+
+# 2. Install dependencies
+bun install
+
+# 3. Copy environment template
+cp .env.example .env
+
+# 4. Edit environment variables
+# Add your API keys and addresses to .env
+
+# 5. Verify environment
+bun run validate:env
+
+# 6. Start development server
+bun run dev
+```
+
+### Environment Validation
+
+```bash
+# Check all environment variables
+bun run validate:env
+
+# Test network connectivity
+bun run test-integration
+
+# Verify contract access
+bun run test-contracts
+```
+
+**Expected Output:**
+```bash
+✅ Environment Validation
+   - All required variables present
+   - Base Sepolia connectivity confirmed
+   - Smart contract accessible
+   - Lit Protocol network available
+   - AIOZ Network responsive
+   - Tableland tables accessible
+```
+
+## Service Configuration
+
+### Vite Configuration
+
+The web app uses Vite with environment variable injection:
+
+```typescript
+// apps/web/vite.config.ts
+export default defineConfig({
+  define: {
+    'process.env.CHAIN_ID': JSON.stringify(process.env.CHAIN_ID),
+    'process.env.RPC_URL': JSON.stringify(process.env.RPC_URL),
+    // ... other variables
+  }
+})
+```
+
+### TypeScript Environment
+
+Environment variables are typed for better development experience:
+
+```typescript
+// packages/utils/src/env.ts
+interface Environment {
+  CHAIN_ID: string
+  RPC_URL: string
+  KARAOKE_STORE_ADDRESS: string
+  LIT_NETWORK: 'datil' | 'serrano' | 'manzano'
+  MIDI_DECRYPTOR_ACTION_CID: string
+  // ... other variables
+}
+
+export const env: Environment = {
+  CHAIN_ID: process.env.CHAIN_ID!,
+  RPC_URL: process.env.RPC_URL!,
+  // ... validate and parse environment
+}
+```
+
+## Testing Environment
+
+### E2E Test Configuration
+
+Playwright tests require additional environment setup:
+
+```env
+# .env.test
+# Extends .env with test-specific overrides
+
+# Test wallet configuration
+TEST_WALLET_PRIVATE_KEY=0xTestWalletPrivateKeyHere
+TEST_WALLET_ADDRESS=0xTestWalletAddressHere
+
+# Test data
+TEST_SONG_ID=1
+TEST_USER_ADDRESS=0xTestUserAddressHere
+
+# Browser testing
+HEADLESS=false
+SLOW_MO=100
+```
+
+### Test Data Setup
+
+```bash
+# Set up test environment
+bun run setup:test-env
+
+# Fund test wallets
+bun run fund-test-wallets
+
+# Verify test setup
+bun run test:e2e --dry-run
+```
+
+## Production Environment
+
+### Environment Differences
+
+**Development vs Production:**
+
+| Variable | Development | Production |
+|----------|-------------|------------|
+| `NODE_ENV` | `development` | `production` |
+| `LIT_NETWORK` | `datil` | `manzano` |
+| `CHAIN_ID` | `84532` (Sepolia) | `8453` (Mainnet) |
+| `RPC_URL` | Testnet endpoint | Mainnet endpoint |
+
+### Production Checklist
+
+- [ ] Switch to mainnet contract addresses
+- [ ] Update Lit Protocol network to `manzano`
+- [ ] Use production RPC endpoints
+- [ ] Secure API key management
+- [ ] Enable error monitoring
+- [ ] Configure CDN for static assets
+
+## Security Considerations
+
+### API Key Management
+
+**Development:**
+- Store keys in `.env` file (gitignored)
+- Use separate keys for each developer
+- Rotate keys regularly
+
+**Production:**
+- Use environment variable injection
+- Implement key rotation policies
+- Monitor key usage and access
+
+### Private Key Security
+
+**Best Practices:**
+1. **Separate Keys**: Use different keys for different purposes
+2. **Minimal Permissions**: Grant only necessary permissions
+3. **Key Rotation**: Rotate keys periodically
+4. **Secure Storage**: Use secure key management systems
+
+**Never:**
+- Commit private keys to version control
+- Share private keys in plain text
+- Use production keys in development
+
+## Troubleshooting
+
+### Common Issues
+
+**Environment Variable Issues:**
+```bash
+# Check if variables are loaded
+bun run validate:env
+
+# Debug specific variable
+echo $CHAIN_ID
+```
+
+**Network Connectivity:**
+```bash
+# Test Base Sepolia connection
+curl -X POST https://sepolia.base.org \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+```
+
+**Contract Access:**
+```bash
+# Test contract interaction
+bun run test-contracts
+
+# Check contract on explorer
+open https://sepolia.basescan.org/address/0x306466a909df4dc0508b68b4511bcf8130abcb43
+```
+
+### Getting Help
+
+**Resources:**
+- **Documentation**: This comprehensive guide
+- **Example Configs**: `.env.example` and related templates
+- **Integration Tests**: Run `bun run test-integration`
+- **Community**: Discord/GitHub for community support
+
+**Debug Commands:**
+```bash
+# Full system health check
+bun run health:check
+
+# Network diagnostics
+bun run debug:network
+
+# Service connectivity
+bun run debug:services
+```
+---
+
+# Index
+
+> Development setup guide for Karaoke Turbo including environment configuration, project structure, and common development tasks.
+
+# Getting Started Guide
+
+Welcome to Karaoke Turbo development! This guide will help you set up the project locally and understand the development workflow.
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/your-repo/karaoke-turbo
+cd karaoke-turbo/karaoke-dapp
+
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
+```
+
+## Prerequisites
+
+### Required Software
+
+- **Node.js** 18+ or **Bun** (recommended)
+- **Git** for version control
+- **MetaMask** or compatible Web3 wallet
+- **VS Code** (recommended) with extensions:
+  - TypeScript and JavaScript Language Features
+  - Tailwind CSS IntelliSense
+  - ESLint
+  - Prettier
+
+### Recommended Setup
+
+- **Base Sepolia ETH** for testing transactions
+- **USDC on Base Sepolia** for testing purchases
+- **Lit Protocol** test account
+
+## Environment Configuration
+
+Create a `.env` file in the `karaoke-dapp` directory:
+
+```env
+# Lit Protocol Configuration
+LIT_NETWORK=datil
+MIDI_DECRYPTOR_ACTION_CID=QmYourActionCID
+
+# Smart Contract
+KARAOKE_STORE_ADDRESS=0xYourContractAddress
+
+# Storage Configuration
+AIOZ_API_URL=https://premium.aiozpin.network
+AIOZ_GATEWAY_URL=https://premium.w3q.link
+
+# Database (for deployment scripts)
+TABLELAND_PRIVATE_KEY=0xYourPrivateKey
+
+# Network Configuration
+CHAIN_ID=84532
+RPC_URL=https://sepolia.base.org
+
+# Development
+NODE_ENV=development
+VITE_APP_NAME=Karaoke Turbo
+```
+
+## Development Workflow
+
+### 1. Start the Development Server
+
+```bash
+bun run dev
+```
+
+This starts:
+- Vite development server on `http://localhost:5173`
+- Hot module replacement
+- TypeScript type checking
+
+### 2. Run Storybook (Optional)
+
+```bash
+bun run storybook
+```
+
+Access component stories at `http://localhost:6006`
+
+### 3. Testing
+
+```bash
+# Run all tests
+bun test
+
+# Run with watch mode
+bun test --watch
+
+# Run specific test file
+bun test packages/services/database.test.ts
+```
+
+### 4. Linting and Formatting
+
+```bash
+# Check linting
+bun run lint
+
+# Fix linting issues
+bun run lint:fix
+
+# Format code
+bun run format
+```
+
+## Project Structure
+
+Understanding the codebase organization:
+
+```
+karaoke-dapp/
+├── apps/
+│   ├── web/              # Main React application
+│   │   ├── src/
+│   │   │   ├── components/   # App-specific components
+│   │   │   ├── pages/        # Route components
+│   │   │   ├── services/     # App-specific services
+│   │   │   ├── machines/     # XState state machines
+│   │   │   ├── contexts/     # React contexts
+│   │   │   └── utils/        # Utility functions
+│   │   └── public/           # Static assets
+│   └── storybook/        # Component documentation
+├── packages/
+│   ├── ui/               # Shared UI components
+│   ├── services/         # Business logic
+│   ├── db/               # Database utilities
+│   ├── contracts/        # Smart contracts
+│   └── utils/            # Shared utilities
+└── docs/                 # This documentation
+```
+
+## Key Development Concepts
+
+### State Management with XState
+
+The app uses XState for complex state management:
+
+```typescript
+// Example: Song state machine
+const songMachine = createMachine({
+  initial: 'idle',
+  states: {
+    idle: {
+      on: { CHECK_ACCESS: 'checkingAccess' }
+    },
+    checkingAccess: {
+      invoke: {
+        src: 'checkAccess',
+        onDone: 'purchased',
+        onError: 'error'
+      }
+    }
+    // ... more states
+  }
+})
+```
+
+### Audio Context Management
+
+Audio features are managed through React context:
+
+```typescript
+const { loadMidi, play, pause, currentTime } = useAudio()
+```
+
+### Web3 Integration
+
+Using Wagmi for blockchain interactions:
+
+```typescript
+const { isConnected, address } = useAccount()
+const { connect } = useConnect()
+```
+
+## Common Development Tasks
+
+### Adding a New Component
+
+1. Create component in appropriate package:
+   ```bash
+   # For shared components
+   packages/ui/src/components/
+
+   # For app-specific components  
+   apps/web/src/components/
+   ```
+
+2. Write the component with TypeScript:
+   ```typescript
+   interface MyComponentProps {
+     title: string
+     onClick: () => void
+   }
+
+   export function MyComponent({ title, onClick }: MyComponentProps) {
+     return <button onClick={onClick}>{title}</button>
+   }
+   ```
+
+3. Add Storybook story (for UI components):
+   ```typescript
+   export default {
+     title: 'Components/MyComponent',
+     component: MyComponent,
+   }
+
+   export const Default = {
+     args: {
+       title: 'Click me',
+       onClick: () => console.log('clicked'),
+     },
+   }
+   ```
+
+4. Export from package index:
+   ```typescript
+   export { MyComponent } from './components/my-component'
+   ```
+
+### Adding a New Service
+
+1. Create service class:
+   ```typescript
+   export class MyService {
+     async doSomething(): Promise<Result> {
+       // Implementation
+     }
+   }
+   ```
+
+2. Add tests:
+   ```typescript
+   describe('MyService', () => {
+     it('should do something', async () => {
+       const service = new MyService()
+       const result = await service.doSomething()
+       expect(result).toBeDefined()
+     })
+   })
+   ```
+
+3. Update package exports
+
+### Working with State Machines
+
+1. Define machine states and events:
+   ```typescript
+   type MyEvent = 
+     | { type: 'START' }
+     | { type: 'COMPLETE'; data: any }
+   ```
+
+2. Create machine:
+   ```typescript
+   const myMachine = createMachine({
+     types: {} as { events: MyEvent },
+     // ... machine definition
+   })
+   ```
+
+3. Use in component:
+   ```typescript
+   const [state, send] = useMachine(myMachine)
+   ```
+
+## Debugging Tips
+
+### Common Issues
+
+1. **Module not found**: Check package dependencies in `package.json`
+2. **Type errors**: Ensure proper TypeScript configuration
+3. **Wallet connection**: Verify network configuration
+4. **Audio issues**: Check browser permissions
+
+### Development Tools
+
+- **React DevTools**: Component inspection
+- **XState DevTools**: State machine visualization
+- **Browser DevTools**: Network and console debugging
+- **Vite DevTools**: Build analysis
+
+## Building for Production
+
+```bash
+# Build all packages
+bun run build
+
+# Preview production build
+bun run preview
+```
+
+## Next Steps
+
+- [Deployment Guide](/guides/deployment) - Deploy to production
+- [Testing Guide](/guides/testing) - Comprehensive testing strategies
+- [Architecture Overview](/architecture/) - Understand system design
+- [API Reference](/api/) - Service documentation
+---
+
+# Testing
+
+> Comprehensive testing guide covering E2E tests with Playwright, integration tests, Storybook component testing, and development testing workflows.
+
+# Testing Guide
+
+This document covers the comprehensive testing infrastructure for Karaoke Turbo, including end-to-end tests, integration tests, and component testing.
+
+## Testing Architecture
+
+The platform uses a multi-layered testing approach:
+
+- **End-to-End Tests**: Playwright + Synpress for real blockchain interactions
+- **Integration Tests**: Full system testing with all services
+- **Component Tests**: Storybook for UI component development
+- **Unit Tests**: Individual service and utility testing
+
+## End-to-End Testing
+
+### Playwright + Synpress Setup
+
+**Test Directory:** `apps/web/test/e2e/`  
+**Configuration:** `apps/web/playwright.config.ts`
+
+The E2E tests use Synpress to automate MetaMask interactions with real blockchain transactions on Base Sepolia.
+
+### Test Files
+
+#### Purchase Flow Test (`purchase.spec.ts`)
+
+Tests the complete user journey from wallet connection to MIDI decryption:
+
+```typescript
+test('complete purchase and decrypt flow', async ({ page, context }) => {
+  // 1. Connect MetaMask wallet
+  await connectWallet(page)
+  
+  // 2. Navigate to song page
+  await page.goto('/lorde/royals')
+  
+  // 3. Purchase credit pack (2 USDC for 100 credits)
+  await purchaseCreditPack(page)
+  
+  // 4. Unlock specific song (1 credit)
+  await unlockSong(page)
+  
+  // 5. Download and decrypt MIDI file
+  await downloadMidi(page)
+  
+  // 6. Verify MIDI is cached in IndexedDB
+  await verifyMidiCache(page)
+})
+```
+
+#### Wallet Connection Test (`wallet-connection.spec.ts`)
+
+Tests wallet connection persistence and session management:
+
+```typescript
+test('wallet connection persists across page reloads', async ({ page }) => {
+  await connectWallet(page)
+  await page.reload()
+  
+  // Verify wallet still connected
+  await expect(page.locator('[data-testid="wallet-address"]')).toBeVisible()
+})
+```
+
+### Running E2E Tests
+
+```bash
+# Run all E2E tests
+bun run test:e2e
+
+# Run with Playwright UI for debugging
+bun run test:e2e:ui
+
+# Run in headed mode (see browser)
+bun run test:e2e:headed
+
+# Run specific test file
+bunx playwright test purchase.spec.ts
+
+# Run with Synpress for crypto wallet testing
+bun run synpress
+```
+
+### MetaMask Test Setup
+
+The tests automatically set up MetaMask with:
+
+- **Network**: Base Sepolia (Chain ID: 84532)
+- **Funded Account**: Pre-loaded with ETH and USDC
+- **Permissions**: Automatic site connection approval
+- **Seed Phrase**: Test wallet with deterministic addresses
+
+### Test Environment
+
+Tests run against:
+
+- **Base Sepolia**: Real testnet with actual transactions
+- **Lit Protocol**: Datil test network
+- **Tableland**: Base Sepolia deployment
+- **AIOZ Network**: IPFS test endpoints
+
+## Integration Testing
+
+### Full System Integration
+
+**Script:** `scripts/integration-test.ts`
+
+Tests all system components working together:
+
+```bash
+bun run test-integration
+```
+
+#### Test Coverage
+
+1. **Environment Validation**
+   - Required environment variables
+   - Network connectivity
+   - Service endpoints
+
+2. **Smart Contract Testing**
+   - Contract deployment verification
+   - Function call testing
+   - Event emission validation
+
+3. **Lit Protocol Integration**
+   - PKP functionality
+   - Action execution
+   - Decryption workflows
+
+4. **Tableland Database**
+   - Table schema validation
+   - Query execution
+   - Data integrity checks
+
+5. **AIOZ Network**
+   - IPFS upload/download
+   - Content addressing
+   - Network availability
+
+### Integration Test Output
+
+```bash
+✅ Environment Check
+   - All required variables present
+   - Network connectivity confirmed
+
+✅ Smart Contract Test
+   - Contract responsive at 0x306466a909df4dc0508b68b4511bcf8130abcb43
+   - checkAccess function working
+   - Event logs accessible
+
+✅ Lit Protocol Test
+   - PKP operational
+   - Action CID accessible: QmXyZ...
+   - Decryption test passed
+
+✅ Tableland Test
+   - Songs table accessible: songs_v7_84532_132
+   - Query execution successful
+   - Schema validation passed
+
+✅ AIOZ Network Test
+   - Upload endpoint responsive
+   - Content retrieval working
+   - Pinning service active
+```
+
+## Component Testing
+
+### Storybook Setup
+
+**Directory:** `apps/storybook/`  
+**Port:** 6006
+
+Storybook provides isolated component development and testing:
+
+```bash
+cd apps/storybook
+bun run dev
+```
+
+### Component Stories
+
+#### Karaoke Components
+
+- **KaraokeDisplay**: Main karaoke interface with lyrics
+- **KaraokeScore**: Performance results and scoring
+- **LyricSheet**: Synchronized lyric display
+- **CountdownTimer**: Karaoke countdown interface
+
+#### Purchase Components
+
+- **PurchaseSlider**: Credit pack purchase flow
+- **ConnectWalletSheet**: Wallet connection modal
+- **SongCard**: Individual song display
+
+#### UI Components
+
+- **Button variants**: Primary, secondary, destructive
+- **Form components**: Input, select, checkbox
+- **Layout components**: Header, footer, navigation
+
+### Storybook Testing
+
+```bash
+# Start Storybook development server
+bun run storybook
+
+# Build Storybook for production
+bun run build-storybook
+
+# Run visual regression tests (if configured)
+bun run test-storybook
+```
+
+## MIDI Processing Tests
+
+### Decryption Testing
+
+Test MIDI decryption without full purchase flow:
+
+```bash
+bun run test-decrypt
+```
+
+This script:
+1. Fetches encrypted MIDI from IPFS
+2. Tests Lit Protocol decryption
+3. Validates MIDI file format
+4. Checks audio processing pipeline
+
+### Song Processing Pipeline
+
+Test the complete song processing workflow:
+
+```bash
+bun run process-song
+```
+
+Tests:
+- MIDI file encryption
+- IPFS upload
+- Metadata generation
+- Tableland registration
+
+## Test Data Management
+
+### Test Accounts
+
+**Funded Test Wallet:**
+- Address: `0x742d35Cc6634C0532925a3b8D5C1D2e5d0d1234` (example)
+- ETH Balance: 0.1 ETH (for gas)
+- USDC Balance: 10 USDC (for testing purchases)
+
+### Test Songs
+
+**Available Test Songs:**
+- "Royals" by Lorde (ID: 1)
+- MIDI files pre-encrypted and uploaded
+- Lyrics synchronized with LRCLIB
+
+### Test Database
+
+**Tableland Tables:**
+- `songs_v7_84532_132`: Song metadata
+- `purchases_v1_84532_117`: Purchase records
+
+## Continuous Integration
+
+### GitHub Actions (Planned)
+
+```yaml
+name: E2E Tests
+on: [push, pull_request]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run test:e2e
+        env:
+          # Test environment variables
+          CHAIN_ID: 84532
+          RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC }}
+```
+
+## Performance Testing
+
+### Load Testing
+
+Test system performance under load:
+
+```bash
+# Simulate multiple concurrent users
+bun run test-load
+
+# Test MIDI decryption performance
+bun run benchmark-decrypt
+
+# Database query performance
+bun run benchmark-db
+```
+
+### Metrics Monitored
+
+- **Transaction Speed**: Block confirmation times
+- **Decryption Latency**: Lit Protocol response times
+- **Database Performance**: Tableland query speeds
+- **IPFS Performance**: Upload/download speeds
+
+## Test Debugging
+
+### Common Issues
+
+**Test Failures:**
+1. **Network Issues**: Check Base Sepolia connectivity
+2. **Wallet Setup**: Verify MetaMask configuration
+3. **Contract State**: Ensure sufficient test tokens
+4. **Environment**: Validate all required variables
+
+### Debugging Commands
+
+```bash
+# Run single test with verbose output
+bunx playwright test purchase.spec.ts --debug
+
+# Inspect test state
+bunx playwright test --ui
+
+# Generate test report
+bunx playwright show-report
+```
+
+### Test Data Reset
+
+```bash
+# Reset test wallet state
+bun run reset-test-wallet
+
+# Clear browser storage
+bunx playwright test --headed --global-setup ./test/clear-storage.ts
+```
+
+## Best Practices
+
+### Writing Tests
+
+1. **Atomic Tests**: Each test should be independent
+2. **Real Data**: Use actual blockchain transactions
+3. **Error Scenarios**: Test failure cases thoroughly
+4. **Performance**: Monitor test execution times
+
+### Test Maintenance
+
+1. **Regular Updates**: Keep test data current
+2. **Environment Sync**: Update test configs with deployments
+3. **Documentation**: Document test scenarios clearly
+4. **CI Integration**: Automate test execution
+
+### Security Testing
+
+1. **Access Control**: Test unauthorized access scenarios
+2. **Input Validation**: Test with malicious inputs
+3. **Rate Limiting**: Test API endpoint limits
+4. **Error Handling**: Verify no sensitive data leaks
+
+## Test Reports
+
+### Coverage Reports
+
+Generated test coverage includes:
+- Component render testing
+- User interaction flows
+- Error boundary testing
+- Performance benchmarks
+
+### Automated Reporting
+
+Tests generate reports for:
+- **Success Rate**: Pass/fail percentages
+- **Performance Metrics**: Response times
+- **Error Analysis**: Failure categorization
+- **Coverage Statistics**: Code coverage percentages
+---
+
+# Index
+
+> Complete documentation for Karaoke Turbo - a decentralized karaoke platform built on Ethereum with Web3 technology, featuring MIDI playback, voice recording, and encrypted storage.
+
+# Karaoke Turbo
+
+A decentralized karaoke platform built on Ethereum with Web3 technology.
+
+## Features
+
+- **🎤 Karaoke System**: Real-time karaoke with MIDI playback and voice recording
+- **🔐 Decentralized Storage**: Encrypted audio files stored with Lit Protocol 
+- **💳 Credit System**: Purchase and unlock songs with USDC on Base network
+- **🎵 MIDI Support**: Rich musical accompaniment with Tone.js
+- **📊 Performance Tracking**: Real-time scoring and analytics
+- **🌐 Web3 Integration**: Wallet connection, ENS support, EFP profiles
+
+## Architecture Overview
+
+<Mermaid>
+<pre>
+graph TB
+    A[Web App] --> B[State Machines]
+    A --> C[Audio Context]
+    B --> D[Smart Contracts]
+    B --> E[Lit Protocol]
+    C --> F[Tone.js MIDI]
+    C --> G[Web Audio API]
+    D --> H[Base Network]
+    E --> I[Encrypted Storage]
+</pre>
+</Mermaid>
+
+## Getting Started
+
+::: tip Quick Start
+Jump to the [Development Setup Guide](/guides/development-setup) to get the project running locally.
+:::
+
+### Core Concepts
+
+- **Songs**: MIDI files encrypted and stored on IPFS/Arweave
+- **Credits**: On-chain tokens for unlocking songs  
+- **Sessions**: Karaoke performances with scoring
+- **PKP**: Lit Protocol Programmable Key Pairs for decryption
+
+### Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Frontend | React, TypeScript, Vite |
+| State Management | XState |
+| Audio | Tone.js, Web Audio API |
+| Blockchain | Base (Ethereum L2) |
+| Storage | IPFS, Arweave, Tableland |
+| Encryption | Lit Protocol |
+| UI | Tailwind CSS, Radix UI |
+
+## Project Structure
+
+```
+karaoke-dapp/
+├── apps/
+│   ├── web/          # Main React application
+│   └── storybook/    # Component stories
+├── packages/
+│   ├── ui/           # Shared UI components
+│   ├── services/     # Business logic services
+│   ├── db/           # Database utilities
+│   ├── contracts/    # Smart contracts
+│   ├── lit-actions/ # Lit Protocol actions
+│   └── utils/        # Shared utilities
+└── docs/             # This documentation
+```
+
+## Navigation
+
+- **[Architecture](/architecture/)** - System design and data flows
+- **[Packages](/packages/)** - Code organization and modules  
+- **[API Reference](/api/)** - Service interfaces and methods
+- **[Smart Contracts](/contracts/)** - Blockchain integration
+- **[Guides](/guides/)** - Setup, deployment, and development
+---
+
+# Index
+
+> Monorepo package organization including UI components, services, database utilities, smart contracts, and Lit Protocol actions.
+
+# Packages Overview
+
+The Karaoke Turbo project is organized as a monorepo with several focused packages that handle different aspects of the platform.
+
+## Package Structure
+
+```
+packages/
+├── ui/              # Shared UI components
+├── services/        # Business logic and external integrations  
+├── db/              # Database utilities and IndexedDB
+├── contracts/       # Smart contracts (Solidity)
+├── lit-actions/     # Lit Protocol actions
+├── utils/           # Shared utility functions
+└── eslint-config/   # Shared linting configuration
+```
+
+## Core Packages
+
+### UI Components (`@karaoke-dapp/ui`)
+
+Reusable React components built with Tailwind CSS and Radix UI primitives.
+
+**Key Components:**
+- `KaraokeDisplay` - Main karaoke interface with lyrics and countdown
+- `KaraokeScore` - Performance results and scoring
+- `PurchaseSlider` - Song purchase interface
+- `ConnectWalletSheet` - Web3 wallet connection
+- `MicrophonePermission` - Audio permission handling
+
+**Features:**
+- TypeScript support
+- Storybook integration
+- Tailwind CSS styling
+- Accessible by default
+
+### Services (`@karaoke-dapp/services`)
+
+Business logic and external service integrations.
+
+**Key Services:**
+- `DatabaseService` - Song metadata and user data
+- `EncryptionService` - Lit Protocol integration
+- `AiozUploadService` - Decentralized storage uploads
+
+**Browser Services:**
+- Local storage management
+- IndexedDB operations
+- Cache strategies
+
+### Database (`@karaoke-dapp/db`)
+
+Database utilities for both local and decentralized storage.
+
+**Components:**
+- `idb.ts` - IndexedDB wrapper for local caching
+- `tableland.ts` - Tableland database operations
+- `cid-tracker.ts` - Content addressing utilities
+
+### Smart Contracts (`@karaoke-dapp/contracts`)
+
+Solidity contracts for the on-chain components.
+
+**Main Contracts:**
+- `KaraokeStore_V0_1_0.sol` - Credit system and access control
+- Deployment scripts for Base network
+- Integration with USDC token
+
+### Lit Actions (`@karaoke-dapp/lit-actions`)
+
+Programmable cryptography actions for the Lit Protocol.
+
+**Actions:**
+- MIDI decryption for purchased songs
+- Session signature validation
+- Access control enforcement
+
+### Utilities (`@karaoke-dapp/utils`)
+
+Shared utility functions used across packages.
+
+**Common Utilities:**
+- Type definitions
+- Helper functions
+- Constants and configuration
+
+## Package Dependencies
+
+<Mermaid>
+<pre>
+graph TD
+    A[apps/web] --> B[packages/ui]
+    A --> C[packages/services]
+    A --> D[packages/db]
+    B --> E[packages/utils]
+    C --> E
+    C --> F[packages/contracts]
+    C --> G[packages/lit-actions]
+    D --> E
+</pre>
+</Mermaid>
+
+## Development Workflow
+
+### Building Packages
+
+```bash
+# Build all packages
+bun run build
+
+# Build specific package
+bun run build --filter=@karaoke-dapp/ui
+```
+
+### Testing
+
+```bash
+# Run all tests
+bun test
+
+# Test specific package
+bun test packages/services
+```
+
+### Storybook
+
+UI components are documented and tested in Storybook:
+
+```bash
+bun run storybook
+```
+
+## Package.json Scripts
+
+Each package includes standardized scripts:
+
+- `build` - TypeScript compilation
+- `dev` - Development mode with watch
+- `test` - Unit tests
+- `lint` - ESLint checking
+- `typecheck` - TypeScript validation
+
+## Inter-Package Communication
+
+Packages communicate through well-defined TypeScript interfaces:
+
+```typescript
+// Example: UI component using services
+import { DatabaseService } from '@karaoke-dapp/services'
+import type { Song } from '@karaoke-dapp/utils'
+
+export function SongCard({ songId }: { songId: number }) {
+  const [song, setSong] = useState<Song | null>(null)
+  
+  useEffect(() => {
+    const db = new DatabaseService()
+    db.getSong(songId).then(setSong)
+  }, [songId])
+  
+  // ... component logic
+}
+```
+
+## Adding New Packages
+
+To add a new package:
+
+1. Create directory in `packages/`
+2. Add `package.json` with workspace dependencies
+3. Configure TypeScript with appropriate references
+4. Update root `turbo.json` for build pipeline
+5. Add to relevant documentation
+---
+
+# Services
+
+# Services Package
+
+The `@karaoke-dapp/services` package contains all business logic and external service integrations.
+
+## Installation
+
+```bash
+bun add @karaoke-dapp/services
+```
+
+## Core Services
+
+### DatabaseService
+
+Manages song metadata and user data with local caching.
+
+```typescript
+class DatabaseService {
+  // Get all available songs
+  async getSongs(): Promise<Song[]>
+  
+  // Get specific song by ID
+  async getSong(id: number): Promise<Song | null>
+  
+  // Get song artwork URL
+  getArtworkUrl(song: Song, size: 'f' | 'm' | 's'): string
+  
+  // Search songs by query
+  async searchSongs(query: string): Promise<Song[]>
+}
+```
+
+**Usage:**
+```typescript
+import { DatabaseService } from '@karaoke-dapp/services'
+
+const db = new DatabaseService()
+const songs = await db.getSongs()
+const song = await db.getSong(1)
+```
+
+**Song Interface:**
+```typescript
+interface Song {
+  id: number
+  title: string
+  artist: string
+  duration: number
+  artwork_url: string
+  lrclib_id: string
+  // ... other properties
+}
+```
+
+### EncryptionService
+
+Handles Lit Protocol integration for encrypted content access.
+
+```typescript
+class EncryptionService {
+  // Create session signatures for temporary access
+  async createSessionSignatures(
+    userAddress: string,
+    songId: number
+  ): Promise<SessionSigs>
+  
+  // Decrypt MIDI file with access verification
+  async decryptMidiFile(
+    encryptedCid: string,
+    sessionSigs: SessionSigs,
+    songId: number
+  ): Promise<{
+    midiData: Uint8Array
+    audioUrl: string
+    lyricsUrl: string
+  }>
+  
+  // Check if user has valid session
+  async hasValidSession(userAddress: string): Promise<boolean>
+}
+```
+
+**Usage:**
+```typescript
+import { EncryptionService } from '@karaoke-dapp/services'
+
+const encryption = new EncryptionService()
+const sessionSigs = await encryption.createSessionSignatures(
+  userAddress,
+  songId
+)
+```
+
+### AiozUploadService
+
+Manages uploads to AIOZ decentralized storage network.
+
+```typescript
+class AiozUploadService {
+  // Upload file and get CID
+  async uploadFile(
+    file: File | Blob,
+    options?: UploadOptions
+  ): Promise<string>
+  
+  // Upload with encryption
+  async uploadEncrypted(
+    file: File | Blob,
+    accessControlConditions: any[]
+  ): Promise<{
+    cid: string
+    encryptedKey: string
+  }>
+  
+  // Get file URL from CID
+  getFileUrl(cid: string): string
+}
+```
+
+**Upload Options:**
+```typescript
+interface UploadOptions {
+  filename?: string
+  contentType?: string
+  metadata?: Record<string, any>
+}
+```
+
+## Browser-Specific Services
+
+### Browser Module (`browser.ts`)
+
+Provides browser-specific implementations and utilities.
+
+```typescript
+// Local storage management
+export class BrowserStorage {
+  set(key: string, value: any): void
+  get<T>(key: string): T | null
+  remove(key: string): void
+  clear(): void
+}
+
+// IndexedDB operations
+export class BrowserDB {
+  async store(storeName: string, data: any): Promise<void>
+  async retrieve(storeName: string, key: any): Promise<any>
+  async delete(storeName: string, key: any): Promise<void>
+}
+```
+
+**Usage:**
+```typescript
+import { BrowserStorage, BrowserDB } from '@karaoke-dapp/services/browser'
+
+const storage = new BrowserStorage()
+storage.set('user-preferences', { theme: 'dark' })
+
+const db = new BrowserDB()
+await db.store('songs', { id: 1, title: 'Royals' })
+```
+
+## Audio Services
+
+### MidiPlayerService
+
+MIDI playback and audio management using Tone.js.
+
+```typescript
+class MidiPlayerService {
+  // Load MIDI file for playback
+  async loadMidi(midiData: Uint8Array): Promise<void>
+  
+  // Start/stop playback
+  play(): void
+  pause(): void
+  stop(): void
+  
+  // Get playback state
+  getCurrentTime(): number
+  getDuration(): number
+  isPlaying(): boolean
+  
+  // Event listeners
+  onTimeUpdate(callback: (time: number) => void): void
+  onComplete(callback: () => void): void
+}
+```
+
+### RecordingManagerService
+
+Manages audio recording during karaoke sessions.
+
+```typescript
+class RecordingManagerService {
+  constructor(options: RecordingOptions)
+  
+  // Initialize with microphone stream
+  initialize(stream: MediaStream): void
+  
+  // Record audio segments aligned with lyrics
+  startSegmentRecording(segment: KaraokeSegment, currentTime: number): void
+  
+  // Stop recording and process audio
+  dispose(): void
+}
+
+interface RecordingOptions {
+  onSegmentReady: (segment: ProcessedSegment) => void
+  onError: (error: Error) => void
+}
+```
+
+### KaraokeGradingService
+
+Real-time performance analysis and scoring.
+
+```typescript
+class KaraokeGradingService {
+  constructor(options: GradingOptions)
+  
+  // Initialize grading with session
+  async initialize(): Promise<void>
+  
+  // Grade audio segment against expected lyric
+  async gradeSegment(segment: AudioSegment): Promise<GradingResult>
+  
+  // Get final performance score
+  calculateFinalScore(lineScores: GradingResult[]): number
+}
+
+interface GradingResult {
+  lyricLineId: number
+  similarity: number
+  timing: number
+  pronunciation: number
+}
+```
+
+## Configuration
+
+Services can be configured through environment variables:
+
+```typescript
+// Configuration interface
+interface ServiceConfig {
+  // Lit Protocol
+  LIT_NETWORK: 'datil' | 'serrano' | 'manzano'
+  MIDI_DECRYPTOR_ACTION_CID: string
+  
+  // AIOZ Network
+  AIOZ_API_URL: string
+  AIOZ_GATEWAY_URL: string
+  
+  // Blockchain
+  KARAOKE_STORE_ADDRESS: string
+  CHAIN_ID: number
+  RPC_URL: string
+}
+```
+
+## Error Handling
+
+All services implement consistent error handling:
+
+```typescript
+// Service-specific errors
+export class DatabaseError extends Error {
+  constructor(message: string, public code: string) {
+    super(message)
+    this.name = 'DatabaseError'
+  }
+}
+
+export class EncryptionError extends Error {
+  constructor(message: string, public code: string) {
+    super(message)
+    this.name = 'EncryptionError'
+  }
+}
+
+// Usage
+try {
+  const songs = await db.getSongs()
+} catch (error) {
+  if (error instanceof DatabaseError) {
+    console.error('Database operation failed:', error.code)
+  }
+}
+```
+
+## Testing
+
+Services include comprehensive unit tests:
+
+```typescript
+// Example test
+describe('DatabaseService', () => {
+  it('should fetch songs from API', async () => {
+    const db = new DatabaseService()
+    const songs = await db.getSongs()
+    
+    expect(songs).toBeInstanceOf(Array)
+    expect(songs.length).toBeGreaterThan(0)
+    expect(songs[0]).toHaveProperty('id')
+    expect(songs[0]).toHaveProperty('title')
+  })
+})
+```
+
+## Performance Considerations
+
+- **Caching**: All services implement intelligent caching
+- **Lazy Loading**: Services are instantiated only when needed
+- **Memory Management**: Proper cleanup of resources
+- **Error Recovery**: Automatic retry with exponential backoff
+---
+
+# Ui
+
+# UI Components
+
+The `@karaoke-dapp/ui` package provides all shared UI components used across the application.
+
+## Installation
+
+```bash
+bun add @karaoke-dapp/ui
+```
+
+## Core Components
+
+### KaraokeDisplay
+
+The main karaoke interface that displays lyrics, handles countdown, and shows performance feedback.
+
+```typescript
+interface KaraokeDisplayProps {
+  lines: KaraokeLyricLine[]
+  currentTime?: number
+  countdown?: number
+  lineColors?: Map<number, number>
+}
+
+interface KaraokeLyricLine {
+  id: string
+  text: string
+  startTime: number
+  endTime: number
+}
+```
+
+**Usage:**
+```tsx
+import { KaraokeDisplay } from '@karaoke-dapp/ui'
+
+<KaraokeDisplay
+  lines={karaokeLyrics}
+  currentTime={currentTime * 1000}
+  lineColors={lineGrades}
+/>
+```
+
+**Features:**
+- Real-time lyric highlighting
+- Performance-based color coding
+- Countdown overlay
+- Responsive design
+
+### KaraokeScore
+
+Post-performance scoring interface with options to practice or continue.
+
+```typescript
+interface KaraokeScoreProps {
+  score: number
+  songTitle: string
+  artist: string
+  onPractice: () => void
+}
+```
+
+**Usage:**
+```tsx
+<KaraokeScore
+  score={85}
+  songTitle="Royals"
+  artist="Lorde"
+  onPractice={() => send({ type: 'PRACTICE' })}
+/>
+```
+
+### PurchaseSlider
+
+Interactive purchase interface with slide-to-confirm functionality.
+
+```typescript
+interface PurchaseSliderProps {
+  songTitle: string
+  packagePrice: number
+  packageCredits: number
+  onPurchase: () => void
+  isPurchasing: boolean
+  children: React.ReactNode
+}
+```
+
+**Usage:**
+```tsx
+<PurchaseSlider
+  songTitle="Royals"
+  packagePrice={2}
+  packageCredits={2}
+  onPurchase={() => purchaseSong()}
+  isPurchasing={isLoading}
+>
+  <Button>Purchase Song Pack</Button>
+</PurchaseSlider>
+```
+
+### ConnectWalletSheet
+
+Modal interface for Web3 wallet connection with support for multiple connectors.
+
+```typescript
+interface ConnectWalletSheetProps {
+  connectors: readonly Connector[]
+  onConnect: (connector: Connector) => void
+  isConnecting: boolean
+  error?: Error | null
+  children: React.ReactNode
+}
+```
+
+**Usage:**
+```tsx
+<ConnectWalletSheet
+  connectors={connectors}
+  onConnect={(connector) => connect({ connector })}
+  isConnecting={status === 'pending'}
+  error={connectError}
+>
+  <Button>Connect Wallet</Button>
+</ConnectWalletSheet>
+```
+
+### MicrophonePermission
+
+Handles microphone permission requests with user-friendly messaging.
+
+```typescript
+interface MicrophonePermissionProps {
+  onRequestPermission: () => Promise<void>
+}
+```
+
+## Base UI Components
+
+### Button
+
+Versatile button component with multiple variants and sizes.
+
+```typescript
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
+  asChild?: boolean
+}
+```
+
+**Variants:**
+- `default` - Primary button style
+- `outline` - Outlined button
+- `ghost` - Transparent background
+- `destructive` - For dangerous actions
+
+### Header
+
+Application header with navigation and user account integration.
+
+```typescript
+interface HeaderProps {
+  onAccountClick?: () => void
+  leftContent?: React.ReactNode
+}
+```
+
+### Sheet
+
+Modal overlay component for forms and detailed content.
+
+```typescript
+interface SheetProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  children: React.ReactNode
+}
+```
+
+## Styling
+
+All components use Tailwind CSS for styling with a custom design system:
+
+### Color Palette
+- **Primary**: Blue gradient (`from-blue-600 to-blue-700`)
+- **Secondary**: Neutral grays
+- **Success**: Green for positive feedback
+- **Warning**: Yellow/orange for caution
+- **Error**: Red for errors
+
+### Typography
+- **Headers**: Font weight 600-700
+- **Body**: Font weight 400
+- **Labels**: Font weight 500
+
+### Spacing
+Following Tailwind's spacing scale (4px base unit):
+- `p-2` (8px), `p-4` (16px), `p-6` (24px), `p-8` (32px)
+
+## Accessibility
+
+All components follow WCAG 2.1 guidelines:
+
+- **Keyboard Navigation**: Full keyboard support
+- **Screen Readers**: Proper ARIA labels and descriptions
+- **Color Contrast**: Meets AA standards
+- **Focus Management**: Visible focus indicators
+
+## Storybook Integration
+
+All components are documented in Storybook with:
+
+- **Stories**: Different component states
+- **Controls**: Interactive property editing
+- **Documentation**: Auto-generated props tables
+
+```bash
+# Start Storybook
+bun run storybook
+```
+
+## Theme Customization
+
+Components use CSS custom properties for theming:
+
+```css
+:root {
+  --primary: 216 100% 64%;
+  --secondary: 210 11% 15%;
+  --background: 0 0% 4%;
+  --foreground: 0 0% 98%;
+}
+```
+
+## Testing
+
+UI components include comprehensive tests:
+
+```typescript
+// Example test
+import { render, screen } from '@testing-library/react'
+import { Button } from './button'
+
+test('renders button with text', () => {
+  render(<Button>Click me</Button>)
+  expect(screen.getByRole('button')).toHaveTextContent('Click me')
+})
+```
+
+## Performance
+
+Components are optimized for performance:
+
+- **Tree Shaking**: Only import used components
+- **Bundle Size**: Minimal external dependencies
+- **React Optimization**: Proper use of memo and callbacks

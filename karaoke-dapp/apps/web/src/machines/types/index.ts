@@ -19,6 +19,7 @@ export interface KaraokeContext {
   midiData: Uint8Array;
   audioUrl?: string;
   lyricsUrl?: string;
+  sessionSigs?: SessionSigsMap;
   audioBuffer?: AudioBuffer;
   lyrics?: LyricLine[];
   currentLineIndex: number;
@@ -52,18 +53,12 @@ export type SongEvent =
   | { type: 'ERROR'; error: string };
 
 export type KaraokeEvent =
-  | { type: 'REQUEST_PERMISSION' }
-  | { type: 'COUNTDOWN_COMPLETE' }
   | { type: 'UPDATE_COUNTDOWN'; value: number }
-  | { type: 'CLOSE' }
   | { type: 'LOAD_AUDIO'; url: string }
   | { type: 'PLAY' }
-  | { type: 'PAUSE' }
   | { type: 'STOP' }
+  | { type: 'COMPLETE' }
   | { type: 'NEXT_LINE' }
-  | { type: 'PREVIOUS_LINE' }
-  | { type: 'START_RECORDING' }
-  | { type: 'STOP_RECORDING' }
   | { type: 'SUBMIT_SCORE' }
   | { type: 'RESTART' }
   | { type: 'ERROR'; error: string };

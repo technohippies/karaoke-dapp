@@ -35,19 +35,11 @@ export class KaraokeGradingService {
   async gradeSegment(segment: RecordingSegment): Promise<GradingResult> {
     try {
       // Convert audio blob to base64
-      console.log('🎵 Audio blob info:', {
-        type: segment.audioBlob.type,
-        size: segment.audioBlob.size
-      });
-      
       const audioBase64 = await this.blobToBase64(segment.audioBlob)
-      console.log('📦 Audio base64 length:', audioBase64.length);
       
       // Note: Keywords are now handled within the deployed Lit Action
       
       // Execute deployed Lit action for voice grading
-      console.log('🎤 Executing voice grader Lit Action for segment:', segment.segmentId);
-      
       const result = await this.encryptionService.executeDeployedLitAction(
         LIT_ACTION_CIDS.voiceGrader,
         {
@@ -60,10 +52,7 @@ export class KaraokeGradingService {
         this.options.sessionSigs
       )
       
-      console.log('🔍 Raw Lit Action result:', result);
-      
       const parsedResult = JSON.parse(result)
-      console.log('📊 Parsed result:', parsedResult);
       
       // The deployed action returns a different structure
       if (!parsedResult.success) {
@@ -71,6 +60,12 @@ export class KaraokeGradingService {
       }
       
       const lineResult = parsedResult.lineResult
+      
+      // Log comparison for debugging
+      console.log(`📝 Line ${segment.lyricLineId} comparison:`)
+      console.log(`   Expected: "${segment.expectedText}"`)
+      console.log(`   Got:      "${lineResult.transcript}"`)
+      console.log(`   Accuracy: ${(lineResult.accuracy * 100).toFixed(0)}%`)
       
       return {
         segmentId: segment.segmentId,

@@ -6,7 +6,8 @@ This section documents all the services, interfaces, and APIs used in the Karaok
 
 The application is built with a service-oriented architecture where different concerns are separated into focused services:
 
-<Mermaid graph="
+<Mermaid>
+<pre>
 graph TD
     A[Web App] --> B[Audio Services]
     A --> C[Database Services]  
@@ -18,7 +19,8 @@ graph TD
     C --> H[Tableland]
     D --> I[Lit Protocol]
     E --> J[Web Audio API]
-" />
+</pre>
+</Mermaid>
 
 ## Core Services
 

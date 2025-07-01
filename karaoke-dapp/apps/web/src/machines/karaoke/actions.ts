@@ -27,17 +27,6 @@ export const karaokeActions = {
     }
   },
 
-  pausePlayback: () => {
-    if (audioContext) {
-      (audioContext as AudioContext).suspend();
-    }
-  },
-
-  resumePlayback: () => {
-    if (audioContext) {
-      (audioContext as AudioContext).resume();
-    }
-  },
 
   startLyricSync: ({ context, self }: any) => {
     if (lyricInterval) {

@@ -1,3 +1,7 @@
+---
+description: Complete documentation for Karaoke Turbo - a decentralized karaoke platform built on Ethereum with Web3 technology, featuring MIDI playback, voice recording, and encrypted storage.
+---
+
 # Karaoke Turbo
 
 A decentralized karaoke platform built on Ethereum with Web3 technology.
@@ -13,7 +17,8 @@ A decentralized karaoke platform built on Ethereum with Web3 technology.
 
 ## Architecture Overview
 
-<Mermaid graph="
+<Mermaid>
+<pre>
 graph TB
     A[Web App] --> B[State Machines]
     A --> C[Audio Context]
@@ -23,7 +28,8 @@ graph TB
     C --> G[Web Audio API]
     D --> H[Base Network]
     E --> I[Encrypted Storage]
-" />
+</pre>
+</Mermaid>
 
 ## Getting Started
 

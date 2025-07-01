@@ -65,9 +65,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         volume: midiVolume,
         onTimeUpdate: (time) => {
           // Update time for MIDI playback
-          if (midiData) {
-            setCurrentTime(time)
-          }
+          setCurrentTime(time)
         },
         onEnd: () => {
           setIsPlaying(false)

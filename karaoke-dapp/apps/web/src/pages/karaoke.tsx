@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { Header, KaraokeDisplay, Button, CountdownScreen, MicrophonePermission } from '@karaoke-dapp/ui'
+import { Header, KaraokeDisplay, Button, MicrophonePermission } from '@karaoke-dapp/ui'
 import { X } from '@phosphor-icons/react'
 import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, getCurrentLyricIndex } from '../utils/lyrics-parser'
@@ -47,7 +47,6 @@ function KaraokeContent() {
   const [, setActiveLyricIndex] = useState(-1)
   const [lyricsWithScores, setLyricsWithScores] = useState<KaraokeLyricLine[]>([])
   const [songId, setSongId] = useState<number | null>(null)
-  const [showCountdown, setShowCountdown] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
   const [isLoadingLyrics, setIsLoadingLyrics] = useState(true)
@@ -228,27 +227,6 @@ function KaraokeContent() {
     navigate('/account')
   }
   
-  const handleCountdownComplete = async () => {
-    // Start playback after countdown
-    setShowCountdown(false)
-    setIsReady(true)
-    
-    // Start playback (MIDI and/or audio)
-    try {
-      await play()
-      // Playback started successfully
-    } catch (error) {
-      console.error('❌ Error starting playback:', error)
-    }
-    
-    // Start recording automatically
-    try {
-      await startRecording()
-      // Recording started successfully
-    } catch (error) {
-      console.error('❌ Error starting recording:', error)
-    }
-  }
   
   const handleClose = () => {
     pause()
@@ -270,7 +248,6 @@ function KaraokeContent() {
         const permission = await navigator.permissions.query({ name: 'microphone' as PermissionName })
         if (permission.state === 'granted') {
           setHasMicPermission(true)
-          setShowCountdown(true)
           return
         }
       }
@@ -279,7 +256,6 @@ function KaraokeContent() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       stream.getTracks().forEach(track => track.stop())
       setHasMicPermission(true)
-      setShowCountdown(true)
     } catch {
       setHasMicPermission(false)
     }
@@ -323,7 +299,6 @@ function KaraokeContent() {
   
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-      {showCountdown && <CountdownScreen onComplete={handleCountdownComplete} />}
       <Header 
         onAccountClick={handleAccountClick}
         leftContent={

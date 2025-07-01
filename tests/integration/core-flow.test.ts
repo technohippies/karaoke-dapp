@@ -54,8 +54,8 @@ describe('Complete Karaoke Flow', () => {
     const initialBalanceBigInt = BigInt(initialBalance.toString())
     expect(initialBalanceBigInt).toBeGreaterThanOrEqual(TEST_CREDITS_TO_USE)
 
-    // 2. VOICE GRADING: Test actual Deepgram nova-3 integration
-    console.log('\n🎤 Step 2: Testing voice grading with Deepgram nova-3...')
+    // 2. VOICE GRADING: Test actual Deepgram nova-3 integration with WebM audio
+    console.log('\n🎤 Step 2: Testing voice grading with Deepgram nova-3 (WebM format)...')
     
     const sessionId = ethers.encodeBytes32String(generateTestSessionId())
     console.log(`Session ID: ${sessionId}`)

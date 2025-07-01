@@ -296,7 +296,36 @@ export const songMachine = createMachine({
         ready: {
           description: 'Song ready to play - show start karaoke button',
           on: {
-            START_KARAOKE: '#song.karaoke',
+            START_KARAOKE: [
+              {
+                target: '#song.karaoke',
+                guard: ({ context }) => !!context.sessionSigs,
+              },
+              {
+                target: 'preparingKaraoke',
+              },
+            ],
+          },
+        },
+        
+        preparingKaraoke: {
+          description: 'Creating session signatures for karaoke',
+          invoke: {
+            id: 'createSessionForKaraoke',
+            src: 'createSession',
+            input: ({ context }) => context,
+            onDone: {
+              target: '#song.karaoke',
+              actions: assign({
+                sessionSigs: ({ event }) => event.output,
+              }),
+            },
+            onError: {
+              target: 'ready',
+              actions: assign({
+                error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+              }),
+            },
           },
         },
       },
@@ -312,6 +341,7 @@ export const songMachine = createMachine({
           midiData: context.midiData,
           audioUrl: context.audioUrl,
           lyricsUrl: context.lyricsUrl,
+          sessionSigs: context.sessionSigs,
         }),
         onDone: {
           target: 'purchased.ready',

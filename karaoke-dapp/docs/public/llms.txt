@@ -1,0 +1,26 @@
+# Karaoke Turbo - Decentralized Karaoke Platform
+
+> Documentation for AI/LLM consumption
+
+This documentation covers a decentralized karaoke platform built on Ethereum with Web3 technology.
+
+## Documentation Sections
+
+- [DEPLOYMENT_GUIDE](/DEPLOYMENT_GUIDE.md)
+- [MIDI_PROCESSING](/MIDI_PROCESSING.md)
+- [TESTING_FLOW](/TESTING_FLOW.md)
+- [Database](/api/database.md): Database architecture documentation covering Tableland decentralized SQL database, IndexedDB client storage, schemas, queries, and data management patterns.
+- [Index](/api/index.md)
+- [Index](/architecture/index.md): System architecture, data flow, and security model for the Karaoke Turbo platform including blockchain integration and decentralized storage.
+- [State Machines](/architecture/state-machines.md): XState implementation details for song lifecycle and karaoke session management including state transitions, context, and machine composition.
+- [Deployment](/contracts/deployment.md): Smart contract deployment information including addresses, networks, and deployment procedures for the Karaoke Turbo platform on Base Sepolia.
+- [Index](/contracts/index.md): Smart contract documentation for KaraokeStore including credit system, access control, revenue distribution, and deployment procedures on Base network.
+- [Deployment](/guides/deployment.md)
+- [Development Commands](/guides/development-commands.md): Complete reference for all development commands, scripts, and workflows in the Karaoke Turbo project including setup, testing, deployment, and maintenance tasks.
+- [Environment Setup](/guides/environment-setup.md): Complete environment setup guide covering development environment configuration, required services, API keys, and deployment preparation for Karaoke Turbo.
+- [Index](/guides/index.md): Development setup guide for Karaoke Turbo including environment configuration, project structure, and common development tasks.
+- [Testing](/guides/testing.md): Comprehensive testing guide covering E2E tests with Playwright, integration tests, Storybook component testing, and development testing workflows.
+- [Index](/index.md): Complete documentation for Karaoke Turbo - a decentralized karaoke platform built on Ethereum with Web3 technology, featuring MIDI playback, voice recording, and encrypted storage.
+- [Index](/packages/index.md): Monorepo package organization including UI components, services, database utilities, smart contracts, and Lit Protocol actions.
+- [Services](/packages/services.md)
+- [Ui](/packages/ui.md)

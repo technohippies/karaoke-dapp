@@ -13,7 +13,6 @@ export * from './components/ui/spinner';
 export * from './components/karaoke/lyric-sheet';
 export * from './components/karaoke/lyric-line';
 export * from './components/karaoke/karaoke-display';
-export * from './components/karaoke/countdown-screen';
 export * from './components/karaoke/microphone-permission';
 export * from './components/karaoke/karaoke-score';
 

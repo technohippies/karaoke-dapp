@@ -2,6 +2,7 @@ export default {
   title: 'Karaoke Turbo',
   description: 'Decentralized Karaoke Platform Documentation',
   base: '/docs/',
+  ignoreDeadLinks: true,
   
   vue: {
     template: {
@@ -96,7 +97,7 @@ export default {
 
   markdown: {
     config: (md) => {
-      // We'll add Mermaid support via markdown-it plugin if needed
+      // We'll add the LLMs plugin via a different approach
     }
   }
 }

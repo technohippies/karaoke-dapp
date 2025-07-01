@@ -1,3 +1,7 @@
+---
+description: Monorepo package organization including UI components, services, database utilities, smart contracts, and Lit Protocol actions.
+---
+
 # Packages Overview
 
 The Karaoke Turbo project is organized as a monorepo with several focused packages that handle different aspects of the platform.
@@ -86,7 +90,8 @@ Shared utility functions used across packages.
 
 ## Package Dependencies
 
-<Mermaid graph="
+<Mermaid>
+<pre>
 graph TD
     A[apps/web] --> B[packages/ui]
     A --> C[packages/services]
@@ -96,7 +101,8 @@ graph TD
     C --> F[packages/contracts]
     C --> G[packages/lit-actions]
     D --> E
-" />
+</pre>
+</Mermaid>
 
 ## Development Workflow
 

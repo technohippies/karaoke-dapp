@@ -1,4 +1,4 @@
-import { useMachine, useSelector } from '@xstate/react';
+import { useMachine } from '@xstate/react';
 import { useAccount } from 'wagmi';
 import { useEffect, useCallback, useState } from 'react';
 import { songMachine } from '../song/songMachine';
@@ -46,6 +46,7 @@ export function useSongMachine(songId: number) {
   const needsDownload = state.matches('purchased.needsDownload');
   const isDownloading = state.matches('purchased.downloading');
   const isReady = state.matches('purchased.ready');
+  const isPreparingKaraoke = state.matches('purchased.preparingKaraoke');
   const hasError = state.matches('error');
   
   // Karaoke states - check if karaoke machine is invoked
@@ -62,11 +63,6 @@ export function useSongMachine(songId: number) {
     }
     
     const subscription = karaokeActor.subscribe((snapshot) => {
-      console.log('📸 Karaoke snapshot update:', { 
-        value: snapshot.value, 
-        countdown: snapshot.context.countdown,
-        fullContext: snapshot.context
-      });
       setKaraokeState(snapshot);
     });
     
@@ -81,22 +77,10 @@ export function useSongMachine(songId: number) {
   // Get countdown value from karaoke state
   const karaokeCountdownValue = karaokeState?.context?.countdown;
   
-  // Debug logging
-  useEffect(() => {
-    if (karaokeState) {
-      console.log('🎤 Karaoke state:', karaokeState.value, { 
-        countdown: karaokeCountdownValue,
-        context: karaokeState.context 
-      });
-    }
-  }, [karaokeState, karaokeCountdownValue]);
   
   // Karaoke sub-states - only check if karaokeState exists
-  const isKaraokeCheckingPermissions = karaokeState ? karaokeState.matches('checkingPermissions') : false;
-  const isKaraokeNeedsPermission = karaokeState ? karaokeState.matches('needsPermission') : false;
   const isKaraokeCountdown = karaokeState ? karaokeState.matches('countdown') : false;
   const isKaraokePlaying = karaokeState ? karaokeState.matches('playing') : false;
-  const isKaraokePaused = karaokeState ? karaokeState.matches('paused') : false;
   const isKaraokeStopped = karaokeState ? karaokeState.matches('stopped') : false;
 
   // Get button state and text
@@ -110,9 +94,10 @@ export function useSongMachine(songId: number) {
     if (needsDownload) return { text: 'Download', disabled: false, action: download };
     if (isDownloading) return { text: 'Downloading...', disabled: true };
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
+    if (isPreparingKaraoke) return { text: 'Preparing...', disabled: true };
     if (hasError) return { text: 'Retry', disabled: false, action: retry };
     return { text: 'Loading...', disabled: true };
-  }, [isCheckingAccess, isCheckingCache, isUnpurchased, canUnlock, isUnlocking, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, hasError, purchase, unlock, download, startKaraoke, retry]);
+  }, [isCheckingAccess, isCheckingCache, isUnpurchased, canUnlock, isUnlocking, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, isPreparingKaraoke, hasError, purchase, unlock, download, startKaraoke, retry]);
 
   return {
     state,
@@ -138,14 +123,12 @@ export function useSongMachine(songId: number) {
     needsDownload,
     isDownloading,
     isReady,
+    isPreparingKaraoke,
     hasError,
     // Karaoke states
     isInKaraokeMode,
-    isKaraokeCheckingPermissions,
-    isKaraokeNeedsPermission,
     isKaraokeCountdown,
     isKaraokePlaying,
-    isKaraokePaused,
     isKaraokeStopped,
     karaokeCountdownValue,
     karaokeActor,

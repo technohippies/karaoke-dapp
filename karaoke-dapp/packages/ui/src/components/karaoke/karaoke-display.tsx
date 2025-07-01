@@ -32,16 +32,6 @@ export function KaraokeDisplay({
     (line) => currentTime >= line.startTime && currentTime < line.endTime
   );
   
-  // Debug logging
-  React.useEffect(() => {
-    if (lines.length > 0 && currentTime > 0) {
-      console.log('🎤 KaraokeDisplay:', {
-        currentTime,
-        activeIndex,
-        currentLine: activeIndex >= 0 ? lines[activeIndex].text : 'none'
-      });
-    }
-  }, [currentTime, activeIndex, lines]);
 
   // Smooth scroll to active line
   React.useEffect(() => {
@@ -53,18 +43,16 @@ export function KaraokeDisplay({
     }
   }, [activeIndex]);
 
-  // Get color based on similarity score
-  const getScoreColor = (lineId: string, isPast: boolean) => {
-    if (!isPast || !lineColors) return 'text-neutral-400';
+  // Get opacity based on similarity score (gradient system)
+  const getScoreOpacity = (lineId: string, isPast: boolean) => {
+    if (!isPast || !lineColors) return 0.4; // Default opacity for unsung lines
     
     const score = lineColors.get(parseInt(lineId));
-    if (score === undefined) return 'text-neutral-400';
+    if (score === undefined) return 0.4;
     
-    // Use the grading service color logic
-    if (score >= 0.8) return 'text-green-500';
-    if (score >= 0.6) return 'text-yellow-500';
-    if (score >= 0.3) return 'text-orange-500';
-    return 'text-red-500';
+    // Map score (0-1) to opacity (0.3-1.0)
+    // Minimum 0.3 so text is always somewhat visible
+    return 0.3 + (score * 0.7);
   };
 
   return (
@@ -98,16 +86,19 @@ export function KaraokeDisplay({
               className={cn(
                 'text-center px-8 transition-all duration-300',
                 isActive && 'scale-110',
-                !isActive && !isPast && 'opacity-30'
+                // Remove opacity-30 since we're controlling opacity with style prop
               )}
             >
               <p
                 className={cn(
-                  'text-2xl md:text-4xl font-medium leading-relaxed',
+                  'text-2xl md:text-4xl font-medium leading-relaxed transition-opacity duration-500',
                   isActive && 'text-neutral-50',
-                  isPast && getScoreColor(line.id, isPast),
+                  isPast && 'text-neutral-200',
                   !isActive && !isPast && 'text-neutral-300'
                 )}
+                style={{
+                  opacity: isActive ? 1 : getScoreOpacity(line.id, isPast)
+                }}
               >
                 {line.text}
               </p>

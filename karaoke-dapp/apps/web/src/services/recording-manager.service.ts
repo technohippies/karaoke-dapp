@@ -23,7 +23,8 @@ export class RecordingManager {
   private options: RecordingManagerOptions
   private isRecording: boolean = false
   private scheduledStops: Map<number, NodeJS.Timeout> = new Map()
-  private pendingSegments: Map<number, { segment: KaraokeSegment, startTime: number, chunks: Blob[] }> = new Map()
+  private pendingSegments: Map<number, { segment: KaraokeSegment, startTime: number, chunks: Blob[], complete?: boolean }> = new Map()
+  private recordingSegmentId: number | null = null // Track which segment is currently being recorded
   
   constructor(options: RecordingManagerOptions = {}) {
     this.options = options
@@ -53,17 +54,18 @@ export class RecordingManager {
       })
       
       this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && this.currentSegment) {
-          console.log(`📼 Received audio chunk, size: ${event.data.size}, for line: ${this.currentSegment.lyricLine.id}`)
-          // Store chunks with their segment info
-          const segmentId = this.currentSegment.lyricLine.id
+        if (event.data.size > 0 && this.recordingSegmentId !== null) {
+          console.log(`📼 Received audio chunk, size: ${event.data.size}, for recording segment: ${this.recordingSegmentId}`)
+          // Use the segment ID that was active when recording started, not the current one
+          const segmentId = this.recordingSegmentId
           const pending = this.pendingSegments.get(segmentId)
           if (pending) {
             pending.chunks.push(event.data)
             console.log(`📼 Added chunk to pending segment ${segmentId}, total chunks: ${pending.chunks.length}`)
           } else {
+            // This shouldn't happen if our logic is correct, but just in case
+            console.warn(`📼 No pending segment found for ${segmentId}, adding to general chunks`)
             this.audioChunks.push(event.data)
-            console.log(`📼 Added chunk to audio chunks, total: ${this.audioChunks.length}`)
           }
         }
       }
@@ -113,10 +115,18 @@ export class RecordingManager {
       }, startDelay)
     }
     
-    // Schedule the stop
+    // Schedule the stop - but don't process segments immediately
     const stopTimeout = setTimeout(() => {
       console.log(`⏰ Stop timeout triggered for line ${segment.lyricLine.id}`)
-      this.stopRecording()
+      
+      // Mark this segment as complete and ready to process
+      const pending = this.pendingSegments.get(segment.lyricLine.id)
+      if (pending) {
+        pending.complete = true
+      }
+      
+      // Process only completed segments
+      this.processCompletedSegments()
     }, stopDelay)
     
     console.log(`⏰ Scheduled stop for line ${segment.lyricLine.id} in ${stopDelay}ms`)
@@ -126,9 +136,9 @@ export class RecordingManager {
   private startRecording(segment: KaraokeSegment) {
     console.log(`🎤 Starting recording for line ${segment.lyricLine.id}: "${segment.expectedText}"`)
     
-    if (this.isRecording && this.currentSegment) {
+    if (this.isRecording && this.currentSegment && this.recordingSegmentId !== null) {
       // Save the current segment data before switching
-      const segmentId = this.currentSegment.lyricLine.id
+      const segmentId = this.recordingSegmentId
       this.pendingSegments.set(segmentId, {
         segment: this.currentSegment,
         startTime: this.segmentStartTime,
@@ -137,37 +147,78 @@ export class RecordingManager {
     }
     
     this.currentSegment = segment
+    this.recordingSegmentId = segment.lyricLine.id // Set the recording segment ID
     this.segmentStartTime = Date.now()
     this.audioChunks = []
     
+    // Make sure we have a pending segment entry for the new recording
+    this.pendingSegments.set(segment.lyricLine.id, {
+      segment: segment,
+      startTime: this.segmentStartTime,
+      chunks: []
+    })
+    
     if (this.mediaRecorder?.state === 'inactive') {
-      this.mediaRecorder.start()
+      // Start with timeslice to get regular chunks
+      this.mediaRecorder.start(100) // Get chunks every 100ms
       this.isRecording = true
-      console.log(`🎤 MediaRecorder started for line ${segment.lyricLine.id}`)
+      console.log(`🎤 MediaRecorder started for line ${segment.lyricLine.id} with 100ms timeslice`)
     } else if (this.isRecording) {
-      // If already recording, we're just switching segments
-      // The MediaRecorder keeps running
+      // If already recording, request data to flush current buffer
+      this.mediaRecorder.requestData()
       console.log(`🎤 Switching to line ${segment.lyricLine.id} (recorder already running)`)
     }
   }
   
   private stopRecording() {
-    console.log(`🛑 Stop recording called, state: ${this.mediaRecorder?.state}`)
-    if (this.mediaRecorder?.state === 'recording') {
-      // Save current segment before stopping
-      if (this.currentSegment) {
-        const segmentId = this.currentSegment.lyricLine.id
-        console.log(`🛑 Saving current segment ${segmentId} with ${this.audioChunks.length} chunks`)
-        this.pendingSegments.set(segmentId, {
-          segment: this.currentSegment,
-          startTime: this.segmentStartTime,
-          chunks: [...this.audioChunks]
-        })
-      }
+    // This method is called when a segment ends, but we don't actually stop the MediaRecorder
+    // We just process the completed segment
+    console.log(`🛑 Segment recording ended for segmentId: ${this.recordingSegmentId}`)
+    
+    if (this.recordingSegmentId !== null) {
+      // Request any buffered data
+      this.mediaRecorder?.requestData()
       
-      this.mediaRecorder.stop()
-      this.isRecording = false
+      // Mark segment as complete after a small delay to ensure data arrives
+      const segmentId = this.recordingSegmentId
+      setTimeout(() => {
+        const pending = this.pendingSegments.get(segmentId)
+        if (pending) {
+          pending.complete = true
+          this.processCompletedSegments()
+        }
+      }, 100)
     }
+  }
+  
+  private processCompletedSegments() {
+    console.log(`📊 Processing completed segments`)
+    
+    // Process only segments marked as complete
+    const completedIds: number[] = []
+    
+    this.pendingSegments.forEach((data, segmentId) => {
+      if (data.complete && data.chunks.length > 0) {
+        const audioBlob = new Blob(data.chunks, { type: 'audio/webm' })
+        console.log(`🎤 Creating audio blob for line ${segmentId}, size: ${audioBlob.size} bytes`)
+        
+        const recordingSegment: RecordingSegment = {
+          segmentId: `seg-${segmentId}-${Date.now()}`,
+          lyricLineId: segmentId,
+          startTime: data.startTime,
+          endTime: Date.now(),
+          audioBlob,
+          expectedText: data.segment.expectedText,
+          keywords: data.segment.keywords
+        }
+        
+        this.options.onSegmentReady?.(recordingSegment)
+        completedIds.push(segmentId)
+      }
+    })
+    
+    // Remove completed segments
+    completedIds.forEach(id => this.pendingSegments.delete(id))
   }
   
   private processPendingSegments() {
@@ -199,6 +250,7 @@ export class RecordingManager {
     // Reset current state
     this.currentSegment = null
     this.audioChunks = []
+    this.recordingSegmentId = null
   }
   
   private clearScheduledStops() {
@@ -209,18 +261,12 @@ export class RecordingManager {
   dispose() {
     this.clearScheduledStops()
     
-    // Save any pending recording before disposing
-    if (this.currentSegment && this.audioChunks.length > 0) {
-      const segmentId = this.currentSegment.lyricLine.id
-      this.pendingSegments.set(segmentId, {
-        segment: this.currentSegment,
-        startTime: this.segmentStartTime,
-        chunks: [...this.audioChunks]
-      })
-    }
+    // Don't need to save manually - chunks are already in pendingSegments
     
     if (this.mediaRecorder) {
       if (this.mediaRecorder.state === 'recording') {
+        // Request final data and then stop
+        this.mediaRecorder.requestData()
         this.mediaRecorder.stop()
       }
       this.mediaRecorder.stream.getTracks().forEach(track => track.stop())
@@ -233,6 +279,7 @@ export class RecordingManager {
     this.audioChunks = []
     this.currentSegment = null
     this.isRecording = false
+    this.recordingSegmentId = null
     this.pendingSegments.clear()
   }
   

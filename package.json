@@ -8,7 +8,10 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:docs": "cd karaoke-dapp && bun run docs:dev",
+    "dev:all": "turbo run dev & cd karaoke-dapp && bun run docs:dev",
     "build": "turbo run build",
+    "docs:build": "cd karaoke-dapp && bun run docs:build",
     "test": "vitest",
     "test:integration": "vitest --project Integration",
     "test:unit": "vitest --project Unit",

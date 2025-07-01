@@ -1,3 +1,7 @@
+---
+description: XState implementation details for song lifecycle and karaoke session management including state transitions, context, and machine composition.
+---
+
 # State Machines
 
 Karaoke Turbo uses XState for managing complex application state. This provides predictable state transitions, clear debugging, and robust error handling.
@@ -6,7 +10,8 @@ Karaoke Turbo uses XState for managing complex application state. This provides 
 
 The application uses a hierarchical state machine pattern with two main machines:
 
-<Mermaid graph="
+<Mermaid>
+<pre>
 stateDiagram-v2
     [*] --> SongMachine
     SongMachine --> KaraokeMachine : START_KARAOKE
@@ -27,7 +32,8 @@ stateDiagram-v2
         playing --> stopped
         stopped --> [*]
     }
-" />
+</pre>
+</Mermaid>
 
 ## Song State Machine
 

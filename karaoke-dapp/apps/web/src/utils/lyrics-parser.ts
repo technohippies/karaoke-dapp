@@ -113,7 +113,7 @@ export function prepareKaraokeSegments(
   bufferMs: number = 500
 ): KaraokeSegment[] {
   return lyrics.map(line => {
-    // Convert to milliseconds and add buffers
+    // Times are already in seconds, convert to milliseconds and add buffers
     const recordStartTime = Math.max(0, line.startTime * 1000 - bufferMs)
     const recordEndTime = line.endTime * 1000 + bufferMs
     
