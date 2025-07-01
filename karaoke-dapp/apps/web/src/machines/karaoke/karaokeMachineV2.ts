@@ -209,6 +209,11 @@ export const karaokeMachineV2 = createMachine({
         },
         
         checkingNextLine: {
+          entry: ({ context, event }) => {
+            if (event.type === 'AUDIO_TIME_UPDATE') {
+              console.log('🔍 Checking for next line, segments:', context.segments.length, 'time:', event.time)
+            }
+          },
           always: [
             {
               target: 'recordingLine',
@@ -222,6 +227,10 @@ export const karaokeMachineV2 = createMachine({
                   // Start recording if we're within 100ms of the start time
                   return timeUntilStart > -100 && timeUntilStart < 100;
                 });
+                
+                if (nextSegment) {
+                  console.log('🎯 Found segment to record:', nextSegment.lyricLine.id, nextSegment.expectedText)
+                }
                 
                 return !!nextSegment;
               },

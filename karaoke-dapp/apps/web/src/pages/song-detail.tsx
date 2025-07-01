@@ -10,11 +10,9 @@ import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, prepareKaraokeSegments } from '../utils/lyrics-parser'
 import { X } from '@phosphor-icons/react'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
+import { RecordingManager } from '../services/recording-manager.service'
 import { KaraokeGradingService } from '../services/karaoke-grading.service'
 import { useRef } from 'react'
-import { useMachine } from '@xstate/react'
-import { fromCallback } from 'xstate'
-import { karaokeMachineV2 } from '../machines/karaoke/karaokeMachineV2'
 
 
 function SongDetailContent({ song }: { song: Song }) {
@@ -25,6 +23,9 @@ function SongDetailContent({ song }: { song: Song }) {
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
   const karaokeSegmentsRef = useRef<ReturnType<typeof prepareKaraokeSegments>>([])
   const gradingServiceRef = useRef<KaraokeGradingService | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const recordingManagerRef = useRef<RecordingManager | null>(null)
+  const scheduledSegmentsRef = useRef<Set<number>>(new Set())
   
   // Now we have the actual songId from the database
   const {
@@ -55,38 +56,7 @@ function SongDetailContent({ song }: { song: Song }) {
     hasMidi
   } = useAudio()
   
-  // New karaoke machine - only start when in karaoke mode with segments
-  const [karaokeV2State, karaokeV2Send] = useMachine(
-    karaokeMachineV2.provide({
-      actors: {
-        countdownTimer: fromCallback(({ sendBack }) => {
-          let count = 3;
-          
-          const interval = setInterval(() => {
-            sendBack({ type: 'UPDATE_COUNTDOWN', value: count });
-            count--;
-            
-            if (count < 0) {
-              clearInterval(interval);
-            }
-          }, 1000);
-          
-          return () => clearInterval(interval);
-        })
-      }
-    }), {
-      input: {
-        songId: song.id,
-        midiData: state.context.midiData,
-        segments: karaokeSegmentsRef.current,
-        sessionSigs: karaokeState?.context?.sessionSigs,
-        gradingService: gradingServiceRef.current
-      }
-    }
-  )
-  
-  // Get line grades from the new machine
-  const lineGrades = karaokeV2State.context.lineScores
+  const [lineGrades, setLineGrades] = useState<Map<number, number>>(new Map())
   
   useEffect(() => {
     async function loadLyrics() {
@@ -174,10 +144,54 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isInKaraokeMode, address, song.id, karaokeState?.context?.sessionSigs])
   
+  // Initialize recording manager when entering karaoke mode
+  useEffect(() => {
+    if (isInKaraokeMode && !recordingManagerRef.current) {
+      // Initialize recording manager
+      recordingManagerRef.current = new RecordingManager({
+        onSegmentReady: async (segment) => {
+          // Grade the segment if grading service is ready
+          if (gradingServiceRef.current) {
+            const result = await gradingServiceRef.current.gradeSegment(segment)
+            
+            // Update line color based on score
+            setLineGrades(prev => new Map(prev).set(result.lyricLineId, result.similarity))
+          }
+        },
+        onError: (error) => {
+          console.error('❌ Recording error:', error)
+        }
+      })
+      
+      // Get microphone stream and initialize recording
+      navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      })
+        .then(stream => {
+          recordingManagerRef.current?.initialize(stream)
+        })
+        .catch(console.error)
+    }
+    
+    return () => {
+      // Cleanup on unmount or when leaving karaoke
+      if (!isInKaraokeMode && recordingManagerRef.current) {
+        recordingManagerRef.current.dispose()
+        recordingManagerRef.current = null
+      }
+    }
+  }, [isInKaraokeMode])
+  
   // Handle karaoke state transitions
   useEffect(() => {
     if (isKaraokePlaying && !isPlaying) {
       console.log('🎵 Starting karaoke playback, hasMidi:', hasMidi)
+      // Reset scheduled segments when starting karaoke
+      scheduledSegmentsRef.current.clear()
       
       // Wait for MIDI to be loaded before playing
       if (hasMidi) {
@@ -190,27 +204,41 @@ function SongDetailContent({ song }: { song: Song }) {
     } else if (!isKaraokePlaying && isPlaying) {
       console.log('⏹️ Stopping karaoke playback')
       pause()
-      karaokeV2Send({ type: 'STOP' })
+      recordingManagerRef.current?.dispose()
+      // Clear scheduled segments when stopping
+      scheduledSegmentsRef.current.clear()
     }
   }, [isKaraokePlaying, isPlaying, play, pause, hasMidi])
   
-  // Send time updates to the karaoke machine for recording coordination
+  // Schedule upcoming segments as the song progresses
   useEffect(() => {
-    if (isKaraokePlaying) {
-      karaokeV2Send({ 
-        type: 'AUDIO_TIME_UPDATE', 
-        time: currentTime 
+    if (isKaraokePlaying && recordingManagerRef.current) {
+      const currentTimeMs = currentTime * 1000
+      
+      // Find segments that should be scheduled soon and haven't been scheduled yet
+      const upcomingSegments = karaokeSegmentsRef.current.filter(segment => {
+        const timeUntilStart = segment.recordStartTime - currentTimeMs
+        const isInScheduleWindow = timeUntilStart > 0 && timeUntilStart < 5000 // Schedule segments in the next 5 seconds
+        const notYetScheduled = !scheduledSegmentsRef.current.has(segment.lyricLine.id)
+        return isInScheduleWindow && notYetScheduled
       })
+      
+      if (upcomingSegments.length > 0) {
+        upcomingSegments.forEach(segment => {
+          scheduledSegmentsRef.current.add(segment.lyricLine.id)
+          recordingManagerRef.current?.startSegmentRecording(segment, currentTimeMs)
+        })
+      }
     }
-  }, [isKaraokePlaying, currentTime, karaokeV2Send])
+  }, [isKaraokePlaying, currentTime])
   
   // Handle song completion
   useEffect(() => {
     if (isKaraokePlaying && currentTime >= duration && duration > 0) {
-      karaokeV2Send({ type: 'COMPLETE' })
+      recordingManagerRef.current?.dispose()
       send({ type: 'COMPLETE' })
     }
-  }, [isKaraokePlaying, currentTime, duration, send, karaokeV2Send])
+  }, [isKaraokePlaying, currentTime, duration, send])
 
   // The countdown is now handled by the karaoke machine
   
@@ -234,7 +262,6 @@ function SongDetailContent({ song }: { song: Song }) {
                 size="icon"
                 onClick={() => {
                   pause()
-                  karaokeV2Send({ type: 'EXIT' })
                   send({ type: 'EXIT' })
                 }}
               >
@@ -263,7 +290,7 @@ function SongDetailContent({ song }: { song: Song }) {
                 size="icon"
                 onClick={() => {
                   pause()
-                  karaokeV2Send({ type: 'STOP' })
+                  recordingManagerRef.current?.dispose()
                   karaokeActor?.send({ type: 'STOP' })
                 }}
               >
