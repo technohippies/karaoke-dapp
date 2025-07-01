@@ -64,7 +64,8 @@ export function useSongMachine(songId: number) {
     const subscription = karaokeActor.subscribe((snapshot) => {
       console.log('📸 Karaoke snapshot update:', { 
         value: snapshot.value, 
-        countdown: snapshot.context.countdown 
+        countdown: snapshot.context.countdown,
+        fullContext: snapshot.context
       });
       setKaraokeState(snapshot);
     });

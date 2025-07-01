@@ -117,7 +117,10 @@ export const karaokeMachine = createMachine({
       on: {
         UPDATE_COUNTDOWN: {
           actions: assign({
-            countdown: ({ event }) => event.value,
+            countdown: ({ event }) => {
+              console.log('🔄 UPDATE_COUNTDOWN received:', event.value);
+              return event.value;
+            },
           }),
         },
         STOP: 'ready',
