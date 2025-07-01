@@ -228,6 +228,14 @@ function SongDetailContent({ song }: { song: Song }) {
   
   // Handle karaoke mode
   if (isInKaraokeMode) {
+    console.log('🎤 Karaoke mode states:', {
+      isKaraokeCheckingPermissions,
+      isKaraokeNeedsPermission,
+      isKaraokeCountdown,
+      isKaraokePlaying,
+      karaokeCountdownValue
+    });
+    
     // Show countdown or permission request
     if (isKaraokeCheckingPermissions || isKaraokeNeedsPermission || isKaraokeCountdown) {
       return (
