@@ -122,7 +122,7 @@ function SongDetailContent({ song }: { song: Song }) {
   
   // Initialize recording and grading services when entering karaoke mode
   useEffect(() => {
-    if (isKaraokePlaying && !recordingManagerRef.current) {
+    if (isInKaraokeMode && !recordingManagerRef.current) {
       // Initialize recording manager
       recordingManagerRef.current = new RecordingManager({
         onSegmentReady: async (segment) => {
@@ -158,38 +158,32 @@ function SongDetailContent({ song }: { song: Song }) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           recordingManagerRef.current?.initialize(stream)
+          console.log('🎤 Recording manager initialized')
         })
         .catch(console.error)
     }
     
     return () => {
       // Cleanup on unmount or when leaving karaoke
-      if (recordingManagerRef.current) {
+      if (!isInKaraokeMode && recordingManagerRef.current) {
         recordingManagerRef.current.dispose()
         recordingManagerRef.current = null
+        gradingServiceRef.current = null
       }
-      gradingServiceRef.current = null
     }
-  }, [isKaraokePlaying, address, song.id])
+  }, [isInKaraokeMode, address, song.id])
   
   // Handle karaoke state transitions
   useEffect(() => {
     if (isKaraokePlaying && !isPlaying) {
       console.log('🎵 Starting karaoke playback')
       play()
-      
-      // Schedule recording for upcoming lyrics
-      if (recordingManagerRef.current && karaokeSegmentsRef.current.length > 0) {
-        // Schedule the first few segments
-        const upcomingSegments = karaokeSegmentsRef.current.slice(0, 5)
-        recordingManagerRef.current.scheduleSegments(upcomingSegments, currentTime * 1000)
-      }
     } else if (!isKaraokePlaying && isPlaying) {
       console.log('⏹️ Stopping karaoke playback')
       pause()
       recordingManagerRef.current?.dispose()
     }
-  }, [isKaraokePlaying, isPlaying, play, pause, currentTime])
+  }, [isKaraokePlaying, isPlaying, play, pause])
   
   // Schedule upcoming segments as the song progresses
   useEffect(() => {

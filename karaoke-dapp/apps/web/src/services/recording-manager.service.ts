@@ -68,7 +68,8 @@ export class RecordingManager {
   
   startSegmentRecording(segment: KaraokeSegment, currentTimeMs: number) {
     if (!this.mediaRecorder) {
-      throw new Error('RecordingManager not initialized')
+      console.warn('RecordingManager not initialized yet, skipping segment:', segment.expectedText)
+      return
     }
     
     // Clear any existing scheduled stops
@@ -168,6 +169,11 @@ export class RecordingManager {
   
   // Schedule multiple segments at once (useful for pre-scheduling)
   scheduleSegments(segments: KaraokeSegment[], currentTimeMs: number) {
+    if (!this.mediaRecorder) {
+      console.warn('RecordingManager not initialized yet, cannot schedule segments')
+      return
+    }
+    
     segments.forEach(segment => {
       const delay = segment.recordStartTime - currentTimeMs
       if (delay > 0 && delay < 10000) { // Only schedule segments in the next 10 seconds
