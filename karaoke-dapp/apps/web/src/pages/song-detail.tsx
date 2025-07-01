@@ -142,16 +142,23 @@ function SongDetailContent({ song }: { song: Song }) {
         }
       })
       
-      // Initialize grading service (mock session sigs for now)
+      // Initialize grading service with proper session signatures
       if (address) {
-        gradingServiceRef.current = new KaraokeGradingService({
-          sessionSigs: {} as any, // Will be replaced with real session sigs
-          userAddress: address,
-          sessionId: `karaoke-${song.id}-${Date.now()}`,
-          language: 'en'
-        })
+        // Get session signatures from song machine context
+        const sessionSigs = state.context.sessionSigs
         
-        gradingServiceRef.current.initialize().catch(console.error)
+        if (sessionSigs) {
+          gradingServiceRef.current = new KaraokeGradingService({
+            sessionSigs,
+            userAddress: address,
+            sessionId: `karaoke-${song.id}-${Date.now()}`,
+            language: 'en'
+          })
+          
+          gradingServiceRef.current.initialize().catch(console.error)
+        } else {
+          console.warn('⚠️ No session signatures available for grading service')
+        }
       }
       
       // Get microphone stream and initialize recording

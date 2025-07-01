@@ -31,6 +31,17 @@ export function KaraokeDisplay({
   const activeIndex = lines.findIndex(
     (line) => currentTime >= line.startTime && currentTime < line.endTime
   );
+  
+  // Debug logging
+  React.useEffect(() => {
+    if (lines.length > 0 && currentTime > 0) {
+      console.log('🎤 KaraokeDisplay:', {
+        currentTime,
+        activeIndex,
+        currentLine: activeIndex >= 0 ? lines[activeIndex].text : 'none'
+      });
+    }
+  }, [currentTime, activeIndex, lines]);
 
   // Smooth scroll to active line
   React.useEffect(() => {
@@ -95,7 +106,7 @@ export function KaraokeDisplay({
                   'text-2xl md:text-4xl font-medium leading-relaxed',
                   isActive && 'text-neutral-50',
                   isPast && getScoreColor(line.id, isPast),
-                  !isActive && !isPast && 'text-neutral-500'
+                  !isActive && !isPast && 'text-neutral-300'
                 )}
               >
                 {line.text}
