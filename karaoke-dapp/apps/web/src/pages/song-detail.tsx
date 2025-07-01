@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, CountdownScreen, MicrophonePermission, KaraokeScore } from "@karaoke-dapp/ui"
-import { useParams } from "react-router-dom"
+import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, MicrophonePermission, KaraokeScore } from "@karaoke-dapp/ui"
+import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
 import { useSongMachine } from "../machines"
@@ -13,11 +13,12 @@ import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 
 
 function SongDetailContent({ song }: { song: Song }) {
+  const navigate = useNavigate()
   const { isConnected } = useAccount()
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
-  const [showCountdown, setShowCountdown] = useState(false)
+  const [countdown, setCountdown] = useState<number | undefined>(undefined)
   const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
   
   // Now we have the actual songId from the database
@@ -98,7 +99,7 @@ function SongDetailContent({ song }: { song: Song }) {
   // Reset states when leaving karaoke
   useEffect(() => {
     if (!isInKaraokeMode) {
-      setShowCountdown(false)
+      setCountdown(undefined)
       setHasMicPermission(null)
     }
   }, [isInKaraokeMode])
@@ -115,7 +116,7 @@ function SongDetailContent({ song }: { song: Song }) {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
           stream.getTracks().forEach(track => track.stop())
           setHasMicPermission(true)
-          setShowCountdown(true)
+          setCountdown(3) // Start 3-second countdown
         } catch {
           setHasMicPermission(false)
         }
@@ -142,57 +143,60 @@ function SongDetailContent({ song }: { song: Song }) {
       send({ type: 'COMPLETE' })
     }
   }, [isKaraokePlaying, currentTime, duration, stopRecording, send])
+
+  // Handle countdown timer
+  useEffect(() => {
+    if (countdown !== undefined && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (countdown === 0) {
+      setCountdown(undefined)
+      send({ type: 'COUNTDOWN_COMPLETE' })
+    }
+  }, [countdown, send])
   
   const handleAccountClick = () => {
-    // Account functionality
+    navigate('/account')
   }
   
   const buttonState = getButtonState()
   
   // Handle karaoke mode
   if (isInKaraokeMode) {
-    // Show countdown as overlay
-    if (isKaraokePreparing && showCountdown) {
+    // Show countdown integrated with karaoke display
+    if (isKaraokePreparing && countdown !== undefined) {
       return (
-        <>
-          {/* Karaoke display with countdown overlay */}
-          <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-            <Header 
-              onAccountClick={handleAccountClick}
-              leftContent={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    pause()
-                    setShowCountdown(false)
-                    setHasMicPermission(null)
-                    send({ type: 'EXIT' })
-                  }}
-                >
-                  <X size={24} />
-                </Button>
-              }
-            />
-            <KaraokeDisplay
-              lines={karaokeLyrics}
-              currentTime={0} // Not started yet
-            />
-          </div>
-          
-          {/* Countdown overlay with semi-transparent background */}
-          <CountdownScreen 
-            onComplete={() => {
-              setShowCountdown(false)
-              send({ type: 'COUNTDOWN_COMPLETE' })
-            }}
+        <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+          <Header 
+            onAccountClick={handleAccountClick}
+            leftContent={
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  pause()
+                  setCountdown(undefined)
+                  setHasMicPermission(null)
+                  send({ type: 'EXIT' })
+                }}
+              >
+                <X size={24} />
+              </Button>
+            }
           />
-        </>
+          <KaraokeDisplay
+            lines={karaokeLyrics}
+            currentTime={0} // Not started yet
+            countdown={countdown}
+          />
+        </div>
       )
     }
     
     // Show mic permission
-    if (isKaraokePreparing && !showCountdown && hasMicPermission === false) {
+    if (isKaraokePreparing && countdown === undefined && hasMicPermission === false) {
       return (
         <MicrophonePermission
           onRequestPermission={async () => {
@@ -200,7 +204,7 @@ function SongDetailContent({ song }: { song: Song }) {
               const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
               stream.getTracks().forEach(track => track.stop())
               setHasMicPermission(true)
-              setShowCountdown(true)
+              setCountdown(3) // Start 3-second countdown
             } catch {
               setHasMicPermission(false)
             }
@@ -404,6 +408,7 @@ function SongDetailContent({ song }: { song: Song }) {
 
 export function SongDetailPage() {
   const { artist, song } = useParams()
+  const navigate = useNavigate()
   const [songData, setSongData] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -441,7 +446,7 @@ export function SongDetailPage() {
   }, [artist, song])
   
   const handleAccountClick = () => {
-    // Account functionality
+    navigate('/account')
   }
   
   if (loading) {

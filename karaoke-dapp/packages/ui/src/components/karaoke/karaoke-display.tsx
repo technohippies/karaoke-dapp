@@ -12,12 +12,14 @@ export interface KaraokeLyricLine {
 interface KaraokeDisplayProps {
   lines: KaraokeLyricLine[];
   currentTime: number;
+  countdown?: number; // Optional countdown value (3, 2, 1, 0)
   className?: string;
 }
 
 export function KaraokeDisplay({
   lines,
   currentTime,
+  countdown,
   className,
 }: KaraokeDisplayProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -56,6 +58,15 @@ export function KaraokeDisplay({
       )}
     >
       <div className="max-w-4xl w-full space-y-8">
+        {/* Show countdown above first line if countdown is active */}
+        {countdown !== undefined && countdown > 0 && (
+          <div className="text-center px-8 transition-all duration-300">
+            <p className="text-2xl md:text-4xl font-medium leading-relaxed text-neutral-50 animate-pulse">
+              {countdown}
+            </p>
+          </div>
+        )}
+        
         {lines.map((line, index) => {
           const isActive = index === activeIndex;
           const isPast = index < activeIndex;
