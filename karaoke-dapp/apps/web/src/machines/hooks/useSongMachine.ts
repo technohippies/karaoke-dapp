@@ -1,6 +1,6 @@
 import { useMachine, useSelector } from '@xstate/react';
 import { useAccount } from 'wagmi';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { songMachine } from '../song/songMachine';
 import { songServices } from '../song/services';
 import { songGuards } from '../song/guards';
@@ -53,18 +53,29 @@ export function useSongMachine(songId: number) {
   const karaokeActor = isInKaraokeMode ? state.children.karaokeMachine : undefined;
   
   // Subscribe to karaoke actor state changes
-  const karaokeState = useSelector(actorRef, (state) => {
-    if (!state.matches('karaoke')) return null;
-    const actor = state.children.karaokeMachine;
-    const snapshot = actor?.getSnapshot();
-    if (snapshot) {
-      console.log('📸 Karaoke snapshot:', { 
+  const [karaokeState, setKaraokeState] = useState(karaokeActor?.getSnapshot() || null);
+  
+  useEffect(() => {
+    if (!karaokeActor) {
+      setKaraokeState(null);
+      return;
+    }
+    
+    const subscription = karaokeActor.subscribe((snapshot) => {
+      console.log('📸 Karaoke snapshot update:', { 
         value: snapshot.value, 
         countdown: snapshot.context.countdown 
       });
-    }
-    return snapshot;
-  });
+      setKaraokeState(snapshot);
+    });
+    
+    // Get initial state
+    setKaraokeState(karaokeActor.getSnapshot());
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [karaokeActor]);
   
   // Get countdown value from karaoke state
   const karaokeCountdownValue = karaokeState?.context?.countdown;
