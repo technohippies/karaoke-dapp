@@ -16,18 +16,15 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
         className="w-full flex items-center justify-between px-6 py-4 bg-neutral-800 border-b border-neutral-700"
         {...props}
       >
-        <div className="flex-1 flex items-center">
-          {leftContent || <div className="w-10" />}
-        </div>
-        
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center gap-4">
           <img src="/logo.png" alt="Karaoke dApp" className="h-8 w-auto" />
+          {leftContent}
         </div>
 
-        <div className="flex-1 flex items-center justify-end">
+        <div className="flex items-center">
           <button
             onClick={onAccountClick}
-            className={`rounded-md text-neutral-50 flex items-center justify-center px-3 py-2 cursor-pointer transition-colors ${
+            className={`rounded-md text-neutral-50 flex items-center justify-center w-10 h-10 cursor-pointer transition-colors ${
               isConnected
                 ? 'bg-green-700 hover:bg-green-600'
                 : 'bg-neutral-700 hover:bg-neutral-600'
@@ -36,7 +33,7 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
           >
             {isConnected && address ? (
               <span className="text-sm font-mono">
-                {address.slice(0, 6)}...{address.slice(-4)}
+                {address.slice(0, 1)}
               </span>
             ) : (
               <User size={20} weight="bold" />

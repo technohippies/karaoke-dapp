@@ -11,8 +11,6 @@ export const songMachine = createMachine({
   context: ({ input }: { input?: { songId: number; userAddress?: string } }) => ({
     songId: input?.songId || 0,
     userAddress: input?.userAddress,
-    currentLineIndex: 0,
-    score: 0,
   }),
   on: {
     UPDATE_ADDRESS: {
@@ -306,29 +304,31 @@ export const songMachine = createMachine({
     
     karaoke: {
       description: 'Karaoke mode active',
-      initial: 'preparing',
-      states: {
-        preparing: {
-          description: 'Showing countdown and checking microphone',
-          on: {
-            COUNTDOWN_COMPLETE: 'playing',
-            CANCEL: '#song.purchased.ready',
-          },
+      invoke: {
+        id: 'karaokeMachine',
+        src: 'karaokeMachine',
+        input: ({ context }) => ({
+          songId: context.songId,
+          midiData: context.midiData,
+          audioUrl: context.audioUrl,
+          lyricsUrl: context.lyricsUrl,
+        }),
+        onDone: {
+          target: 'purchased.ready',
+          actions: assign({
+            // Store the final score if needed
+            lastKaraokeScore: ({ event }) => event.output?.score,
+          }),
         },
-        playing: {
-          description: 'Karaoke in progress',
-          on: {
-            COMPLETE: 'finished',
-            EXIT: '#song.purchased.ready',
-          },
+        onError: {
+          target: 'purchased.ready',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
         },
-        finished: {
-          description: 'Karaoke completed - showing score',
-          on: {
-            PRACTICE: 'preparing',
-            EXIT: '#song.purchased.ready',
-          },
-        },
+      },
+      on: {
+        EXIT: 'purchased.ready',
       },
     },
     

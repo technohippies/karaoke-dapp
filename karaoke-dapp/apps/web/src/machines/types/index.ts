@@ -11,6 +11,7 @@ export interface SongContext {
   sessionSigs?: SessionSigsMap;
   credits?: number;
   error?: string;
+  lastKaraokeScore?: number;
 }
 
 export interface KaraokeContext {
@@ -26,6 +27,7 @@ export interface KaraokeContext {
   recordingData?: Blob;
   sessionId?: string;
   error?: string;
+  countdown?: number;
 }
 
 export interface LyricLine {
@@ -52,6 +54,7 @@ export type SongEvent =
 export type KaraokeEvent =
   | { type: 'REQUEST_PERMISSION' }
   | { type: 'COUNTDOWN_COMPLETE' }
+  | { type: 'UPDATE_COUNTDOWN'; value: number }
   | { type: 'CLOSE' }
   | { type: 'LOAD_AUDIO'; url: string }
   | { type: 'PLAY' }

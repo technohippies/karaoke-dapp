@@ -2,6 +2,17 @@ import { fromPromise } from 'xstate';
 import type { KaraokeContext, LyricLine } from '../types';
 
 export const karaokeServices = {
+  checkMicrophonePermission: fromPromise(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immediately stop the stream after getting permission
+      stream.getTracks().forEach(track => track.stop());
+      return { hasPermission: true };
+    } catch (error) {
+      throw new Error('Microphone permission denied');
+    }
+  }),
+
   loadAudio: fromPromise(async ({ input }: { input: KaraokeContext }) => {
     const context = input;
     // Create audio context

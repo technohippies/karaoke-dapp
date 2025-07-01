@@ -1,4 +1,4 @@
-import { createMachine, assign } from 'xstate';
+import { createMachine, assign, fromPromise } from 'xstate';
 
 import type { KaraokeContext, KaraokeEvent } from '../types';
 
@@ -100,8 +100,25 @@ export const karaokeMachine = createMachine({
     countdown: {
       description: 'Countdown before karaoke starts',
       entry: 'startCountdown',
+      invoke: {
+        src: fromPromise(async ({ self }) => {
+          let count = 3;
+          while (count > 0) {
+            self.send({ type: 'UPDATE_COUNTDOWN', value: count });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            count--;
+          }
+          self.send({ type: 'UPDATE_COUNTDOWN', value: 0 });
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }),
+        onDone: 'playing',
+      },
       on: {
-        COUNTDOWN_COMPLETE: 'playing',
+        UPDATE_COUNTDOWN: {
+          actions: assign({
+            countdown: ({ event }) => event.value,
+          }),
+        },
         STOP: 'ready',
       },
     },

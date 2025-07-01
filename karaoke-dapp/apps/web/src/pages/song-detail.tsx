@@ -18,8 +18,7 @@ function SongDetailContent({ song }: { song: Song }) {
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
-  const [countdown, setCountdown] = useState<number | undefined>(undefined)
-  const [hasMicPermission, setHasMicPermission] = useState<boolean | null>(null)
+  // Removed local state - will use karaoke machine states instead
   
   // Now we have the actual songId from the database
   const {
@@ -28,7 +27,16 @@ function SongDetailContent({ song }: { song: Song }) {
     getButtonState,
     isCheckingAccess,
     error: machineError,
-    send
+    send,
+    // Karaoke states
+    isInKaraokeMode,
+    isKaraokeCheckingPermissions,
+    isKaraokeNeedsPermission,
+    isKaraokeCountdown,
+    isKaraokePlaying,
+    isKaraokeStopped,
+    karaokeCountdownValue,
+    karaokeActor
   } = useSongMachine(song.id)
   
   // Audio context
@@ -90,43 +98,14 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isConnected, checkAccess])
   
-  // Check if we're in karaoke mode
-  const isInKaraokeMode = state.matches('karaoke')
-  const isKaraokePreparing = state.matches('karaoke.preparing')
-  const isKaraokePlaying = state.matches('karaoke.playing')
-  const isKaraokeFinished = state.matches('karaoke.finished')
+  // Karaoke states are now handled by the karaoke machine
   
-  // Reset states when leaving karaoke
+  // Load MIDI when entering karaoke mode
   useEffect(() => {
-    if (!isInKaraokeMode) {
-      setCountdown(undefined)
-      setHasMicPermission(null)
+    if (isInKaraokeMode && state.context.midiData) {
+      loadMidi(state.context.midiData)
     }
-  }, [isInKaraokeMode])
-  
-  // Handle entering karaoke mode
-  useEffect(() => {
-    async function prepareKaraoke() {
-      if (isKaraokePreparing && state.context.midiData) {
-        // Load MIDI data
-        await loadMidi(state.context.midiData)
-        
-        // Check microphone permission
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-          stream.getTracks().forEach(track => track.stop())
-          setHasMicPermission(true)
-          setCountdown(3) // Start 3-second countdown
-        } catch {
-          setHasMicPermission(false)
-        }
-      }
-    }
-    
-    if (isKaraokePreparing) {
-      prepareKaraoke()
-    }
-  }, [isKaraokePreparing, state.context.midiData, loadMidi])
+  }, [isInKaraokeMode, state.context.midiData, loadMidi])
   
   // Handle karaoke playback
   useEffect(() => {
@@ -144,18 +123,7 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isKaraokePlaying, currentTime, duration, stopRecording, send])
 
-  // Handle countdown timer
-  useEffect(() => {
-    if (countdown !== undefined && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(countdown - 1)
-      }, 1000)
-      return () => clearTimeout(timer)
-    } else if (countdown === 0) {
-      setCountdown(undefined)
-      send({ type: 'COUNTDOWN_COMPLETE' })
-    }
-  }, [countdown, send])
+  // The countdown is now handled by the karaoke machine
   
   const handleAccountClick = () => {
     navigate('/account')
@@ -165,8 +133,8 @@ function SongDetailContent({ song }: { song: Song }) {
   
   // Handle karaoke mode
   if (isInKaraokeMode) {
-    // Show countdown integrated with karaoke display
-    if (isKaraokePreparing && countdown !== undefined) {
+    // Show countdown or permission request
+    if (isKaraokeCheckingPermissions || isKaraokeNeedsPermission || isKaraokeCountdown) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
@@ -177,8 +145,6 @@ function SongDetailContent({ song }: { song: Song }) {
                 size="icon"
                 onClick={() => {
                   pause()
-                  setCountdown(undefined)
-                  setHasMicPermission(null)
                   send({ type: 'EXIT' })
                 }}
               >
@@ -189,25 +155,18 @@ function SongDetailContent({ song }: { song: Song }) {
           <KaraokeDisplay
             lines={karaokeLyrics}
             currentTime={0} // Not started yet
-            countdown={countdown}
+            countdown={karaokeCountdownValue}
           />
         </div>
       )
     }
     
-    // Show mic permission
-    if (isKaraokePreparing && countdown === undefined && hasMicPermission === false) {
+    // Show mic permission if needed
+    if (isKaraokeNeedsPermission) {
       return (
         <MicrophonePermission
-          onRequestPermission={async () => {
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-              stream.getTracks().forEach(track => track.stop())
-              setHasMicPermission(true)
-              setCountdown(3) // Start 3-second countdown
-            } catch {
-              setHasMicPermission(false)
-            }
+          onRequestPermission={() => {
+            karaokeActor?.send({ type: 'REQUEST_PERMISSION' })
           }}
         />
       )
@@ -226,7 +185,7 @@ function SongDetailContent({ song }: { song: Song }) {
                 onClick={() => {
                   pause()
                   stopRecording()
-                  send({ type: 'EXIT' })
+                  karaokeActor?.send({ type: 'STOP' })
                 }}
               >
                 <X size={24} />
@@ -242,16 +201,16 @@ function SongDetailContent({ song }: { song: Song }) {
     }
     
     // Show score
-    if (isKaraokeFinished) {
+    if (isKaraokeStopped) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header onAccountClick={handleAccountClick} />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <KaraokeScore
-              score={85} // TODO: Calculate actual score
+              score={karaokeActor?.getSnapshot()?.context?.score || 0}
               songTitle={song.title}
               artist={song.artist}
-              onPractice={() => send({ type: 'PRACTICE' })}
+              onPractice={() => karaokeActor?.send({ type: 'RESTART' })}
             />
             <Button
               variant="outline"

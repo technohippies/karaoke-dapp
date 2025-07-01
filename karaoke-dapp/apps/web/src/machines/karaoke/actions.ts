@@ -106,6 +106,10 @@ export const karaokeActions = {
       return Math.round(completion * 100);
     },
   }),
+
+  startCountdown: assign({
+    countdown: () => 3,
+  }),
 };
 
 export const karaokeGuards = {

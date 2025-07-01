@@ -6,6 +6,7 @@ import { EncryptionService, DatabaseService } from '@karaoke-dapp/services/brows
 import { openDB } from 'idb';
 import type { SongContext } from '../types';
 import type { SessionSigsMap } from '@lit-protocol/types';
+import { karaokeMachine } from '../karaoke/karaokeMachine';
 
 const MUSIC_STORE_ADDRESS = CONTRACTS.baseSepolia.musicStore;
 const SESSION_STORAGE_KEY = 'lit-session-sigs';
@@ -635,4 +636,7 @@ export const songServices = {
       timestamp: Date.now(),
     }, cacheKey);
   }),
+
+  // Add karaokeMachine as an actor
+  karaokeMachine: karaokeMachine,
 };

@@ -48,6 +48,19 @@ export function useSongMachine(songId: number) {
   const isReady = state.matches('purchased.ready');
   const hasError = state.matches('error');
   
+  // Karaoke states - check if karaoke machine is invoked
+  const isInKaraokeMode = state.matches('karaoke');
+  const karaokeActor = state.children.karaokeMachine;
+  const karaokeState = karaokeActor?.getSnapshot();
+  
+  // Karaoke sub-states
+  const isKaraokeCheckingPermissions = karaokeState?.matches('checkingPermissions') ?? false;
+  const isKaraokeNeedsPermission = karaokeState?.matches('needsPermission') ?? false;
+  const isKaraokeCountdown = karaokeState?.matches('countdown') ?? false;
+  const isKaraokePlaying = karaokeState?.matches('playing') ?? false;
+  const isKaraokePaused = karaokeState?.matches('paused') ?? false;
+  const isKaraokeStopped = karaokeState?.matches('stopped') ?? false;
+  const karaokeCountdownValue = karaokeState?.context?.countdown;
 
   // Get button state and text
   const getButtonState = useCallback(() => {
@@ -89,6 +102,16 @@ export function useSongMachine(songId: number) {
     isDownloading,
     isReady,
     hasError,
+    // Karaoke states
+    isInKaraokeMode,
+    isKaraokeCheckingPermissions,
+    isKaraokeNeedsPermission,
+    isKaraokeCountdown,
+    isKaraokePlaying,
+    isKaraokePaused,
+    isKaraokeStopped,
+    karaokeCountdownValue,
+    karaokeActor,
     // Helpers
     getButtonState,
     error: state.context.error,
