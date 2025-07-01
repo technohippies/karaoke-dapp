@@ -111,7 +111,12 @@ function SongDetailContent({ song }: { song: Song }) {
   // Load MIDI when entering karaoke mode
   useEffect(() => {
     if (isInKaraokeMode && state.context.midiData) {
-      loadMidi(state.context.midiData)
+      console.log('🎹 Loading MIDI data into audio context')
+      loadMidi(state.context.midiData).then(() => {
+        console.log('✅ MIDI loaded successfully')
+      }).catch(err => {
+        console.error('❌ Failed to load MIDI:', err)
+      })
     }
   }, [isInKaraokeMode, state.context.midiData, loadMidi])
   

@@ -59,11 +59,10 @@ export function useSongMachine(songId: number) {
     return actor?.getSnapshot();
   });
   
-  // Subscribe to countdown value specifically
-  const karaokeCountdownValue = useSelector(actorRef, (state) => {
-    if (!state.matches('karaoke')) return undefined;
-    const actor = state.children.karaokeMachine;
-    return actor?.getSnapshot()?.context?.countdown;
+  // Subscribe to countdown value from karaoke actor directly
+  const karaokeCountdownValue = useSelector(karaokeActor, (state) => {
+    if (!state) return undefined;
+    return state.context.countdown;
   });
   
   // Debug logging

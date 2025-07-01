@@ -100,7 +100,9 @@ export const karaokeMachine = createMachine({
     
     countdown: {
       description: 'Countdown before karaoke starts',
-      entry: 'startCountdown',
+      entry: assign({
+        countdown: () => 3
+      }),
       invoke: {
         id: 'countdownTimer',
         src: 'countdownTimer',
@@ -178,7 +180,12 @@ export const karaokeMachine = createMachine({
     
     stopped: {
       description: 'Karaoke session stopped',
-      entry: ['stopPlayback', 'calculateFinalScore'],
+      entry: ['stopPlayback', assign({
+        score: ({ context }) => {
+          const completion = context.currentLineIndex / (context.lyrics?.length || 1);
+          return Math.round(completion * 100);
+        }
+      })],
       initial: 'reviewing',
       states: {
         reviewing: {

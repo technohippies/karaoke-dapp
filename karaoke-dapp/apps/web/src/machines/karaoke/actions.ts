@@ -1,4 +1,3 @@
-import { assign } from 'xstate';
 import type { KaraokeContext } from '../types';
 
 let audioContext: AudioContext | null = null;
@@ -99,17 +98,7 @@ export const karaokeActions = {
     }
   },
 
-  calculateFinalScore: assign({
-    score: ({ context }) => {
-      // Simple scoring based on completion
-      const completion = context.currentLineIndex / (context.lyrics?.length || 1);
-      return Math.round(completion * 100);
-    },
-  }),
 
-  startCountdown: assign({
-    countdown: () => 3,
-  }),
 };
 
 export const karaokeGuards = {
