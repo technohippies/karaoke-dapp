@@ -13,6 +13,7 @@ interface KaraokeDisplayProps {
   lines: KaraokeLyricLine[];
   currentTime: number;
   countdown?: number; // Optional countdown value (3, 2, 1, 0)
+  lineColors?: Map<number, number>; // Map of line ID to similarity score (0-1)
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export function KaraokeDisplay({
   lines,
   currentTime,
   countdown,
+  lineColors,
   className,
 }: KaraokeDisplayProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -40,11 +42,18 @@ export function KaraokeDisplay({
     }
   }, [activeIndex]);
 
-  // Calculate red intensity based on score (0-1 → 0-255)
-  const getScoreColor = (score?: number) => {
+  // Get color based on similarity score
+  const getScoreColor = (lineId: string, isPast: boolean) => {
+    if (!isPast || !lineColors) return 'text-neutral-400';
+    
+    const score = lineColors.get(parseInt(lineId));
     if (score === undefined) return 'text-neutral-400';
-    const intensity = Math.round(score * 255);
-    return `text-[rgb(${intensity},0,0)]`;
+    
+    // Use the grading service color logic
+    if (score >= 0.8) return 'text-green-500';
+    if (score >= 0.6) return 'text-yellow-500';
+    if (score >= 0.3) return 'text-orange-500';
+    return 'text-red-500';
   };
 
   return (
@@ -85,7 +94,7 @@ export function KaraokeDisplay({
                 className={cn(
                   'text-2xl md:text-4xl font-medium leading-relaxed',
                   isActive && 'text-neutral-50',
-                  isPast && getScoreColor(line.score),
+                  isPast && getScoreColor(line.id, isPast),
                   !isActive && !isPast && 'text-neutral-500'
                 )}
               >

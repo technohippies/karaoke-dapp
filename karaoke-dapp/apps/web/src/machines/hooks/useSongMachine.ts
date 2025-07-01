@@ -1,4 +1,4 @@
-import { useMachine } from '@xstate/react';
+import { useMachine, useSelector } from '@xstate/react';
 import { useAccount } from 'wagmi';
 import { useEffect, useCallback } from 'react';
 import { songMachine } from '../song/songMachine';
@@ -51,15 +51,30 @@ export function useSongMachine(songId: number) {
   // Karaoke states - check if karaoke machine is invoked
   const isInKaraokeMode = state.matches('karaoke');
   const karaokeActor = isInKaraokeMode ? state.children.karaokeMachine : undefined;
-  const karaokeState = karaokeActor?.getSnapshot();
+  
+  // Subscribe to karaoke actor state changes
+  const karaokeState = useSelector(actorRef, (state) => {
+    if (!state.matches('karaoke')) return null;
+    const actor = state.children.karaokeMachine;
+    return actor?.getSnapshot();
+  });
+  
+  // Subscribe to countdown value specifically
+  const karaokeCountdownValue = useSelector(actorRef, (state) => {
+    if (!state.matches('karaoke')) return undefined;
+    const actor = state.children.karaokeMachine;
+    return actor?.getSnapshot()?.context?.countdown;
+  });
   
   // Debug logging
-  if (karaokeState) {
-    console.log('🎤 Karaoke state:', karaokeState.value, { 
-      countdown: karaokeState.context.countdown,
-      context: karaokeState.context 
-    });
-  }
+  useEffect(() => {
+    if (karaokeState) {
+      console.log('🎤 Karaoke state:', karaokeState.value, { 
+        countdown: karaokeCountdownValue,
+        context: karaokeState.context 
+      });
+    }
+  }, [karaokeState, karaokeCountdownValue]);
   
   // Karaoke sub-states - only check if karaokeState exists
   const isKaraokeCheckingPermissions = karaokeState ? karaokeState.matches('checkingPermissions') : false;
@@ -68,7 +83,6 @@ export function useSongMachine(songId: number) {
   const isKaraokePlaying = karaokeState ? karaokeState.matches('playing') : false;
   const isKaraokePaused = karaokeState ? karaokeState.matches('paused') : false;
   const isKaraokeStopped = karaokeState ? karaokeState.matches('stopped') : false;
-  const karaokeCountdownValue = karaokeState?.context?.countdown;
 
   // Get button state and text
   const getButtonState = useCallback(() => {

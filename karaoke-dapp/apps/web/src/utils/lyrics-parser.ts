@@ -3,6 +3,8 @@ export interface LyricLine {
   text: string
   startTime: number
   endTime: number
+  isBackgroundVocal?: boolean
+  words?: string[]
 }
 
 export function parseLRC(lrcContent: string): LyricLine[] {
@@ -31,11 +33,23 @@ export function parseLRC(lrcContent: string): LyricLine[] {
       
       // Only add non-empty lines
       if (text.trim()) {
+        const cleanText = text.trim()
+        const isBackgroundVocal = cleanText.startsWith('(') && cleanText.endsWith(')')
+        
+        // Extract words for keyword boosting (remove parentheses if present)
+        const textForWords = isBackgroundVocal ? cleanText.slice(1, -1) : cleanText
+        const words = textForWords
+          .split(/\s+/)
+          .filter(word => word.length > 0)
+          .map(word => word.replace(/[.,!?;:'"]/g, '')) // Remove punctuation
+        
         lyrics.push({
           id: lyrics.length + 1,
-          text: text.trim(),
+          text: cleanText,
           startTime,
-          endTime
+          endTime,
+          isBackgroundVocal,
+          words
         })
       }
     }
@@ -84,4 +98,40 @@ export function getVisibleLyrics(
   }
   
   return { previous, current, next }
+}
+
+export interface KaraokeSegment {
+  lyricLine: LyricLine
+  recordStartTime: number // With buffer before
+  recordEndTime: number   // With buffer after
+  expectedText: string    // For Deepgram comparison
+  keywords: string[]      // Unique words for boosting
+}
+
+export function prepareKaraokeSegments(
+  lyrics: LyricLine[], 
+  bufferMs: number = 500
+): KaraokeSegment[] {
+  return lyrics.map(line => {
+    // Convert to milliseconds and add buffers
+    const recordStartTime = Math.max(0, line.startTime * 1000 - bufferMs)
+    const recordEndTime = line.endTime * 1000 + bufferMs
+    
+    // Prepare expected text (remove parentheses for background vocals)
+    const expectedText = line.isBackgroundVocal 
+      ? line.text.slice(1, -1) 
+      : line.text
+    
+    // Get unique keywords from this line
+    const keywords = [...new Set(line.words || [])]
+      .filter(word => word.length > 3) // Only words longer than 3 chars
+    
+    return {
+      lyricLine: line,
+      recordStartTime,
+      recordEndTime,
+      expectedText,
+      keywords
+    }
+  })
 }
