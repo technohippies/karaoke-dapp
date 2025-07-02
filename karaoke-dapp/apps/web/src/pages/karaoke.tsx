@@ -299,6 +299,7 @@ function KaraokeContent() {
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
       <Header 
         onAccountClick={handleAccountClick}
+        onLogoClick={() => navigate('/')}
         leftContent={
           <Button
             variant="ghost"

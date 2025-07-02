@@ -88,21 +88,47 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     // 3. Calculate accuracy (simple word matching for MVP)
     const accuracy = calculateAccuracy(transcript.toLowerCase(), expectedText.toLowerCase());
 
-    // 4. Return result for IndexedDB storage
+    // 4. Create result and sign it
+    const timestamp = Date.now();
     const lineResult = {
       lineIndex: lineIndex,
       accuracy,
       transcript,
       expectedText: expectedText,
-      timestamp: Date.now(),
+      timestamp,
       status: 'completed'
     };
 
-    // Return the result for frontend IndexedDB storage
+    // 5. Create message to sign (critical data only)
+    const messageToSign = {
+      sessionId: sessionId,
+      lineIndex: lineIndex,
+      transcript: transcript,
+      expectedText: expectedText,
+      timestamp: timestamp
+    };
+    
+    // Convert to deterministic string for signing
+    const messageString = JSON.stringify(messageToSign, Object.keys(messageToSign).sort());
+    
+    // Sign the message using PKP
+    const signature = await Lit.Actions.signEcdsa({
+      toSign: ethers.utils.arrayify(
+        ethers.utils.keccak256(ethers.utils.toUtf8Bytes(messageString))
+      ),
+      publicKey: pkpPublicKey,
+      sigName: 'lineResultSig'
+    });
+
+    // Return the result with signature
     Lit.Actions.setResponse({
       response: JSON.stringify({
         success: true,
-        lineResult,
+        lineResult: {
+          ...lineResult,
+          signature: signature.signature
+        },
+        messageString, // Include for verification
         debug: {
           transcriptLength: transcript.length,
           expectedLength: expectedText.length

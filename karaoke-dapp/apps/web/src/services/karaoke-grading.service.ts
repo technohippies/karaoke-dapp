@@ -81,7 +81,7 @@ export class KaraokeGradingService {
         transcript: lineResult.transcript,
         expectedText: segment.expectedText,
         similarity: lineResult.accuracy,  // The deployed action uses 'accuracy' not 'similarity'
-        // No signature in the deployed version - it returns the result directly
+        signature: lineResult.signature,  // Now includes PKP signature
       }
     } catch (error) {
       console.error('❌ Grading error:', error)

@@ -3,13 +3,14 @@ import { User } from '@phosphor-icons/react';
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   onAccountClick?: () => void;
+  onLogoClick?: () => void;
   isConnected?: boolean;
   address?: string;
   leftContent?: React.ReactNode;
 }
 
 const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
-  ({ onAccountClick, isConnected, address, leftContent, ...props }, ref) => {
+  ({ onAccountClick, onLogoClick, isConnected, address, leftContent, ...props }, ref) => {
     return (
       <div
         ref={ref}
@@ -17,7 +18,12 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
         {...props}
       >
         <div className="flex items-center gap-4">
-          <img src="/logo.png" alt="Karaoke dApp" className="h-8 w-auto" />
+          <img 
+            src="/logo.png" 
+            alt="Karaoke dApp" 
+            className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={onLogoClick}
+          />
           {leftContent}
         </div>
 

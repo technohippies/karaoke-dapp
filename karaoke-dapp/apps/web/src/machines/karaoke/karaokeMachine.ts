@@ -21,7 +21,13 @@ interface MergedKaraokeContext extends KaraokeContext {
   
   // Grading
   gradingService: KaraokeGradingService | null
-  gradingResults: Map<number, { transcript: string; accuracy: number }>
+  gradingResults: Map<number, { 
+    transcript: string; 
+    accuracy: number;
+    signature?: string;
+    expectedText: string;
+    timestamp: number;
+  }>
 }
 
 type MergedKaraokeEvent = KaraokeEvent
@@ -30,7 +36,7 @@ type MergedKaraokeEvent = KaraokeEvent
   | { type: 'RESTART' }
   | { type: 'AUDIO_CHUNK'; chunk: Blob; timestamp: number }
   | { type: 'SEGMENT_READY'; segment: KaraokeSegment }
-  | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number }
+  | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number; signature?: string; expectedText: string; timestamp: number }
   | { type: 'SONG_ENDED' }
   | { type: 'UPDATE_CONTEXT'; segments?: KaraokeSegment[]; gradingService?: KaraokeGradingService | null }
   | { type: 'UPDATE_COUNTDOWN'; value: number }
@@ -416,7 +422,10 @@ export const karaokeMachine = createMachine({
                   type: 'GRADING_COMPLETE',
                   lineId: segment.lyricLine.id,
                   transcript: result.transcript,
-                  accuracy: result.similarity
+                  accuracy: result.similarity,
+                  signature: result.signature,
+                  expectedText: result.expectedText,
+                  timestamp: Date.now()
                 })
               }).catch((error: Error) => {
                 console.error(`❌ Failed to grade segment ${segment.lyricLine.id}:`, error)
@@ -427,19 +436,55 @@ export const karaokeMachine = createMachine({
           }
         },
         
-        GRADING_COMPLETE: {
-          actions: assign({
-            gradingResults: ({ context, event }) => {
-              if (event.type !== 'GRADING_COMPLETE') return context.gradingResults
-              const newResults = new Map(context.gradingResults)
-              newResults.set(event.lineId, {
-                transcript: event.transcript,
-                accuracy: event.accuracy
-              })
-              return newResults
-            }
-          })
-        },
+        GRADING_COMPLETE: [
+          {
+            // In development, stop after 3 lines
+            target: 'completed',
+            guard: ({ context, event }) => {
+              if (event.type !== 'GRADING_COMPLETE') return false
+              const newResultsCount = context.gradingResults.size + 1
+              const isDevelopment = import.meta.env.DEV || process.env.NODE_ENV === 'development'
+              if (isDevelopment && newResultsCount >= 3) {
+                console.log(`🎯 Development mode: Stopping after ${newResultsCount} lines`)
+                return true
+              }
+              return false
+            },
+            actions: [
+              assign({
+                gradingResults: ({ context, event }) => {
+                  if (event.type !== 'GRADING_COMPLETE') return context.gradingResults
+                  const newResults = new Map(context.gradingResults)
+                  newResults.set(event.lineId, {
+                    transcript: event.transcript,
+                    accuracy: event.accuracy,
+                    signature: event.signature,
+                    expectedText: event.expectedText,
+                    timestamp: event.timestamp
+                  })
+                  return newResults
+                }
+              }),
+              () => console.log('📋 Stopping early for development testing')
+            ]
+          },
+          {
+            actions: assign({
+              gradingResults: ({ context, event }) => {
+                if (event.type !== 'GRADING_COMPLETE') return context.gradingResults
+                const newResults = new Map(context.gradingResults)
+                newResults.set(event.lineId, {
+                  transcript: event.transcript,
+                  accuracy: event.accuracy,
+                  signature: event.signature,
+                  expectedText: event.expectedText,
+                  timestamp: event.timestamp
+                })
+                return newResults
+              }
+            })
+          }
+        ],
         
         SONG_ENDED: 'processingRemaining',
         STOP: 'stopped'

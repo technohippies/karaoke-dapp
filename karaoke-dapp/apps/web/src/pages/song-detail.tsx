@@ -235,6 +235,7 @@ function SongDetailContent({ song }: { song: Song }) {
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
             onAccountClick={handleAccountClick}
+            onLogoClick={() => navigate('/')}
             leftContent={
               <Button
                 variant="ghost"
@@ -263,6 +264,7 @@ function SongDetailContent({ song }: { song: Song }) {
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
             onAccountClick={handleAccountClick}
+            onLogoClick={() => navigate('/')}
             leftContent={
               <Button
                 variant="ghost"
@@ -289,7 +291,7 @@ function SongDetailContent({ song }: { song: Song }) {
     if (isKaraokeStopped) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-          <Header onAccountClick={handleAccountClick} />
+          <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <KaraokeScore
               score={karaokeState?.context?.score || 0}
@@ -313,7 +315,7 @@ function SongDetailContent({ song }: { song: Song }) {
   // Normal song detail view
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-      <Header onAccountClick={handleAccountClick} />
+      <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
       
       {/* Main content area */}
       <div className="flex-1 pb-20">
@@ -496,7 +498,7 @@ export function SongDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white">
-        <Header onAccountClick={handleAccountClick} />
+        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-neutral-400">Loading song...</div>
         </div>
@@ -507,7 +509,7 @@ export function SongDetailPage() {
   if (error || !songData) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white">
-        <Header onAccountClick={handleAccountClick} />
+        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-red-400">{error || 'Song not found'}</div>
         </div>

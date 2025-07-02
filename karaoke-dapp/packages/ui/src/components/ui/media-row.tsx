@@ -18,8 +18,8 @@ const MediaRow = React.forwardRef<HTMLDivElement, MediaRowProps>(
       <div
         ref={ref}
         className={cn(
-          'w-full flex items-center gap-4 px-4 py-3 text-left cursor-pointer select-none transition-all rounded-lg',
-          'bg-neutral-800 hover:bg-neutral-700',
+          'w-full flex items-center gap-4 px-4 py-3 text-left cursor-pointer select-none transition-all rounded',
+          'bg-neutral-700 hover:bg-neutral-600',
           className
         )}
         role="button"

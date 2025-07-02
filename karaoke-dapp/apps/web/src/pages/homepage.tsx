@@ -46,7 +46,8 @@ export function HomePage() {
   return (
     <div className="min-h-screen bg-neutral-900">
       <Header 
-        onAccountClick={handleAccountClick} 
+        onAccountClick={handleAccountClick}
+        onLogoClick={() => navigate('/')}
         isConnected={isConnected}
         address={address}
       />
