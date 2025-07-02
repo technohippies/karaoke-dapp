@@ -108,7 +108,8 @@ function SongDetailContent({ song }: { song: Song }) {
       karaokeActor.send({
         type: 'UPDATE_CONTEXT',
         segments: karaokeSegmentsRef.current,
-        gradingService: gradingServiceRef.current
+        gradingService: gradingServiceRef.current,
+        finalGradingService: finalGradingServiceRef.current
       })
     }
   }, [karaokeLyrics, karaokeActor]) // Use karaokeLyrics as dependency since it triggers when segments are ready
@@ -178,14 +179,15 @@ function SongDetailContent({ song }: { song: Song }) {
     }
   }, [isInKaraokeMode, address, song.id, karaokeState?.context?.sessionSigs, karaokeActor])
   
-  // Update karaoke machine when segments or grading service are ready
+  // Update karaoke machine when segments or grading services are ready
   useEffect(() => {
-    if (isInKaraokeMode && karaokeSegmentsRef.current.length > 0 && gradingServiceRef.current && karaokeActor) {
-      // Update the machine context with segments and grading service
+    if (isInKaraokeMode && karaokeSegmentsRef.current.length > 0 && gradingServiceRef.current && finalGradingServiceRef.current && karaokeActor) {
+      // Update the machine context with segments and grading services
       karaokeActor.send({
         type: 'UPDATE_CONTEXT',
         segments: karaokeSegmentsRef.current,
-        gradingService: gradingServiceRef.current
+        gradingService: gradingServiceRef.current,
+        finalGradingService: finalGradingServiceRef.current
       } as const)
     }
   }, [isInKaraokeMode, karaokeActor])
