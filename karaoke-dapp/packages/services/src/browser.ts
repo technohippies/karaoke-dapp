@@ -2,4 +2,5 @@
 export * from './database.service';
 export * from './encryption.service';
 export * from './config';
-export type { Song } from '@karaoke-dapp/db';
+// Re-export Song from database.service instead of db package
+export type { Song } from './database.service';

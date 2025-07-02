@@ -18,6 +18,8 @@ export * from './components/karaoke/karaoke-score';
 // Song Components
 export * from './components/song/download-slider';
 export * from './components/song/purchase-slider';
+export * from './components/song/lyrics-slider';
+export * from './components/song/streaming-slider';
 
 
 // Wallet Components

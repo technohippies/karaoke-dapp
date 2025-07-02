@@ -160,6 +160,9 @@ export class EncryptionService {
               ability: LIT_ABILITY.LitActionExecution,
             },
           ],
+          authNeededCallback: async () => {
+            throw new Error('Session expired - please sign in again');
+          }
         });
         
         console.log('✅ Existing session restored successfully');

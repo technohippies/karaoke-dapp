@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, KaraokeScore } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider } from "@karaoke-dapp/ui"
 import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
@@ -8,16 +8,18 @@ import { useAccount, useConnect } from "wagmi"
 import { LyricsService } from "../services/lyrics.service"
 import { AudioProvider, useAudio } from '../contexts/audio-context'
 import { parseLRC, prepareKaraokeSegments } from '../utils/lyrics-parser'
-import { X } from '@phosphor-icons/react'
+import { X, MusicNote, Article } from '@phosphor-icons/react'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 import { KaraokeGradingService } from '../services/karaoke-grading.service'
 import { FinalGradingService } from '../services/final-grading.service'
 import { useRef } from 'react'
+import { useUserTable } from '../hooks/use-user-table'
 
 
 function SongDetailContent({ song }: { song: Song }) {
   const navigate = useNavigate()
   const { isConnected, address } = useAccount()
+  const { hasTable } = useUserTable()
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
@@ -56,6 +58,7 @@ function SongDetailContent({ song }: { song: Song }) {
   } = useAudio()
   
   const [lineGrades, setLineGrades] = useState<Map<number, number>>(new Map())
+  const [isSavingProgress, setIsSavingProgress] = useState(false)
   
   useEffect(() => {
     async function loadLyrics() {
@@ -187,7 +190,11 @@ function SongDetailContent({ song }: { song: Song }) {
         type: 'UPDATE_CONTEXT',
         segments: karaokeSegmentsRef.current,
         gradingService: gradingServiceRef.current,
-        finalGradingService: finalGradingServiceRef.current
+        finalGradingService: finalGradingServiceRef.current,
+        songId: song.id,
+        songTitle: song.title,
+        artistName: song.artist,
+        userAddress: address
       } as const)
     }
   }, [isInKaraokeMode, karaokeActor])
@@ -317,7 +324,33 @@ function SongDetailContent({ song }: { song: Song }) {
               score={karaokeState?.context?.score || 0}
               songTitle={song.title}
               artist={song.artist}
-              onPractice={() => karaokeActor?.send({ type: 'RESTART' })}
+              onSaveProgress={async () => {
+                // Handle save progress
+                setIsSavingProgress(true)
+                const { karaokeDataPipeline } = await import('@karaoke-dapp/services')
+                
+                try {
+                  const result = await karaokeDataPipeline.handleSaveProgress(
+                    address!,
+                    hasTable
+                  )
+                  
+                  if (result.tablelandCreated) {
+                    console.log('✅ Tableland table created')
+                  }
+                  if (result.syncStarted) {
+                    console.log('✅ Sync started')
+                  }
+                  
+                  // Navigate to progress page
+                  navigate('/progress')
+                } catch (error) {
+                  console.error('Failed to save progress:', error)
+                  setIsSavingProgress(false)
+                }
+              }}
+              onSkip={() => send({ type: 'EXIT' })}
+              isSaving={isSavingProgress}
             />
             <Button
               variant="outline"
@@ -360,13 +393,46 @@ function SongDetailContent({ song }: { song: Song }) {
                 {song.title}
               </motion.h1>
               <motion.p 
-                className="text-xl text-neutral-200"
+                className="text-xl text-neutral-200 mb-4"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.5 }}
               >
                 {song.artist}
               </motion.p>
+              <motion.div 
+                className="flex gap-3"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                <StreamingSlider
+                  songTitle={song.title}
+                  artist={song.artist}
+                  streamingLinks={song.streaming_links}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/10 hover:bg-white/20 text-white opacity-80 hover:opacity-100 transition-opacity"
+                  >
+                    <MusicNote size={20} weight="fill" />
+                  </Button>
+                </StreamingSlider>
+                <LyricsSlider
+                  songTitle={song.title}
+                  artist={song.artist}
+                  geniusSlug={song.genius_slug}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="bg-white/10 hover:bg-white/20 text-white opacity-80 hover:opacity-100 transition-opacity"
+                  >
+                    <Article size={20} weight="fill" />
+                  </Button>
+                </LyricsSlider>
+              </motion.div>
             </div>
           </div>
         </motion.div>

@@ -40,7 +40,15 @@ type MergedKaraokeEvent = KaraokeEvent
   | { type: 'SEGMENT_READY'; segment: KaraokeSegment }
   | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number; signature?: string; expectedText: string; timestamp: number }
   | { type: 'SONG_ENDED' }
-  | { type: 'UPDATE_CONTEXT'; segments?: KaraokeSegment[]; gradingService?: KaraokeGradingService | null; finalGradingService?: FinalGradingService | null }
+  | { type: 'UPDATE_CONTEXT'; 
+      segments?: KaraokeSegment[]; 
+      gradingService?: KaraokeGradingService | null; 
+      finalGradingService?: FinalGradingService | null;
+      songId?: number;
+      songTitle?: string;
+      artistName?: string;
+      userAddress?: string;
+    }
   | { type: 'UPDATE_COUNTDOWN'; value: number }
   | { type: 'RETRY' }
 
@@ -239,7 +247,11 @@ export const karaokeMachine = createMachine({
       actions: assign({
         segments: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.segments || []) : [],
         gradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.gradingService || null) : null,
-        finalGradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.finalGradingService || null) : null
+        finalGradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.finalGradingService || null) : null,
+        songId: ({ event, context }) => event.type === 'UPDATE_CONTEXT' && event.songId !== undefined ? event.songId : context.songId,
+        songTitle: ({ event, context }) => event.type === 'UPDATE_CONTEXT' && event.songTitle !== undefined ? event.songTitle : context.songTitle,
+        artistName: ({ event, context }) => event.type === 'UPDATE_CONTEXT' && event.artistName !== undefined ? event.artistName : context.artistName,
+        userAddress: ({ event, context }) => event.type === 'UPDATE_CONTEXT' && event.userAddress !== undefined ? event.userAddress : context.userAddress
       })
     }
   },
@@ -582,7 +594,42 @@ export const karaokeMachine = createMachine({
         },
         
         done: {
-          type: 'final'
+          type: 'final',
+          entry: async ({ context }) => {
+            // Process completed session data
+            try {
+              const { karaokeDataPipeline } = await import('@karaoke-dapp/services')
+              
+              // Extract final result data from context
+              const finalResult = {
+                finalScore: context.score || 0,
+                accuracy: context.score ? context.score / 100 : 0,
+                songTitle: context.songTitle || 'Unknown',
+                artistName: 'Unknown', // Would need to pass this in context
+                startTime: Date.now() - 300000, // Approximate
+                fullTranscript: Array.from(context.gradingResults.values())
+                  .map(r => r.transcript)
+                  .join(' ')
+              }
+              
+              // Process the session
+              await karaokeDataPipeline.processCompletedSession(
+                context.sessionId || '',
+                context.songId || 1,
+                context.gradingResults,
+                {
+                  ...finalResult,
+                  songTitle: context.songTitle || finalResult.songTitle,
+                  artistName: context.artistName || finalResult.artistName
+                },
+                context.userAddress || ''
+              )
+              
+              console.log('✅ Session data processed and queued for sync')
+            } catch (error) {
+              console.error('❌ Failed to process session data:', error)
+            }
+          }
         }
       },
       

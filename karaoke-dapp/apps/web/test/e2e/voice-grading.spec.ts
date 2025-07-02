@@ -8,7 +8,7 @@ const { expect } = test
 test.describe('Voice Grading Flow', () => {
   test.describe.configure({ mode: 'serial' });
   
-  test('should record voice and get transcription during karaoke', async ({
+  test('should complete full karaoke flow with voice grading and save progress', async ({
     context,
     page,
     metamaskPage,
@@ -43,31 +43,40 @@ test.describe('Voice Grading Flow', () => {
     
     await page.waitForTimeout(2000)
     
-    // Ensure we have MIDI downloaded (should be cached from previous tests)
-    const downloadButton = page.locator('.fixed.bottom-0 button').first()
-    const buttonText = await downloadButton.textContent()
+    // Wait for the button to be ready (could be in various states)
+    const actionButton = page.locator('.fixed.bottom-0 button').first()
     
-    if (buttonText?.includes('Download')) {
-      console.log('📥 Downloading MIDI...')
-      await downloadButton.click()
-      await page.waitForTimeout(2000)
+    // Handle different button states
+    let retries = 0
+    while (retries < 10) {
+      const buttonText = await actionButton.textContent()
+      console.log(`🔘 Button state: "${buttonText}"`)
       
-      try {
-        await metamask.confirmSignature()
-        console.log('✅ Session signature confirmed')
-      } catch (e) {
-        console.log('ℹ️ No session signature needed')
+      if (buttonText?.includes('Start Karaoke')) {
+        console.log('✅ Ready to start karaoke')
+        break
+      } else if (buttonText?.includes('Download')) {
+        console.log('📥 Downloading MIDI...')
+        await actionButton.click()
+        
+        // Handle possible signature request
+        try {
+          await metamask.confirmSignature()
+          console.log('✅ Session signature confirmed')
+        } catch (e) {
+          console.log('ℹ️ No session signature needed')
+        }
+      } else if (buttonText?.includes('Loading') || buttonText?.includes('Downloading') || buttonText?.includes('Decrypting')) {
+        console.log('⏳ Waiting for operation to complete...')
       }
       
-      await expect(page.locator('button:has-text("Start Karaoke")')).toBeVisible({ 
-        timeout: 30000 
-      })
+      await page.waitForTimeout(3000)
+      retries++
     }
     
-    console.log('🎵 Ready to start karaoke')
-    
-    // Click "Start Karaoke" button
-    await page.locator('button:has-text("Start Karaoke")').click()
+    // Now click Start Karaoke
+    await expect(actionButton).toHaveText('Start Karaoke', { timeout: 30000 })
+    await actionButton.click()
     
     console.log('🎤 Starting karaoke mode...')
     
@@ -88,7 +97,7 @@ test.describe('Voice Grading Flow', () => {
     // Should now be in karaoke playing mode - just wait a bit since we see recording logs
     console.log('🎵 Karaoke started - recording system active')
     
-    // Capture recording-related logs for the next 10 seconds
+    // Capture recording-related logs
     const recordingLogs = []
     const logCapture = (msg) => {
       const text = msg.text()
@@ -111,21 +120,27 @@ test.describe('Voice Grading Flow', () => {
     
     page.on('console', logCapture)
     
-    // Wait for more lyrics to be recorded (20 seconds to capture multiple lines and responses)
-    console.log('🎤 Monitoring voice recording for 20 seconds to capture Lit Action responses...')
-    await page.waitForTimeout(20000)
+    // Wait for karaoke to complete (development mode stops after 3 lines)
+    console.log('🎤 Waiting for karaoke to complete (3 lines in dev mode)...')
+    await page.waitForTimeout(15000)
+    
+    // Monitor for development mode stop
+    const devModeLogs = logs.filter(log => log.includes('Development mode: Stopping after 3 lines'))
+    console.log('Dev mode logs:', devModeLogs.length)
+    
+    // Wait for score screen (should appear after 3 lines in dev mode)
+    const scoreVisible = await page.locator('text=/Outstanding!|Great job!|Good effort!|Keep practicing!/').isVisible({ timeout: 20000 }).catch(() => false)
+    
+    if (!scoreVisible) {
+      // If not visible yet, wait a bit more
+      console.log('⏳ Waiting for score screen...')
+      await page.waitForTimeout(10000)
+    }
     
     page.off('console', logCapture)
     
-    // Exit karaoke by clicking the X button
-    const exitButton = page.locator('button:has-text("×"), button:has([data-icon="x"])')
-    if (await exitButton.isVisible()) {
-      await exitButton.click()
-      console.log('🔚 Exited karaoke')
-    }
-    
-    // Analyze the recording logs
-    console.log(`\n📊 Recording Analysis:`)
+    // Analyze the voice grading logs
+    console.log(`\n📊 Voice Grading Analysis:`)
     console.log(`Total recording logs: ${recordingLogs.length}`)
     
     // Look for patterns from our continuous recording system
@@ -139,18 +154,7 @@ test.describe('Voice Grading Flow', () => {
     console.log(`Transcripts received: ${transcripts.length}`)
     console.log(`Grading results: ${gradingResults.length}`)
     
-    // Show sample logs
-    if (audioBlobs.length > 0) {
-      console.log('Sample audio blob:', audioBlobs[0])
-    }
-    if (transcripts.length > 0) {
-      console.log('Sample transcript:', transcripts[0])
-    }
-    if (gradingResults.length > 0) {
-      console.log('Sample grading:', gradingResults[0])
-    }
-    
-    // Assertions
+    // Assertions for voice grading
     expect(audioChunks.length).toBeGreaterThan(0) // Should receive audio chunks
     expect(audioBlobs.length).toBeGreaterThan(0) // Should create audio blobs
     
@@ -161,23 +165,7 @@ test.describe('Voice Grading Flow', () => {
       !log.includes('Got: ""')
     )
     
-    if (hasValidTranscripts) {
-      console.log('✅ SUCCESS: Voice grading is working - got valid transcripts!')
-    } else {
-      console.log('❌ PROBLEM: All transcripts are empty')
-      console.log('Debugging info:')
-      console.log('- Audio chunks received:', audioChunks.length > 0 ? '✅' : '❌')
-      console.log('- Audio blobs created:', audioBlobs.length > 0 ? '✅' : '❌')
-      console.log('- Grading service called:', gradingResults.length > 0 ? '✅' : '❌')
-      console.log('- Session signatures working:', logs.some(l => l.includes('session')) ? '✅' : '❌')
-      
-      // Show all recording logs for debugging
-      console.log('\nAll recording logs:')
-      recordingLogs.forEach((log, i) => console.log(`${i + 1}. ${log}`))
-    }
-    
     // For CI environments, we expect empty transcripts (no real mic input)
-    // So just verify the system is working
     const systemWorking = audioBlobs.length > 0 && gradingResults.length > 0
     
     if (systemWorking) {
@@ -185,10 +173,66 @@ test.describe('Voice Grading Flow', () => {
       console.log(`- Audio captured: ${audioBlobs.length} segments`)
       console.log(`- Grading calls made: ${gradingResults.length}`)
       console.log(`- Transcripts empty: ${!hasValidTranscripts} (expected in test environment)`)
-      expect(systemWorking).toBe(true)
     } else {
       console.log('❌ Voice grading system not working properly')
-      expect(systemWorking).toBe(true) // This will fail and show what's missing
     }
+    
+    expect(systemWorking).toBe(true)
+    
+    // Now test save progress functionality
+    console.log('\n🎤 Testing Save Progress functionality...')
+    
+    // Look for Save Progress button
+    const saveProgressButton = page.locator('button:has-text("Save Progress")')
+    await expect(saveProgressButton).toBeVisible({ timeout: 10000 })
+    console.log('✅ Save Progress button found')
+    
+    // Also check Skip button
+    const skipButton = page.locator('button:has-text("Skip")')
+    await expect(skipButton).toBeVisible()
+    console.log('✅ Skip button found')
+    
+    // Click Save Progress
+    await saveProgressButton.click()
+    console.log('📤 Clicked Save Progress')
+    
+    // Wait for processing
+    await page.waitForTimeout(3000)
+    
+    // Check logs for expected behavior
+    const processingLogs = logs.filter(log => 
+      log.includes('Session data processed') ||
+      log.includes('Karaoke data pipeline initialized') ||
+      log.includes('Tableland table created') ||
+      log.includes('Sync started') ||
+      log.includes('Processing karaoke session') ||
+      log.includes('words processed')
+    )
+    
+    console.log('\n📊 Save Progress Analysis:')
+    console.log(`Processing logs: ${processingLogs.length}`)
+    processingLogs.forEach(log => console.log('- ' + log))
+    
+    // Verify data pipeline was initialized
+    const pipelineInitialized = logs.some(log => log.includes('Karaoke data pipeline initialized'))
+    expect(pipelineInitialized).toBe(true)
+    console.log('✅ Data pipeline initialized')
+    
+    // Verify session was processed
+    const sessionProcessed = logs.some(log => log.includes('Session data processed'))
+    expect(sessionProcessed).toBe(true)
+    console.log('✅ Session data processed')
+    
+    // Check for word processing
+    const wordsProcessed = logs.some(log => log.includes('words processed'))
+    if (wordsProcessed) {
+      console.log('✅ Word-level SRS data extracted')
+    }
+    
+    // Should navigate to progress page
+    await expect(page).toHaveURL('/progress', { timeout: 5000 })
+    console.log('✅ Navigated to progress page')
+    
+    console.log('\n🎉 Full karaoke flow with voice grading and save progress working correctly!')
   })
 })

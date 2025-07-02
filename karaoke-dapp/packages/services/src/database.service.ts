@@ -1,7 +1,7 @@
 import { Database } from '@tableland/sdk';
 
 // Browser-compatible constants (avoiding Node.js fs imports)
-export const SONGS_TABLE = 'songs_v7_84532_132';
+export const SONGS_TABLE = 'songs_v8_84532_135';
 
 export interface Song {
   id: number;
@@ -14,6 +14,8 @@ export interface Song {
   language: string;
   genius_id: number;
   lrclib_id: number;
+  genius_slug?: string;
+  streaming_links?: any;
   artwork_hash: {
     id: string;
     ext: string;
@@ -41,7 +43,8 @@ export class DatabaseService {
       return results.map(song => ({
         ...song,
         stems: typeof song.stems === 'string' ? JSON.parse(song.stems) : song.stems,
-        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash
+        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash,
+        streaming_links: typeof song.streaming_links === 'string' ? JSON.parse(song.streaming_links) : song.streaming_links
       }));
     } catch (error) {
       console.error('Failed to fetch songs:', error);
@@ -67,7 +70,8 @@ export class DatabaseService {
       return {
         ...song,
         stems: typeof song.stems === 'string' ? JSON.parse(song.stems) : song.stems,
-        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash
+        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash,
+        streaming_links: typeof song.streaming_links === 'string' ? JSON.parse(song.streaming_links) : song.streaming_links
       };
     } catch (error) {
       console.error(`Failed to fetch song ${id}:`, error);
@@ -88,7 +92,8 @@ export class DatabaseService {
       return results.map(song => ({
         ...song,
         stems: typeof song.stems === 'string' ? JSON.parse(song.stems) : song.stems,
-        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash
+        artwork_hash: typeof song.artwork_hash === 'string' ? JSON.parse(song.artwork_hash) : song.artwork_hash,
+        streaming_links: typeof song.streaming_links === 'string' ? JSON.parse(song.streaming_links) : song.streaming_links
       }));
     } catch (error) {
       console.error('Failed to search songs:', error);

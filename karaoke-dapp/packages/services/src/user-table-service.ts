@@ -33,7 +33,6 @@ export interface KaraokeHistoryRow {
 
 export class UserTableService {
   private db: Database | null = null
-  private userTableName: string | null = null
   private readonly STORAGE_KEY = 'karaoke_user_table'
 
   async initialize(provider: any): Promise<void> {
@@ -51,7 +50,6 @@ export class UserTableService {
     const stored = localStorage.getItem(`${this.STORAGE_KEY}_${userAddress}`)
     if (stored) {
       const info: UserTableInfo = JSON.parse(stored)
-      this.userTableName = info.tableName
       return info.tableName
     }
     
@@ -95,13 +93,11 @@ export class UserTableService {
         `)
         .run()
 
-      // Wait for transaction confirmation
-      const createTxn = await createMeta.txn?.wait()
+      // Get table name immediately without waiting for confirmation
+      // This avoids the 404 errors during receipt polling
+      const tableName = createMeta.txn?.names?.[0]
       
-      if (createTxn && createMeta.txn?.names) {
-        const tableName = createMeta.txn.names[0]
-        this.userTableName = tableName
-        
+      if (tableName) {
         // Save to local storage
         const tableInfo: UserTableInfo = {
           userAddress,
@@ -154,7 +150,7 @@ export class UserTableService {
 
     try {
       // Insert into Tableland
-      const { meta } = await this.db
+      await this.db
         .prepare(`
           INSERT INTO ${tableName} (
             session_id, song_id, song_title, artist_name,
@@ -175,12 +171,69 @@ export class UserTableService {
         )
         .run()
 
-      await meta.txn?.wait()
-      console.log('✅ Session saved to Tableland')
+      // Skip waiting for confirmation to avoid 404 errors
+      console.log('✅ Session queued for Tableland')
       
     } catch (error) {
       console.error('Failed to save session to Tableland:', error)
       throw error
+    }
+  }
+
+  /**
+   * Batch save multiple sessions at once for better performance
+   */
+  async batchSaveKaraokeSessions(userAddress: string, sessions: Array<{ session: KaraokeSession; songId: number }>): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized')
+    
+    // Ensure user has a table
+    let tableName = await this.getUserTableName(userAddress)
+    if (!tableName) {
+      tableName = await this.createUserTable(userAddress)
+    }
+
+    const statements = sessions.map(({ session, songId }) => {
+      const totalAccuracy = session.lines.reduce((sum, line) => sum + line.accuracy, 0) / session.lines.length
+      
+      return this.db!.prepare(`
+        INSERT INTO ${tableName} (
+          session_id, song_id, song_title, artist_name,
+          total_score, accuracy, credits_used,
+          started_at, completed_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        session.sessionId,
+        songId,
+        session.songTitle,
+        session.artistName,
+        Math.round((session.totalScore || 0) * 100),
+        Math.round(totalAccuracy * 100),
+        session.creditsUsed,
+        session.startTime,
+        session.endTime || Date.now()
+      )
+    })
+
+    try {
+      // Batch insert all sessions in a single transaction
+      await this.db.batch(statements)
+      console.log(`✅ Batch saved ${sessions.length} sessions to Tableland`)
+    } catch (error) {
+      console.error('Failed to batch save sessions:', error)
+      throw error
+    }
+  }
+
+  async verifyTableExists(tableName: string): Promise<boolean> {
+    try {
+      // Use Tableland REST API to check if table exists
+      const response = await fetch(
+        `https://testnets.tableland.network/api/v1/tables/84532/${tableName.split('_').pop()}`
+      )
+      return response.ok
+    } catch (error) {
+      console.error('Failed to verify table:', error)
+      return false
     }
   }
 
@@ -259,7 +312,7 @@ export class UserTableService {
     values.push(sessionId) // For WHERE clause
 
     try {
-      const { meta } = await this.db
+      await this.db
         .prepare(`
           UPDATE ${tableName}
           SET ${updateFields.join(', ')}
@@ -268,8 +321,8 @@ export class UserTableService {
         .bind(...values)
         .run()
 
-      await meta.txn?.wait()
-      console.log('✅ FSRS data updated')
+      // Skip waiting for confirmation to avoid 404 errors
+      console.log('✅ FSRS data update queued')
       
     } catch (error) {
       console.error('Failed to update FSRS data:', error)

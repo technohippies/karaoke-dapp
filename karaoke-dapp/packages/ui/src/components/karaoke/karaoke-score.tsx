@@ -8,7 +8,9 @@ interface KaraokeScoreProps {
   score?: number
   songTitle?: string
   artist?: string
-  onPractice?: () => void
+  onSaveProgress?: () => void
+  onSkip?: () => void
+  isSaving?: boolean
   className?: string
 }
 
@@ -17,7 +19,9 @@ export function KaraokeScore({
   score = 0,
   songTitle,
   artist,
-  onPractice,
+  onSaveProgress,
+  onSkip,
+  isSaving = false,
   className
 }: KaraokeScoreProps) {
   
@@ -141,16 +145,35 @@ export function KaraokeScore({
         </motion.div>
       </div>
 
-      {/* Fixed footer with practice button */}
+      {/* Fixed footer with action buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-neutral-800/80 backdrop-blur-lg border-t border-neutral-700">
         <div className="container mx-auto px-4 py-4">
-          <Button 
-            className="w-full" 
-            size="lg"
-            onClick={onPractice}
-          >
-            Practice
-          </Button>
+          <div className="flex gap-3">
+            <Button 
+              className="flex-1" 
+              size="lg"
+              variant="outline"
+              onClick={onSkip}
+            >
+              Skip
+            </Button>
+            <Button 
+              className="flex-1" 
+              size="lg"
+              variant="default"
+              onClick={onSaveProgress}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <div className="flex items-center gap-2">
+                  <Spinner size="sm" />
+                  <span>Saving...</span>
+                </div>
+              ) : (
+                'Save Progress'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

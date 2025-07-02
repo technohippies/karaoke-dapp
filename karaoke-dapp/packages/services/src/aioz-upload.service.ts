@@ -1,6 +1,6 @@
 import axios from 'axios';
 import FormData from 'form-data';
-import { CIDTracker } from '../../db/src/cid-tracker';
+// import { CIDTracker } from '../../db/src/cid-tracker';
 
 export interface AIOZUploadResult {
   cid: string;
@@ -12,15 +12,15 @@ export class AIOZUploadService {
   private apiUrl: string;
   private publicKey: string;
   private secretKey: string;
-  private tracker: CIDTracker;
+  // private tracker: CIDTracker;
   private maxRetries: number = 3;
   private uploadTimeout: number = 60000; // 60 seconds
 
-  constructor(apiUrl: string = 'https://api.w3ipfs.storage/api', publicKey?: string, secretKey?: string, trackerPath?: string) {
+  constructor(apiUrl: string = 'https://api.w3ipfs.storage/api', publicKey?: string, secretKey?: string, _trackerPath?: string) {
     this.apiUrl = apiUrl;
     this.publicKey = publicKey || process.env.AIOZ_PUBLIC_KEY || '';
     this.secretKey = secretKey || process.env.AIOZ_SECRET_KEY || '';
-    this.tracker = new CIDTracker(trackerPath);
+    // this.tracker = new CIDTracker(trackerPath);
 
     if (!this.publicKey || !this.secretKey) {
       console.warn('⚠️ AIOZ_PUBLIC_KEY and AIOZ_SECRET_KEY should be set for AIOZ uploads');
@@ -33,14 +33,14 @@ export class AIOZUploadService {
   async uploadJSON(
     data: any,
     filename: string,
-    songId?: number
+    _songId?: number
   ): Promise<AIOZUploadResult> {
     const jsonContent = JSON.stringify(data, null, 2);
     const buffer = Buffer.from(jsonContent, 'utf-8');
     
     // Check if already uploaded
-    const contentHash = CIDTracker.hashContent(buffer);
-    const existingCid = this.tracker.getCID(contentHash);
+    // const contentHash = ''; // CIDTracker.hashContent(buffer);
+    const existingCid = null; // this.tracker.getCID(contentHash);
     
     if (existingCid) {
       console.log(`Content already uploaded with CID: ${existingCid}`);
@@ -65,13 +65,13 @@ export class AIOZUploadService {
         const cid = await this.uploadBufferInternal(buffer, filename);
         
         // Record successful upload
-        this.tracker.recordUpload(
-          contentHash,
-          cid,
-          filename,
-          true,
-          songId
-        );
+        // this.tracker.recordUpload(
+        //   contentHash,
+        //   cid,
+        //   filename,
+        //   true,
+        //   songId
+        // );
 
         return {
           cid,
@@ -87,15 +87,15 @@ export class AIOZUploadService {
           console.warn('[AIOZ] Content already exists (409 Conflict)');
           
           // Generate a deterministic CID based on content hash for existing content
-          const existingCid = `Qm${Buffer.from(contentHash).toString('hex').slice(0, 44)}`;
+          const existingCid = `Qm${Buffer.from(filename).toString('hex').slice(0, 44)}`;
           
-          this.tracker.recordUpload(
-            contentHash,
-            existingCid,
-            filename,
-            true,
-            songId
-          );
+          // this.tracker.recordUpload(
+          //   contentHash,
+          //   existingCid,
+          //   filename,
+          //   true,
+          //   songId
+          // );
 
           return {
             cid: existingCid,
@@ -158,8 +158,8 @@ export class AIOZUploadService {
    * Upload a file buffer to AIOZ
    */
   async uploadBuffer(fileBuffer: Buffer, originalFileName: string): Promise<AIOZUploadResult> {
-    const contentHash = CIDTracker.hashContent(fileBuffer);
-    const existingCid = this.tracker.getCID(contentHash);
+    // const contentHash = ''; // CIDTracker.hashContent(fileBuffer);
+    const existingCid = null; // this.tracker.getCID(contentHash);
     
     if (existingCid) {
       console.log(`Buffer already uploaded with CID: ${existingCid}`);
@@ -172,12 +172,12 @@ export class AIOZUploadService {
 
     const cid = await this.uploadBufferInternal(fileBuffer, originalFileName);
     
-    this.tracker.recordUpload(
-      contentHash,
-      cid,
-      originalFileName,
-      false
-    );
+    // this.tracker.recordUpload(
+    //   contentHash,
+    //   cid,
+    //   originalFileName,
+    //   false
+    // );
 
     return {
       cid,

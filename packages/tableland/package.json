@@ -5,7 +5,9 @@
     "deploy-tables": "node scripts/deploy-tables.js",
     "deploy-tables:bun": "bun run scripts/deploy-tables.ts",
     "update-songs": "bun run scripts/update-songs.ts",
-    "check-tables": "bun run scripts/check-tables.ts"
+    "check-tables": "bun run scripts/check-tables.ts",
+    "deploy-test-user-table": "bun run scripts/deploy-test-user-table.ts",
+    "test-user-table": "bun run scripts/test-user-table.ts"
   },
   "dependencies": {
     "@tableland/sdk": "^7.2.1",
@@ -15,6 +17,7 @@
     "dotenv": "^16.0.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "ora": "^8.2.0"
   }
 }

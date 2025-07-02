@@ -16,6 +16,9 @@ export interface SongContext {
 
 export interface KaraokeContext {
   songId: number;
+  songTitle?: string;
+  artistName?: string;
+  userAddress?: string;
   midiData: Uint8Array;
   audioUrl?: string;
   lyricsUrl?: string;
