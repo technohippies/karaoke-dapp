@@ -71,12 +71,19 @@ test.describe('Voice Grading Flow', () => {
     
     console.log('🎤 Starting karaoke mode...')
     
-    // Wait for countdown to appear and complete
-    await expect(page.locator('text="3"')).toBeVisible({ timeout: 10000 })
-    console.log('⏳ Countdown started')
+    // Wait a moment for karaoke to initialize
+    await page.waitForTimeout(1000)
     
-    // Wait for countdown to finish (should take ~3 seconds)
-    await page.waitForTimeout(4000)
+    // Check if we're in karaoke mode by looking for either countdown or lyrics display
+    const inKaraokeMode = await page.locator('.text-2xl.md\\:text-4xl').first().isVisible({ timeout: 5000 }).catch(() => false)
+    
+    if (inKaraokeMode) {
+      console.log('✅ Entered karaoke mode successfully')
+      // Wait for recording to start (countdown takes 3 seconds)
+      await page.waitForTimeout(4000)
+    } else {
+      throw new Error('Failed to enter karaoke mode')
+    }
     
     // Should now be in karaoke playing mode - just wait a bit since we see recording logs
     console.log('🎵 Karaoke started - recording system active')

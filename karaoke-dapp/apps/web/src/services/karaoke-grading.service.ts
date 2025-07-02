@@ -42,6 +42,11 @@ export class KaraokeGradingService {
       // Note: Keywords are now handled within the deployed Lit Action
       
       // Execute deployed Lit action for voice grading
+      // TODO: The Lit Action (CID: QmYov82aEgcqq1kMaYCoDQzH79PW8Q2pfLiddA96MRTdyX) is too strict in grading:
+      // - It should normalize case (e.g., "And" vs "and")
+      // - It should ignore punctuation differences (e.g., "torn-up" vs "torn up")
+      // - It should handle partial matches better (e.g., "fees and i'm not proud" should get partial credit)
+      // - Consider using Levenshtein distance or similar for more lenient scoring
       const result = await this.encryptionService.executeDeployedLitAction(
         LIT_ACTION_CIDS.voiceGrader,
         {

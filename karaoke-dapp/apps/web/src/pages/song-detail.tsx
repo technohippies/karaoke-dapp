@@ -79,7 +79,7 @@ function SongDetailContent({ song }: { song: Song }) {
             const parsedLyrics = parseLRC(lyricsData.syncedLyrics)
             const karaokeLines: KaraokeLyricLine[] = parsedLyrics.map(line => ({
               id: line.id.toString(),
-              text: line.text,
+              text: line.text.replace(/\s*\([^)]*\)/g, '').trim(), // Remove parenthetical content for display
               startTime: line.startTime * 1000,
               endTime: line.endTime * 1000
             }))

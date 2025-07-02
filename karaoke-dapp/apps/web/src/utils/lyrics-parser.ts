@@ -141,10 +141,14 @@ export function prepareKaraokeSegments(
     
     console.log(`🎯 Segment ${currentLine.id}: "${currentLine.text}" | ${(recordStartTime/1000).toFixed(2)}s - ${(recordEndTime/1000).toFixed(2)}s (${((recordEndTime-recordStartTime)/1000).toFixed(1)}s duration)`)
     
-    // Prepare expected text (remove parentheses for background vocals)
-    const expectedText = currentLine.isBackgroundVocal 
-      ? currentLine.text.slice(1, -1) 
-      : currentLine.text
+    // Prepare expected text for grading
+    // Remove parentheses for background vocals and inline parenthetical content
+    let expectedText = currentLine.text
+    if (currentLine.isBackgroundVocal) {
+      expectedText = expectedText.slice(1, -1) // Remove outer parentheses
+    }
+    // Remove inline parenthetical content like "(royals)"
+    expectedText = expectedText.replace(/\s*\([^)]*\)/g, '').trim()
     
     // Get unique keywords from this line
     const keywords = [...new Set(currentLine.words || [])]

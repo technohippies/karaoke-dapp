@@ -29,21 +29,18 @@ const sampleLyrics: KaraokeLyricLine[] = [
     text: 'Is this the real life?',
     startTime: 0,
     endTime: 3000,
-    score: 0.95,
   },
   {
     id: '2',
     text: 'Is this just fantasy?',
     startTime: 3000,
     endTime: 6000,
-    score: 0.8,
   },
   {
     id: '3',
     text: 'Caught in a landslide',
     startTime: 6000,
     endTime: 9000,
-    score: 0.6,
   },
   { id: '4', text: 'No escape from reality', startTime: 9000, endTime: 12000 },
   { id: '5', text: 'Open your eyes', startTime: 12000, endTime: 15000 },
@@ -73,15 +70,54 @@ export const WithScores: Story = {
   args: {
     lines: sampleLyrics,
     currentTime: 13000, // Past some scored lines
+    lineColors: new Map([
+      [1, 0.95], // Almost perfect - bright green
+      [2, 0.8],  // Good - green
+      [3, 0.6],  // OK - yellow-green
+      [4, 0.3],  // Poor - orange-red
+    ]),
   },
 };
 
 export const PerfectScore: Story = {
   args: {
-    lines: sampleLyrics.map((line, i) => ({
-      ...line,
-      score: i < 3 ? 1.0 : undefined, // Perfect scores turn bright red
-    })),
+    lines: sampleLyrics,
     currentTime: 13000,
+    lineColors: new Map([
+      [1, 1.0], // Perfect - bright green
+      [2, 1.0], // Perfect - bright green
+      [3, 1.0], // Perfect - bright green
+    ]),
+  },
+};
+
+export const LowScores: Story = {
+  args: {
+    lines: sampleLyrics,
+    currentTime: 13000,
+    lineColors: new Map([
+      [1, 0.2], // Bad - red
+      [2, 0.4], // Poor - orange
+      [3, 0.1], // Very bad - bright red
+    ]),
+  },
+};
+
+export const WithCountdown: Story = {
+  args: {
+    lines: sampleLyrics,
+    currentTime: 0,
+    countdown: 3,
+  },
+};
+
+export const ActivePlayback: Story = {
+  args: {
+    lines: sampleLyrics,
+    currentTime: 7500, // Middle of singing
+    lineColors: new Map([
+      [1, 0.85], // Already sung - green
+      [2, 0.7],  // Already sung - green
+    ]),
   },
 };
