@@ -3,13 +3,13 @@
 ```yaml
 - button:
   - img
-- button "B Base Sepolia"
+- button "B Base Sepolia" [disabled]
 - button "Account 2":
   - img
   - text: Account 2
 - button "Account options"
 - button "0x0C643...Ca79C"
-- text: 0.007 ETH
+- text: 0.007 ETH $17.94 USD
 - button "Buy & Sell" [disabled]:
   - paragraph: Buy & Sell
 - button "Send":
@@ -27,22 +27,13 @@
     - button "NFTs"
   - listitem:
     - button "Activity"
-- link "E B ETH 0.007 ETH":
+- link "E B Ethereum $17.94 USD 0.007 ETH":
   - /url: "#"
-  - text: E B ETH
-  - button
+  - text: E B Ethereum
+  - paragraph: $17.94 USD
   - paragraph: 0.007 ETH
 - button "Import tokens"
 - button "Refresh list"
 - link "MetaMask support":
   - /url: https://support.metamask.io
-- heading "Protect your funds" [level=2]
-- paragraph: Your Secret Recovery Phrase controls all of your accounts.
-- list:
-  - listitem: Never share your Secret Recovery Phrase with anyone
-  - listitem: The MetaMask team will never ask for your Secret Recovery Phrase
-  - listitem:
-    - text: Need to backup your Secret Recovery Phrase again?
-    - button "Start here"
-- button "Got it"
 ```

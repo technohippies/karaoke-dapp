@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAccount } from 'wagmi'
-import { userTableService, type KaraokeHistoryRow, type KaraokeSession } from '@karaoke-dapp/services'
+import { userTableService, type UserTableInfo, type KaraokeSession } from '@karaoke-dapp/services'
 
 export function useUserTable() {
   const { address, connector } = useAccount()
   const [isInitialized, setIsInitialized] = useState(false)
-  const [tableName, setTableName] = useState<string | null>(null)
-  const [isCreatingTable, setIsCreatingTable] = useState(false)
+  const [userTables, setUserTables] = useState<UserTableInfo | null>(null)
+  const [isCreatingTables, setIsCreatingTables] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Initialize service when wallet connects
@@ -21,9 +21,9 @@ export function useUserTable() {
         const provider = await connector.getProvider()
         await userTableService.initialize(provider)
         
-        // Check if user already has a table
-        const existingTable = await userTableService.getUserTableName(address)
-        setTableName(existingTable)
+        // Check if user already has tables
+        const existingTables = await userTableService.getUserTables(address)
+        setUserTables(existingTables)
         setIsInitialized(true)
         setError(null)
       } catch (err) {
@@ -36,25 +36,25 @@ export function useUserTable() {
     init()
   }, [connector, address])
 
-  const createUserTable = useCallback(async () => {
+  const createUserTables = useCallback(async () => {
     if (!address || !isInitialized) {
       setError('Wallet not connected')
       return null
     }
 
-    setIsCreatingTable(true)
+    setIsCreatingTables(true)
     setError(null)
 
     try {
-      const newTableName = await userTableService.createUserTable(address)
-      setTableName(newTableName)
-      return newTableName
+      const newTables = await userTableService.createUserTables(address)
+      setUserTables(newTables)
+      return newTables
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create table'
+      const message = err instanceof Error ? err.message : 'Failed to create tables'
       setError(message)
       throw err
     } finally {
-      setIsCreatingTable(false)
+      setIsCreatingTables(false)
     }
   }, [address, isInitialized])
 
@@ -74,24 +74,10 @@ export function useUserTable() {
     }
   }, [address, isInitialized])
 
-  const getUserHistory = useCallback(async (): Promise<KaraokeHistoryRow[]> => {
-    if (!address || !isInitialized) {
-      return []
-    }
-
-    try {
-      setError(null)
-      return await userTableService.getUserHistory(address)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch history'
-      setError(message)
-      return []
-    }
-  }, [address, isInitialized])
-
-  const updateFSRSData = useCallback(async (
+  const saveExerciseSession = useCallback(async (
     sessionId: string,
-    fsrsData: Partial<KaraokeHistoryRow>
+    cardsReviewed: number,
+    cardsCorrect: number
   ) => {
     if (!address || !isInitialized) {
       setError('Wallet not connected')
@@ -100,23 +86,54 @@ export function useUserTable() {
 
     try {
       setError(null)
-      await userTableService.updateFSRSData(address, sessionId, fsrsData)
+      await userTableService.saveExerciseSession(address, sessionId, cardsReviewed, cardsCorrect)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update FSRS data'
+      const message = err instanceof Error ? err.message : 'Failed to save exercise session'
       setError(message)
       throw err
     }
   }, [address, isInitialized])
 
+  const getDueCards = useCallback(async (limit = 20) => {
+    if (!address || !isInitialized) {
+      return []
+    }
+
+    try {
+      setError(null)
+      return await userTableService.getDueCards(address, limit)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch due cards'
+      setError(message)
+      return []
+    }
+  }, [address, isInitialized])
+
+  const getExerciseStreak = useCallback(async () => {
+    if (!address || !isInitialized) {
+      return 0
+    }
+
+    try {
+      setError(null)
+      return await userTableService.getExerciseStreak(address)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch streak'
+      setError(message)
+      return 0
+    }
+  }, [address, isInitialized])
+
   return {
     isInitialized,
-    tableName,
-    isCreatingTable,
+    userTables,
+    isCreatingTables,
     error,
-    hasTable: !!tableName,
-    createUserTable,
+    hasTables: !!userTables,
+    createUserTables,
     saveSession,
-    getUserHistory,
-    updateFSRSData
+    saveExerciseSession,
+    getDueCards,
+    getExerciseStreak
   }
 }

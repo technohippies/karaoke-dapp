@@ -19,7 +19,7 @@ import { useUserTable } from '../hooks/use-user-table'
 function SongDetailContent({ song }: { song: Song }) {
   const navigate = useNavigate()
   const { isConnected, address } = useAccount()
-  const { hasTable } = useUserTable()
+  const { hasTables } = useUserTable()
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
@@ -335,7 +335,7 @@ function SongDetailContent({ song }: { song: Song }) {
                 try {
                   const result = await karaokeDataPipeline.handleSaveProgress(
                     address!,
-                    hasTable
+                    hasTables
                   )
                   
                   if (result.tablelandCreated) {

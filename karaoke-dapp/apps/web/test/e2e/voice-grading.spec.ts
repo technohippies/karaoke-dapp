@@ -229,9 +229,13 @@ test.describe('Voice Grading Flow', () => {
       console.log('✅ Word-level SRS data extracted')
     }
     
-    // Should navigate to progress page
-    await expect(page).toHaveURL('/progress', { timeout: 5000 })
-    console.log('✅ Navigated to progress page')
+    // Should show "Saved!" message
+    await expect(page.locator('text="Saved!"')).toBeVisible({ timeout: 5000 })
+    console.log('✅ Save progress completed successfully')
+    
+    // Should show practice button
+    await expect(page.locator('button:has-text("Practice Exercises")')).toBeVisible()
+    console.log('✅ Practice exercises button displayed')
     
     console.log('\n🎉 Full karaoke flow with voice grading and save progress working correctly!')
   })

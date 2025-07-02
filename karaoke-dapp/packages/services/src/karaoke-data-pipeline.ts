@@ -151,7 +151,7 @@ export class KaraokeDataPipeline {
     // If user doesn't have Tableland table yet, create it
     if (!hasTableland) {
       try {
-        await userTableService.createUserTable(userAddress);
+        await userTableService.createUserTables(userAddress);
         result.tablelandCreated = true;
       } catch (error) {
         console.error('Failed to create Tableland table:', error);
