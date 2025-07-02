@@ -8,6 +8,7 @@ export * from './components/ui/header';
 export * from './components/ui/page-header';
 export * from './components/ui/media-row';
 export * from './components/ui/spinner';
+export * from './components/ui/progress';
 
 // Karaoke Components
 export * from './components/karaoke/lyric-line';
@@ -21,6 +22,14 @@ export * from './components/song/purchase-slider';
 export * from './components/song/lyrics-slider';
 export * from './components/song/streaming-slider';
 
+// Exercise Components
+export * from './components/exercises/exercise-footer';
+export * from './components/exercises/exercise-recording-footer';
+export * from './components/exercises/exercise-container';
+export * from './components/exercises/exercises/say-it-back';
+
+// Exercise Machine
+export * from './machines/exerciseMachine';
 
 // Wallet Components
 export * from './components/wallet/connect-wallet-sheet';

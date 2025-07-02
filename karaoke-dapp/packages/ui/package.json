@@ -24,11 +24,15 @@
   "dependencies": {
     "@phosphor-icons/react": "^2.1.5",
     "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.1",
+    "@xstate/react": "^4.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "framer-motion": "^11.14.4",
     "motion": "^12.19.2",
-    "tailwind-merge": "^2.4.0"
+    "tailwind-merge": "^2.4.0",
+    "xstate": "^5.19.0"
   },
   "devDependencies": {
     "@karaoke-dapp/eslint-config": "workspace:*",
