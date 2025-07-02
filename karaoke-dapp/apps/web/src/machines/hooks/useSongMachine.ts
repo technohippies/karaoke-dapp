@@ -80,8 +80,8 @@ export function useSongMachine(songId: number) {
   
   // Karaoke sub-states - only check if karaokeState exists
   const isKaraokeCountdown = karaokeState ? karaokeState.matches('countdown') : false;
-  const isKaraokePlaying = karaokeState ? karaokeState.matches('playing') : false;
-  const isKaraokeStopped = karaokeState ? karaokeState.matches('stopped') : false;
+  const isKaraokePlaying = karaokeState ? karaokeState.matches('recording') : false;
+  const isKaraokeStopped = karaokeState ? (karaokeState.matches('stopped') || karaokeState.matches('completed')) : false;
 
   // Get button state and text
   const getButtonState = useCallback(() => {

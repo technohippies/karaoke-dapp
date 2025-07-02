@@ -43,16 +43,17 @@ export function KaraokeDisplay({
     }
   }, [activeIndex]);
 
-  // Get opacity based on similarity score (gradient system)
-  const getScoreOpacity = (lineId: string, isPast: boolean) => {
-    if (!isPast || !lineColors) return 0.4; // Default opacity for unsung lines
+  // Get color based on similarity score (gradient system)
+  const getScoreColor = (lineId: string, isPast: boolean) => {
+    if (!isPast || !lineColors) return undefined; // Default color for unsung lines
     
     const score = lineColors.get(parseInt(lineId));
-    if (score === undefined) return 0.4;
+    if (score === undefined) return undefined;
     
-    // Map score (0-1) to opacity (0.3-1.0)
-    // Minimum 0.3 so text is always somewhat visible
-    return 0.3 + (score * 0.7);
+    // Interpolate from red (0) to green (1)
+    const red = Math.round(255 * (1 - score));
+    const green = Math.round(255 * score);
+    return `rgb(${red}, ${green}, 0)`;
   };
 
   return (
@@ -91,13 +92,13 @@ export function KaraokeDisplay({
             >
               <p
                 className={cn(
-                  'text-2xl md:text-4xl font-medium leading-relaxed transition-opacity duration-500',
+                  'text-2xl md:text-4xl font-medium leading-relaxed transition-all duration-500',
                   isActive && 'text-neutral-50',
-                  isPast && 'text-neutral-200',
                   !isActive && !isPast && 'text-neutral-300'
                 )}
                 style={{
-                  opacity: isActive ? 1 : getScoreOpacity(line.id, isPast)
+                  color: isPast ? getScoreColor(line.id, isPast) : undefined,
+                  opacity: isActive ? 1 : (isPast ? 0.8 : 0.4)
                 }}
               >
                 {line.text}

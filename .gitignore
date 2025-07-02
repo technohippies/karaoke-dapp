@@ -37,3 +37,4 @@ broadcast/
 # Temporary files
 *.tmp
 *.temp.turbo
+.turbo/

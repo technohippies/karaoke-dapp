@@ -36,14 +36,8 @@ export class KaraokeGradingService {
     try {
       // Convert audio blob to base64
       const audioBase64 = await this.blobToBase64(segment.audioBlob)
+      console.log(`🔊 Segment ${segment.lyricLineId} audio: ${segment.audioBlob.size} bytes → ${audioBase64.length} base64 chars`)
       
-      console.log(`🎵 Sending audio to Lit Action:`, {
-        lineId: segment.lyricLineId,
-        audioSize: segment.audioBlob.size,
-        audioType: segment.audioBlob.type,
-        base64Length: audioBase64.length,
-        expectedText: segment.expectedText
-      })
       
       // Note: Keywords are now handled within the deployed Lit Action
       

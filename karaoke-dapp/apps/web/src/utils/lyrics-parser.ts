@@ -110,28 +110,54 @@ export interface KaraokeSegment {
 
 export function prepareKaraokeSegments(
   lyrics: LyricLine[], 
-  bufferMs: number = 500
+  bufferMs: number = 1000 // 1s buffer before line starts
 ): KaraokeSegment[] {
-  return lyrics.map(line => {
-    // Times are already in seconds, convert to milliseconds and add buffers
-    const recordStartTime = Math.max(0, line.startTime * 1000 - bufferMs)
-    const recordEndTime = line.endTime * 1000 + bufferMs
+  const segments: KaraokeSegment[] = []
+  
+  for (let i = 0; i < lyrics.length; i++) {
+    const currentLine = lyrics[i]
+    const nextLine = lyrics[i + 1]
+    
+    // Start recording 1s before the line starts
+    const recordStartTime = Math.max(0, currentLine.startTime * 1000 - bufferMs)
+    
+    // End recording when next line starts (or after max duration)
+    let recordEndTime: number
+    if (nextLine) {
+      // Record until next line starts
+      recordEndTime = nextLine.startTime * 1000
+    } else {
+      // Last line: use the original endTime or add a fixed duration
+      recordEndTime = currentLine.endTime * 1000 || (currentLine.startTime * 1000 + 5000) // 5s max
+    }
+    
+    // Ensure minimum recording duration
+    const duration = recordEndTime - recordStartTime
+    if (duration < 1000) { // Less than 1s
+      recordEndTime = recordStartTime + 3000 // Default to 3s
+    } else if (duration > 5000) { // More than 5s
+      recordEndTime = recordStartTime + 5000 // Cap at 5s
+    }
+    
+    console.log(`🎯 Segment ${currentLine.id}: "${currentLine.text}" | ${(recordStartTime/1000).toFixed(2)}s - ${(recordEndTime/1000).toFixed(2)}s (${((recordEndTime-recordStartTime)/1000).toFixed(1)}s duration)`)
     
     // Prepare expected text (remove parentheses for background vocals)
-    const expectedText = line.isBackgroundVocal 
-      ? line.text.slice(1, -1) 
-      : line.text
+    const expectedText = currentLine.isBackgroundVocal 
+      ? currentLine.text.slice(1, -1) 
+      : currentLine.text
     
     // Get unique keywords from this line
-    const keywords = [...new Set(line.words || [])]
+    const keywords = [...new Set(currentLine.words || [])]
       .filter(word => word.length > 3) // Only words longer than 3 chars
     
-    return {
-      lyricLine: line,
+    segments.push({
+      lyricLine: currentLine,
       recordStartTime,
       recordEndTime,
       expectedText,
       keywords
-    }
-  })
+    })
+  }
+  
+  return segments
 }

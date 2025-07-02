@@ -1,15 +1,171 @@
-import { createMachine, assign } from 'xstate';
-import type { KaraokeContext, KaraokeEvent } from '../types';
+import { createMachine, assign, fromPromise, fromCallback } from 'xstate'
+import type { KaraokeContext, KaraokeEvent } from '../types'
+import type { KaraokeSegment } from '../../utils/lyrics-parser'
+import type { RecordingSegment } from '../../services/recording-manager.service'
+import { KaraokeGradingService } from '../../services/karaoke-grading.service'
+
+interface AudioChunk {
+  data: Blob
+  timestamp: number
+}
+
+interface MergedKaraokeContext extends KaraokeContext {
+  // Recording state
+  mediaRecorder: MediaRecorder | null
+  audioChunks: AudioChunk[]
+  recordingStartTime: number | null
+  
+  // Segment tracking
+  segments: KaraokeSegment[]
+  processedSegments: Set<number>
+  
+  // Grading
+  gradingService: KaraokeGradingService | null
+  gradingResults: Map<number, { transcript: string; accuracy: number }>
+}
+
+type MergedKaraokeEvent = KaraokeEvent
+  | { type: 'START' }
+  | { type: 'STOP' }
+  | { type: 'RESTART' }
+  | { type: 'AUDIO_CHUNK'; chunk: Blob; timestamp: number }
+  | { type: 'SEGMENT_READY'; segment: KaraokeSegment }
+  | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number }
+  | { type: 'SONG_ENDED' }
+  | { type: 'UPDATE_CONTEXT'; segments?: KaraokeSegment[]; gradingService?: KaraokeGradingService | null }
+  | { type: 'UPDATE_COUNTDOWN'; value: number }
+  | { type: 'RETRY' }
+
+// Timer service for countdown
+const countdownTimer = fromPromise<void, { duration: number }>(
+  async ({ input, emit }) => {
+    let remaining = input.duration
+    
+    while (remaining > 0) {
+      emit({ type: 'UPDATE_COUNTDOWN', value: remaining } as any)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      remaining--
+    }
+    
+    emit({ type: 'UPDATE_COUNTDOWN', value: 0 } as any)
+  }
+)
+
+// Setup MediaRecorder service
+const setupMediaRecorder = fromPromise<MediaRecorder, void>(
+  async () => {
+    console.log('🎤 Setting up MediaRecorder...')
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      } 
+    })
+    
+    console.log('🎤 Got media stream:', stream.getAudioTracks().length, 'audio tracks')
+    
+    const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm']
+    let selectedMimeType = 'audio/webm'
+    
+    for (const mimeType of mimeTypes) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        selectedMimeType = mimeType
+        break
+      }
+    }
+    
+    console.log('🎤 Creating MediaRecorder with mime type:', selectedMimeType)
+    const recorder = new MediaRecorder(stream, { mimeType: selectedMimeType })
+    console.log('✅ MediaRecorder created successfully')
+    return recorder
+  }
+)
+
+// Continuous recording service
+const recordingService = fromCallback<
+  MergedKaraokeEvent,
+  { 
+    mediaRecorder: MediaRecorder
+    segments: KaraokeSegment[]
+    recordingStartTime: number
+    processedSegments: Set<number>
+  }
+>(({ input, sendBack }) => {
+  console.log('🔴 Recording service invoked with:', {
+    hasMediaRecorder: !!input.mediaRecorder,
+    segmentCount: input.segments.length,
+    recordingStartTime: input.recordingStartTime
+  })
+  const { mediaRecorder, segments, recordingStartTime, processedSegments } = input
+  
+  // Listen for audio chunks
+  let chunkCount = 0
+  mediaRecorder.ondataavailable = async (event) => {
+    if (event.data.size > 0) {
+      chunkCount++
+      // Only log every 10th chunk to reduce spam
+      if (chunkCount % 10 === 0 && import.meta.env.DEV) {
+        console.log(`🎤 Audio chunk ${chunkCount} received: ${event.data.size} bytes`)
+      }
+      
+      // Clone the blob to ensure we're not storing a reference that gets reused
+      const clonedBlob = new Blob([event.data], { type: event.data.type })
+      
+      sendBack({
+        type: 'AUDIO_CHUNK',
+        chunk: clonedBlob,
+        timestamp: Date.now() - recordingStartTime
+      } as any)
+    }
+  }
+  
+  console.log('📼 Recording service started, monitoring segments...')
+  
+  // Monitor segment timing
+  const checkSegments = setInterval(() => {
+    const currentTime = Date.now() - recordingStartTime
+    // Only log every 4 seconds to reduce spam
+    if (currentTime % 4000 < 500 && import.meta.env.DEV) {
+      console.log(`⏱️ Checking segments at ${currentTime}ms, total segments: ${segments.length}`)
+    }
+    
+    segments.forEach(segment => {
+      // segment.recordEndTime is in milliseconds from song start (calculated by smart split algorithm)
+      // currentTime is milliseconds since recording started
+      // These should align because recording starts when song starts
+      
+      const segmentEndTime = segment.recordEndTime
+      
+      // If segment has ended and we haven't processed it
+      if (currentTime > segmentEndTime && !processedSegments.has(segment.lyricLine.id)) {
+        console.log(`📦 Segment ${segment.lyricLine.id} ready for processing: "${segment.expectedText}" (ended at ${(segmentEndTime/1000).toFixed(2)}s, now ${(currentTime/1000).toFixed(2)}s)`)
+        sendBack({ 
+          type: 'SEGMENT_READY', 
+          segment: segment 
+        } as any)
+      }
+    })
+  }, 500) // Check every 500ms
+  
+  // Cleanup
+  return () => {
+    clearInterval(checkSegments)
+  }
+})
 
 export const karaokeMachine = createMachine({
   types: {} as {
-    context: KaraokeContext;
-    events: KaraokeEvent;
+    context: MergedKaraokeContext
+    events: MergedKaraokeEvent
+    input: Partial<MergedKaraokeContext>
   },
+  
   id: 'karaoke',
-  // Skip permission check since we already checked in the parent component
-  initial: 'countdown',
-  context: ({ input }: { input?: Partial<KaraokeContext> }) => ({
+  initial: 'preparing',
+  
+  context: ({ input }) => ({
+    // Base context
     songId: input?.songId || 0,
     midiData: input?.midiData || new Uint8Array(),
     audioUrl: input?.audioUrl,
@@ -18,157 +174,330 @@ export const karaokeMachine = createMachine({
     currentLineIndex: 0,
     score: 0,
     countdown: undefined,
+    
+    // Recording context
+    mediaRecorder: null,
+    audioChunks: [],
+    recordingStartTime: null,
+    
+    // Segment tracking
+    segments: input?.segments || [],
+    processedSegments: new Set(),
+    
+    // Grading
+    gradingService: input?.gradingService || null,
+    gradingResults: new Map()
   }),
+  
+  on: {
+    UPDATE_CONTEXT: {
+      actions: assign({
+        segments: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.segments || []) : [],
+        gradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.gradingService || null) : null
+      })
+    }
+  },
   states: {
-    initializing: {
-      description: 'Setting up karaoke session',
-      initial: 'loadingAudio',
-      states: {
-        loadingAudio: {
-          description: 'Loading audio buffer and MIDI data',
-          invoke: {
-            id: 'loadAudio',
-            src: 'loadAudio',
-            input: ({ context }) => context,
-            onDone: {
-              target: 'loadingLyrics',
-              actions: assign({
-                audioBuffer: ({ event }) => event.output.audioBuffer,
-              }),
-            },
-            onError: {
-              target: '#karaoke.error',
-              actions: assign({
-                error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
-              }),
-            },
-          },
-        },
-        
-        loadingLyrics: {
-          description: 'Loading and parsing lyrics',
-          invoke: {
-            id: 'loadLyrics',
-            src: 'loadLyrics',
-            input: ({ context }) => context,
-            onDone: {
-              target: '#karaoke.ready',
-              actions: assign({
-                lyrics: ({ event }) => event.output,
-              }),
-            },
-            onError: {
-              target: '#karaoke.error',
-              actions: assign({
-                error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
-              }),
-            },
-          },
-        },
-      },
+    idle: {
+      on: {
+        START: {
+          target: 'preparing',
+          actions: () => console.log('🚀 Transitioning from idle to preparing')
+        }
+      }
     },
     
-    ready: {
-      description: 'Ready to start karaoke',
-      on: {
-        PLAY: 'countdown',
-        LOAD_AUDIO: 'initializing',
-      },
+    preparing: {
+      entry: () => console.log('🎬 In preparing state, about to setup MediaRecorder'),
+      invoke: {
+        src: setupMediaRecorder,
+        onDone: {
+          target: 'countdown',
+          actions: [
+            ({ event }) => console.log('✅ MediaRecorder setup complete:', event.output),
+            assign({
+              mediaRecorder: ({ event }) => event.output
+            })
+          ]
+        },
+        onError: {
+          target: 'error',
+          actions: [
+            ({ event }) => console.error('❌ MediaRecorder setup failed:', event),
+            assign({
+              error: () => 'Failed to setup recording'
+            })
+          ]
+        }
+      }
     },
     
     countdown: {
-      description: 'Countdown before karaoke starts',
-      entry: assign({
-        countdown: () => 3
-      }),
+      entry: [
+        () => console.log('⏰ Entered countdown state'),
+        assign({ countdown: 3 })
+      ],
       invoke: {
-        id: 'countdownTimer',
-        src: 'countdownTimer',
-        onError: {
-          actions: ({ event }) => console.error('❌ Countdown error:', event),
+        src: countdownTimer,
+        input: { duration: 3 },
+        onDone: {
+          target: 'recording',
+          actions: () => console.log('✅ Countdown timer completed, transitioning to recording')
         },
+        onError: {
+          target: 'error',
+          actions: ({ event }) => console.error('❌ Countdown timer failed:', event)
+        }
       },
       on: {
         UPDATE_COUNTDOWN: [
           {
-            target: 'playing',
-            guard: ({ event }) => event.value === 0,
-            actions: () => console.log('✅ Transitioning to playing state'),
+            target: 'recording',
+            guard: ({ event }) => {
+              const value = (event as any).value
+              console.log('⏰ UPDATE_COUNTDOWN received with value:', value, 'checking if 0')
+              return value === 0
+            },
+            actions: () => console.log('✅ Countdown reached 0, transitioning to recording')
           },
           {
-            actions: assign({
-              countdown: ({ event }) => event.value,
-            }),
-          },
+            actions: [
+              ({ event }) => console.log('⏰ Countdown update:', (event as any).value),
+              assign({
+                countdown: ({ event }) => (event as any).value
+              })
+            ]
+          }
         ],
-        STOP: 'ready',
-      },
+        STOP: 'stopped'
+      }
     },
     
-    playing: {
-      description: 'Karaoke session active - playing and recording',
-      entry: ['startPlayback', 'startLyricSync', 'startRecording'],
-      exit: ['stopPlayback', 'stopLyricSync', 'stopRecordingAndProcess'],
-      on: {
-        COMPLETE: 'stopped',
-        STOP: 'stopped',
-        NEXT_LINE: {
-          actions: assign({
-            currentLineIndex: ({ context }) => 
-              Math.min(context.currentLineIndex + 1, (context.lyrics?.length || 1) - 1),
-          }),
+    recording: {
+      entry: [
+        () => console.log('🎬 ENTERED RECORDING STATE!'),
+        // Start continuous recording
+        ({ context }) => {
+          if (context.mediaRecorder) {
+            console.log('🎙️ Starting continuous recording, recorder state:', context.mediaRecorder.state)
+            try {
+              context.mediaRecorder.start(100) // Get chunks every 100ms
+              console.log('✅ MediaRecorder.start() called successfully')
+            } catch (error) {
+              console.error('❌ Failed to start MediaRecorder:', error)
+            }
+          } else {
+            console.error('❌ No MediaRecorder available in context')
+          }
         },
+        assign({
+          audioChunks: [],
+          recordingStartTime: () => Date.now(),
+          processedSegments: () => new Set()
+        })
+      ],
+      
+      invoke: {
+        src: recordingService,
+        input: ({ context }) => ({
+          mediaRecorder: context.mediaRecorder!,
+          segments: context.segments,
+          recordingStartTime: context.recordingStartTime!,
+          processedSegments: context.processedSegments
+        })
       },
+      
+      on: {
+        AUDIO_CHUNK: {
+          actions: assign({
+            audioChunks: ({ context, event }) => {
+              const newChunk = {
+                data: (event as any).chunk,
+                timestamp: (event as any).timestamp
+              }
+              const updatedChunks = [...context.audioChunks, newChunk]
+              
+              // Log every 50th chunk to verify continuous recording
+              if (updatedChunks.length % 50 === 0) {
+                console.log(`💾 Total chunks stored: ${updatedChunks.length}, latest timestamp: ${(newChunk.timestamp/1000).toFixed(2)}s`)
+              }
+              
+              return updatedChunks
+            }
+          })
+        },
+        
+        SEGMENT_READY: {
+          actions: ({ context, event, self }) => {
+            const segment = (event as any).segment as KaraokeSegment
+            
+            // Skip if already processed
+            if (context.processedSegments.has(segment.lyricLine.id)) return
+            
+            console.log(`📦 Processing segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
+            
+            // Extract audio chunks for this segment's time window
+            const segmentStart = segment.recordStartTime
+            const segmentEnd = segment.recordEndTime
+            
+            // For WebM format, we need to include the initial chunks that contain headers
+            // Get the first few chunks (headers) plus the segment-specific chunks
+            const headerChunks = context.audioChunks.slice(0, 3) // First 3 chunks contain WebM headers
+            const segmentChunks = context.audioChunks.filter(chunk => 
+              chunk.timestamp >= segmentStart && 
+              chunk.timestamp <= segmentEnd
+            )
+            
+            // Combine headers with segment chunks (avoiding duplicates)
+            const allChunks = segment.lyricLine.id === 1 ? segmentChunks : [...headerChunks, ...segmentChunks.filter(c => c.timestamp >= headerChunks[headerChunks.length - 1]?.timestamp || 0)]
+            
+            console.log(`🔍 Segment ${segment.lyricLine.id} chunk search:`, {
+              segmentWindow: `${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s`,
+              totalChunks: context.audioChunks.length,
+              chunkTimeRange: context.audioChunks.length > 0 ? 
+                `${(context.audioChunks[0]?.timestamp/1000).toFixed(2)}s - ${(context.audioChunks[context.audioChunks.length - 1]?.timestamp/1000).toFixed(2)}s` : 'none',
+              segmentChunks: segmentChunks.length,
+              headerChunks: segment.lyricLine.id > 1 ? headerChunks.length : 0,
+              totalChunksUsed: allChunks.length
+            })
+            
+            if (allChunks.length === 0) {
+              console.warn(`❌ No chunks found for segment ${segment.lyricLine.id} (${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s)`)
+              return
+            }
+            
+            // Create blob - ensure we're using fresh chunk data
+            const chunkData = allChunks.map(c => c.data)
+            console.log(`🎵 Creating blob from ${chunkData.length} chunks, first chunk size: ${chunkData[0]?.size || 0}`)
+            
+            const audioBlob = new Blob(
+              chunkData,
+              { type: 'audio/webm' }
+            )
+            
+            console.log(`📦 Extracted segment ${segment.lyricLine.id}: ${audioBlob.size} bytes from ${allChunks.length} chunks`)
+            
+            // Verify blob is valid
+            if (audioBlob.size === 0) {
+              console.error(`❌ Created empty blob for segment ${segment.lyricLine.id}`)
+              return
+            }
+            
+            // Mark as processed
+            context.processedSegments.add(segment.lyricLine.id)
+            
+            // Grade segment asynchronously
+            if (context.gradingService) {
+              const recordingSegment: RecordingSegment = {
+                segmentId: `seg-${segment.lyricLine.id}-${Date.now()}`,
+                lyricLineId: segment.lyricLine.id,
+                startTime: segment.recordStartTime,
+                endTime: segment.recordEndTime,
+                audioBlob,
+                expectedText: segment.expectedText,
+                keywords: segment.keywords
+              }
+              
+              console.log(`🎯 Starting grading for segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
+            console.log(`🎤 MediaRecorder state: ${context.mediaRecorder?.state}`)
+              
+              context.gradingService.gradeSegment(recordingSegment).then(result => {
+                console.log(`✅ Grading complete for segment ${segment.lyricLine.id}`)
+                self.send({
+                  type: 'GRADING_COMPLETE',
+                  lineId: segment.lyricLine.id,
+                  transcript: result.transcript,
+                  accuracy: result.similarity
+                })
+              }).catch((error: Error) => {
+                console.error(`❌ Failed to grade segment ${segment.lyricLine.id}:`, error)
+              })
+            } else {
+              console.warn(`⚠️ No grading service available for segment ${segment.lyricLine.id}`)
+            }
+          }
+        },
+        
+        GRADING_COMPLETE: {
+          actions: assign({
+            gradingResults: ({ context, event }) => {
+              if (event.type !== 'GRADING_COMPLETE') return context.gradingResults
+              const newResults = new Map(context.gradingResults)
+              newResults.set(event.lineId, {
+                transcript: event.transcript,
+                accuracy: event.accuracy
+              })
+              return newResults
+            }
+          })
+        },
+        
+        SONG_ENDED: 'processingRemaining',
+        STOP: 'stopped'
+      }
+    },
+    
+    processingRemaining: {
+      entry: ({ context }) => {
+        // Process any remaining segments
+        context.segments.forEach(segment => {
+          if (!context.processedSegments.has(segment.lyricLine.id)) {
+            console.log(`Processing remaining segment ${segment.lyricLine.id}`)
+            // Would trigger SEGMENT_READY for remaining segments
+          }
+        })
+      },
+      always: 'completed'
+    },
+    
+    completed: {
+      entry: [
+        ({ context }) => {
+          if (context.mediaRecorder?.state === 'recording') {
+            context.mediaRecorder.stop()
+          }
+          
+          // Calculate final score
+          let totalAccuracy = 0
+          context.gradingResults.forEach(result => {
+            totalAccuracy += result.accuracy
+          })
+          
+          const avgAccuracy = context.gradingResults.size > 0 
+            ? totalAccuracy / context.gradingResults.size 
+            : 0
+            
+          console.log(`🏁 Karaoke completed: ${context.gradingResults.size} segments graded, avg accuracy: ${(avgAccuracy * 100).toFixed(1)}%`)
+        },
+        assign({
+          score: ({ context }) => {
+            let totalAccuracy = 0
+            context.gradingResults.forEach(result => {
+              totalAccuracy += result.accuracy
+            })
+            return context.gradingResults.size > 0 
+              ? Math.round((totalAccuracy / context.gradingResults.size) * 100)
+              : 0
+          }
+        })
+      ],
+      on: {
+        RESTART: 'countdown'
+      }
     },
     
     stopped: {
-      description: 'Karaoke session stopped',
-      entry: ['stopPlayback', assign({
-        score: ({ context }) => {
-          const completion = context.currentLineIndex / (context.lyrics?.length || 1);
-          return Math.round(completion * 100);
+      entry: ({ context }) => {
+        if (context.mediaRecorder?.state === 'recording') {
+          context.mediaRecorder.stop()
         }
-      })],
-      initial: 'reviewing',
-      states: {
-        reviewing: {
-          description: 'Reviewing performance',
-          on: {
-            SUBMIT_SCORE: 'submitting',
-            RESTART: '#karaoke.ready',
-          },
-        },
-        
-        submitting: {
-          description: 'Submitting score to blockchain',
-          invoke: {
-            id: 'submitScore',
-            src: 'submitScore',
-            input: ({ context }) => context,
-            onDone: {
-              target: 'submitted',
-            },
-            onError: {
-              target: 'reviewing',
-              actions: assign({
-                error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
-              }),
-            },
-          },
-        },
-        
-        submitted: {
-          description: 'Score submitted successfully',
-          type: 'final',
-        },
+        console.log('⏹️ Recording stopped by user')
       },
+      type: 'final'
     },
     
     error: {
-      description: 'Error state',
-      on: {
-        RESTART: 'initializing',
-      },
-    },
-  },
-});
+      type: 'final'
+    }
+  }
+})
