@@ -3,6 +3,7 @@ import type { KaraokeContext, KaraokeEvent } from '../types'
 import type { KaraokeSegment } from '../../utils/lyrics-parser'
 import type { RecordingSegment } from '../../services/recording-manager.service'
 import { KaraokeGradingService } from '../../services/karaoke-grading.service'
+import { FinalGradingService } from '../../services/final-grading.service'
 
 interface AudioChunk {
   data: Blob
@@ -21,6 +22,7 @@ interface MergedKaraokeContext extends KaraokeContext {
   
   // Grading
   gradingService: KaraokeGradingService | null
+  finalGradingService: FinalGradingService | null
   gradingResults: Map<number, { 
     transcript: string; 
     accuracy: number;
@@ -38,7 +40,7 @@ type MergedKaraokeEvent = KaraokeEvent
   | { type: 'SEGMENT_READY'; segment: KaraokeSegment }
   | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number; signature?: string; expectedText: string; timestamp: number }
   | { type: 'SONG_ENDED' }
-  | { type: 'UPDATE_CONTEXT'; segments?: KaraokeSegment[]; gradingService?: KaraokeGradingService | null }
+  | { type: 'UPDATE_CONTEXT'; segments?: KaraokeSegment[]; gradingService?: KaraokeGradingService | null; finalGradingService?: FinalGradingService | null }
   | { type: 'UPDATE_COUNTDOWN'; value: number }
   | { type: 'RETRY' }
 
@@ -169,6 +171,29 @@ const recordingService = fromCallback<
   }
 })
 
+// Final grading service
+const finalGradingActor = fromPromise<
+  number,
+  { 
+    finalGradingService: FinalGradingService;
+    gradingResults: Map<number, any>;
+    segments: KaraokeSegment[];
+  }
+>(async ({ input }) => {
+  const { finalGradingService, gradingResults, segments } = input
+  
+  // Concatenate all expected texts
+  const fullExpectedText = segments
+    .map(s => s.expectedText)
+    .join(' ')
+    .trim()
+  
+  console.log('🎯 Starting final grading...')
+  const finalResult = await finalGradingService.calculateFinalScore(gradingResults, fullExpectedText)
+  
+  return finalResult.finalScore
+})
+
 export const karaokeMachine = createMachine({
   types: {} as {
     context: MergedKaraokeContext
@@ -201,6 +226,7 @@ export const karaokeMachine = createMachine({
     
     // Grading
     gradingService: input?.gradingService || null,
+    finalGradingService: input?.finalGradingService || null,
     gradingResults: new Map()
   }),
   
@@ -208,7 +234,8 @@ export const karaokeMachine = createMachine({
     UPDATE_CONTEXT: {
       actions: assign({
         segments: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.segments || []) : [],
-        gradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.gradingService || null) : null
+        gradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.gradingService || null) : null,
+        finalGradingService: ({ event }) => event.type === 'UPDATE_CONTEXT' ? (event.finalGradingService || null) : null
       })
     }
   },
@@ -505,36 +532,56 @@ export const karaokeMachine = createMachine({
     },
     
     completed: {
-      entry: [
-        ({ context }) => {
-          if (context.mediaRecorder?.state === 'recording') {
-            context.mediaRecorder.stop()
+      initial: 'grading',
+      
+      states: {
+        grading: {
+          entry: ({ context }) => {
+            if (context.mediaRecorder?.state === 'recording') {
+              context.mediaRecorder.stop()
+            }
+            console.log(`🏁 Processing final score for ${context.gradingResults.size} segments...`)
+          },
+          
+          invoke: {
+            src: finalGradingActor,
+            input: ({ context }) => ({
+              finalGradingService: context.finalGradingService!,
+              gradingResults: context.gradingResults,
+              segments: context.segments
+            }),
+            onDone: {
+              target: 'done',
+              actions: assign({
+                score: ({ event }) => event.output
+              })
+            },
+            onError: {
+              target: 'done',
+              actions: [
+                ({ event }) => console.error('❌ Final grading failed:', event),
+                // Fallback to average score
+                assign({
+                  score: ({ context }) => {
+                    let totalAccuracy = 0
+                    context.gradingResults.forEach(result => {
+                      totalAccuracy += result.accuracy
+                    })
+                    return context.gradingResults.size > 0 
+                      ? Math.round((totalAccuracy / context.gradingResults.size) * 100)
+                      : 0
+                  }
+                })
+              ]
+            }
           }
-          
-          // Calculate final score
-          let totalAccuracy = 0
-          context.gradingResults.forEach(result => {
-            totalAccuracy += result.accuracy
-          })
-          
-          const avgAccuracy = context.gradingResults.size > 0 
-            ? totalAccuracy / context.gradingResults.size 
-            : 0
-            
-          console.log(`🏁 Karaoke completed: ${context.gradingResults.size} segments graded, avg accuracy: ${(avgAccuracy * 100).toFixed(1)}%`)
         },
-        assign({
-          score: ({ context }) => {
-            let totalAccuracy = 0
-            context.gradingResults.forEach(result => {
-              totalAccuracy += result.accuracy
-            })
-            return context.gradingResults.size > 0 
-              ? Math.round((totalAccuracy / context.gradingResults.size) * 100)
-              : 0
-          }
-        })
-      ],
+        
+        done: {
+          type: 'final'
+        }
+      },
+      
       on: {
         RESTART: 'countdown'
       }

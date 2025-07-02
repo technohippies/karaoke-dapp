@@ -82,6 +82,7 @@ export function useSongMachine(songId: number) {
   const isKaraokeCountdown = karaokeState ? karaokeState.matches('countdown') : false;
   const isKaraokePlaying = karaokeState ? karaokeState.matches('recording') : false;
   const isKaraokeStopped = karaokeState ? (karaokeState.matches('stopped') || karaokeState.matches('completed')) : false;
+  const isKaraokeGrading = karaokeState ? karaokeState.matches('completed.grading') : false;
 
   // Get button state and text
   const getButtonState = useCallback(() => {
@@ -130,6 +131,7 @@ export function useSongMachine(songId: number) {
     isKaraokeCountdown,
     isKaraokePlaying,
     isKaraokeStopped,
+    isKaraokeGrading,
     karaokeCountdownValue,
     karaokeActor,
     karaokeState,

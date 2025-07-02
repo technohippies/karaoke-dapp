@@ -11,6 +11,7 @@ import { parseLRC, prepareKaraokeSegments } from '../utils/lyrics-parser'
 import { X } from '@phosphor-icons/react'
 import type { KaraokeLyricLine } from '@karaoke-dapp/ui'
 import { KaraokeGradingService } from '../services/karaoke-grading.service'
+import { FinalGradingService } from '../services/final-grading.service'
 import { useRef } from 'react'
 
 
@@ -22,6 +23,7 @@ function SongDetailContent({ song }: { song: Song }) {
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
   const karaokeSegmentsRef = useRef<ReturnType<typeof prepareKaraokeSegments>>([])
   const gradingServiceRef = useRef<KaraokeGradingService | null>(null)
+  const finalGradingServiceRef = useRef<FinalGradingService | null>(null)
   
   // Now we have the actual songId from the database
   const {
@@ -36,6 +38,7 @@ function SongDetailContent({ song }: { song: Song }) {
     isKaraokeCountdown,
     isKaraokePlaying,
     isKaraokeStopped,
+    isKaraokeGrading,
     karaokeCountdownValue,
     karaokeActor,
     karaokeState
@@ -137,26 +140,40 @@ function SongDetailContent({ song }: { song: Song }) {
   // Initialize grading service when session signatures become available
   useEffect(() => {
     if (isInKaraokeMode && address && karaokeState?.context?.sessionSigs && !gradingServiceRef.current) {
-      console.log('🔐 Initializing grading service with session signatures')
+      console.log('🔐 Initializing grading services with session signatures')
+      const sessionId = `karaoke-${song.id}-${Date.now()}`
+      
       gradingServiceRef.current = new KaraokeGradingService({
         sessionSigs: karaokeState.context.sessionSigs,
         userAddress: address,
-        sessionId: `karaoke-${song.id}-${Date.now()}`,
+        sessionId,
         language: 'en'
       })
       
-      gradingServiceRef.current.initialize().then(() => {
-        console.log('✅ Grading service initialized successfully')
-        // Update the karaoke machine with the grading service
+      finalGradingServiceRef.current = new FinalGradingService({
+        sessionSigs: karaokeState.context.sessionSigs,
+        sessionId,
+        songId: song.id,
+        userAddress: address,
+        totalLines: karaokeSegmentsRef.current.length
+      })
+      
+      Promise.all([
+        gradingServiceRef.current.initialize(),
+        finalGradingServiceRef.current.initialize()
+      ]).then(() => {
+        console.log('✅ Grading services initialized successfully')
+        // Update the karaoke machine with both grading services
         if (karaokeActor) {
           karaokeActor.send({
             type: 'UPDATE_CONTEXT',
             segments: karaokeSegmentsRef.current,
-            gradingService: gradingServiceRef.current
+            gradingService: gradingServiceRef.current,
+            finalGradingService: finalGradingServiceRef.current
           })
         }
       }).catch(error => {
-        console.error('❌ Failed to initialize grading service:', error)
+        console.error('❌ Failed to initialize grading services:', error)
       })
     }
   }, [isInKaraokeMode, address, song.id, karaokeState?.context?.sessionSigs, karaokeActor])
@@ -294,6 +311,7 @@ function SongDetailContent({ song }: { song: Song }) {
           <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <KaraokeScore
+              isLoading={isKaraokeGrading}
               score={karaokeState?.context?.score || 0}
               songTitle={song.title}
               artist={song.artist}

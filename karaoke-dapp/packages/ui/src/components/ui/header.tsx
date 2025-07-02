@@ -21,7 +21,7 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
           <img 
             src="/logo.png" 
             alt="Karaoke dApp" 
-            className="h-10 w-10 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+            className="h-10 w-10 object-contain cursor-pointer hover:opacity-80 transition-opacity rounded-md"
             onClick={onLogoClick}
           />
           {leftContent}
