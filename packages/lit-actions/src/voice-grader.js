@@ -112,13 +112,19 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     const messageString = JSON.stringify(messageToSign, Object.keys(messageToSign).sort());
     
     // Sign the message using PKP
-    const signature = await Lit.Actions.signEcdsa({
-      toSign: ethers.utils.arrayify(
-        ethers.utils.keccak256(ethers.utils.toUtf8Bytes(messageString))
-      ),
-      publicKey: pkpPublicKey,
-      sigName: 'lineResultSig'
-    });
+    // Note: PKP signing requires the pkpPublicKey to be passed as a parameter
+    let signature = null;
+    if (typeof pkpPublicKey !== 'undefined' && pkpPublicKey) {
+      signature = await Lit.Actions.signEcdsa({
+        toSign: ethers.utils.arrayify(
+          ethers.utils.keccak256(ethers.utils.toUtf8Bytes(messageString))
+        ),
+        publicKey: pkpPublicKey,
+        sigName: 'lineResultSig'
+      });
+    } else {
+      console.log('PKP public key not provided, skipping signature');
+    }
 
     // Return the result with signature
     Lit.Actions.setResponse({
@@ -126,7 +132,7 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
         success: true,
         lineResult: {
           ...lineResult,
-          signature: signature.signature
+          signature: signature ? signature.signature : undefined
         },
         messageString, // Include for verification
         debug: {

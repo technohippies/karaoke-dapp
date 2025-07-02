@@ -10,7 +10,7 @@ export const PKP_CONFIG = {
 
 // Lit Action CIDs
 export const LIT_ACTION_CIDS = {
-  voiceGrader: 'QmZCagMYeEAUJxL4mtw8xb567j37GU9H1oTov1rRG5QFzd',
+  voiceGrader: 'QmTgQGR33ETR79Ab5VFwzEYiHCCVjDQFozqYkdTwLnS4nb',
   finalGrader: 'QmW2HSh9BYUiwbJC9g3uMUtpY1tT1iWDExSZ5f4KSbWKh6',
   sessionSettlement: 'QmRHZLRQThj9oq4bgMRupjvwQUH4iVyFweHp1WGdYc25oy',
 } as const;
