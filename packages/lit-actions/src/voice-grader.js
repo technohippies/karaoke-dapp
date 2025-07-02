@@ -5,6 +5,7 @@
  * jsParams expected:
  * - audioData: base64 encoded audio
  * - expectedText: the correct lyrics
+ * - keywords: array of important words to boost in transcription
  * - sessionId: unique session identifier
  * - lineIndex: which line in the song
  */
@@ -18,6 +19,8 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     console.log('Debug: Parameters check');
     console.log('typeof audioData:', typeof audioData);
     console.log('typeof expectedText:', typeof expectedText);
+    console.log('typeof keywords:', typeof keywords);
+    console.log('keywords:', keywords);
     console.log('typeof sessionId:', typeof sessionId);
     console.log('typeof lineIndex:', typeof lineIndex);
     console.log('typeof jsParams:', typeof jsParams);
@@ -54,7 +57,23 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
       bytes[i] = binaryString.charCodeAt(i);
     }
     
-    const deepgramResponse = await fetch('https://api.deepgram.com/v1/listen?model=nova-3&language=en', {
+    // Build Deepgram URL with keywords if provided
+    let deepgramUrl = 'https://api.deepgram.com/v1/listen?model=nova-2&language=en';
+    
+    // Add keywords with boost factor
+    if (keywords && Array.isArray(keywords) && keywords.length > 0) {
+      // Filter keywords (> 3 chars, unique, limit to 100)
+      const uniqueKeywords = [...new Set(keywords)]
+        .filter(k => k && k.length > 3)
+        .slice(0, 100);
+      
+      // Add each keyword with moderate boost (2.0)
+      uniqueKeywords.forEach(keyword => {
+        deepgramUrl += `&keywords=${encodeURIComponent(keyword)}:2.0`;
+      });
+    }
+    
+    const deepgramResponse = await fetch(deepgramUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Token ${apiKey}`
@@ -100,22 +119,72 @@ const DEEPGRAM_KEY_HASH = '49bac3dba60752be1bb0f06d856a0b31a660c3358b93568827586
     });
   }
   
-  // Simple accuracy calculation
+  // Improved accuracy calculation with normalization and partial matching
   function calculateAccuracy(transcript, expectedText) {
-    const transcriptWords = transcript.split(/\s+/).filter(w => w.length > 0);
-    const expectedWords = expectedText.split(/\s+/).filter(w => w.length > 0);
+    // Normalize both texts
+    const normalizeText = (text) => {
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .replace(/\s+/g, ' ')     // Normalize whitespace
+        .trim();
+    };
+    
+    const normalizedTranscript = normalizeText(transcript);
+    const normalizedExpected = normalizeText(expectedText);
+    
+    // If exact match after normalization, perfect score
+    if (normalizedTranscript === normalizedExpected) return 1.0;
+    
+    const transcriptWords = normalizedTranscript.split(' ').filter(w => w.length > 0);
+    const expectedWords = normalizedExpected.split(' ').filter(w => w.length > 0);
     
     if (expectedWords.length === 0) return 0;
+    if (transcriptWords.length === 0) return 0;
     
+    // Simple approach: count how many expected words appear in transcript
     let matches = 0;
-    const minLength = Math.min(transcriptWords.length, expectedWords.length);
+    const usedIndices = new Set();
     
-    for (let i = 0; i < minLength; i++) {
-      if (transcriptWords[i] === expectedWords[i]) {
-        matches++;
+    expectedWords.forEach((expectedWord) => {
+      // Find this word in transcript (not already used)
+      for (let i = 0; i < transcriptWords.length; i++) {
+        if (!usedIndices.has(i) && transcriptWords[i] === expectedWord) {
+          matches++;
+          usedIndices.add(i);
+          break;
+        }
       }
+    });
+    
+    // Base accuracy is matches / expected
+    let accuracy = matches / expectedWords.length;
+    
+    // Bonus for correct order
+    let inOrderCount = 0;
+    let lastIndex = -1;
+    expectedWords.forEach((expectedWord) => {
+      const index = transcriptWords.indexOf(expectedWord);
+      if (index > lastIndex) {
+        inOrderCount++;
+        lastIndex = index;
+      }
+    });
+    
+    // Order bonus (up to 20% boost if all words are in order)
+    const orderBonus = (inOrderCount / expectedWords.length) * 0.2;
+    accuracy = Math.min(1.0, accuracy + orderBonus);
+    
+    // Length penalty - penalize if transcript is too short or too long
+    const lengthRatio = transcriptWords.length / expectedWords.length;
+    if (lengthRatio < 0.5) {
+      // Too short - likely missed a lot
+      accuracy *= lengthRatio * 2;
+    } else if (lengthRatio > 2.0) {
+      // Too long - likely a lot of extra words
+      accuracy *= (2.0 / lengthRatio);
     }
     
-    return matches / expectedWords.length;
+    return Math.min(1.0, Math.max(0, accuracy));
   }
 })();

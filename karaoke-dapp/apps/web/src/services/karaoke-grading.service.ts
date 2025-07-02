@@ -52,6 +52,7 @@ export class KaraokeGradingService {
         {
           audioData: audioBase64,  // Note: The deployed action expects 'audioData' not 'audioBase64'
           expectedText: segment.expectedText,
+          keywords: segment.keywords || [],  // Send keywords for Deepgram boosting
           sessionId: this.options.sessionId,
           lineIndex: segment.lyricLineId,
           recallBucketId: `karaoke-session-${this.options.sessionId}`  // For storing results
