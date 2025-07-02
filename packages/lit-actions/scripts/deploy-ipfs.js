@@ -112,6 +112,7 @@ async function main() {
     // Deploy all actions
     const actions = [
         { name: 'voice-grader', needsContract: false },
+        { name: 'final-grader', needsContract: false },
         { name: 'midi-decryptor', needsContract: true },
         { name: 'session-settlement', needsContract: true }
     ];

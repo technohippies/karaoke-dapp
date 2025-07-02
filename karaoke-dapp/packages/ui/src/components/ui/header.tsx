@@ -21,7 +21,7 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
           <img 
             src="/logo.png" 
             alt="Karaoke dApp" 
-            className="h-8 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            className="h-10 w-10 object-contain cursor-pointer hover:opacity-80 transition-opacity"
             onClick={onLogoClick}
           />
           {leftContent}
@@ -30,20 +30,10 @@ const Header = React.forwardRef<HTMLDivElement, HeaderProps>(
         <div className="flex items-center">
           <button
             onClick={onAccountClick}
-            className={`rounded-md text-neutral-50 flex items-center justify-center w-10 h-10 cursor-pointer transition-colors ${
-              isConnected
-                ? 'bg-green-700 hover:bg-green-600'
-                : 'bg-neutral-700 hover:bg-neutral-600'
-            }`}
+            className="rounded-md text-neutral-50 flex items-center justify-center w-10 h-10 cursor-pointer transition-colors bg-neutral-700 hover:bg-neutral-600"
             aria-label="Account"
           >
-            {isConnected && address ? (
-              <span className="text-sm font-mono">
-                {address.slice(0, 1)}
-              </span>
-            ) : (
-              <User size={20} weight="bold" />
-            )}
+            <User size={20} weight="fill" />
           </button>
         </div>
       </div>
