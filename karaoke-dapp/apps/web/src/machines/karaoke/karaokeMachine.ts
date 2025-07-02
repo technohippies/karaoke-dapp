@@ -154,8 +154,12 @@ const recordingService = fromCallback<
       
       const segmentEndTime = segment.recordEndTime
       
-      // If segment has ended and we haven't processed it
-      if (currentTime > segmentEndTime && !processedSegments.has(segment.lyricLine.id)) {
+      // Add a 500ms buffer to ensure all audio chunks are captured
+      // This is especially important for the first segment
+      const processingTime = segmentEndTime + 500
+      
+      // If segment has ended (with buffer) and we haven't processed it
+      if (currentTime > processingTime && !processedSegments.has(segment.lyricLine.id)) {
         console.log(`📦 Segment ${segment.lyricLine.id} ready for processing: "${segment.expectedText}" (ended at ${(segmentEndTime/1000).toFixed(2)}s, now ${(currentTime/1000).toFixed(2)}s)`)
         sendBack({ 
           type: 'SEGMENT_READY', 

@@ -140,11 +140,38 @@ export class EncryptionService {
       await this.connect();
     }
 
-    // Clear any corrupted stored session data
-    console.log('🧹 Clearing any existing Lit session data...');
-    localStorage.removeItem('lit-session-key');
-    localStorage.removeItem('lit-wallet-sig');
-    localStorage.removeItem('lit-session-sigs');
+    // Try to use existing session if available and valid
+    try {
+      const existingSessionKey = localStorage.getItem('lit-session-key');
+      const existingWalletSig = localStorage.getItem('lit-wallet-sig');
+      
+      if (existingSessionKey && existingWalletSig) {
+        console.log('🔍 Checking existing Lit session...');
+        // Try to restore session - the SDK will validate it
+        const sessionSigs = await this.litNodeClient.getSessionSigs({
+          chain: 'base',
+          resourceAbilityRequests: [
+            {
+              resource: new LitPKPResource('*'),
+              ability: LIT_ABILITY.PKPSigning,
+            },
+            {
+              resource: new LitActionResource('*'),
+              ability: LIT_ABILITY.LitActionExecution,
+            },
+          ],
+        });
+        
+        console.log('✅ Existing session restored successfully');
+        return sessionSigs;
+      }
+    } catch (error) {
+      console.log('⚠️ Existing session invalid or expired, creating new one...');
+      // Clear invalid session data
+      localStorage.removeItem('lit-session-key');
+      localStorage.removeItem('lit-wallet-sig');
+      localStorage.removeItem('lit-session-sigs');
+    }
     
     // Create a wallet instance (in production, this would use the connected wallet)
     const provider = new ethers.BrowserProvider((window as any).ethereum);
