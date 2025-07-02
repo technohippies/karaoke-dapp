@@ -26,7 +26,17 @@ export function useExerciseGrading(sessionSigs: SessionSigsMap | null) {
     return gradingServiceRef.current
   }, [sessionSigs, address])
 
-  const gradeAudio = useCallback(async (expectedText: string, audioBlob: Blob) => {
+  const gradeAudio = useCallback(async (expectedText: string, answer: string | Blob) => {
+    // For text answers, just compare directly (not used in current implementation)
+    if (typeof answer === 'string') {
+      return {
+        isCorrect: answer.toLowerCase() === expectedText.toLowerCase(),
+        transcript: answer
+      }
+    }
+    
+    // For audio answers, use the grading service
+    const audioBlob = answer
     const gradingService = await initializeGrading()
     
     // Create a segment format that the grading service expects

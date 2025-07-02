@@ -34,7 +34,7 @@ export function ExercisePage() {
   const { address } = useAccount()
   const [sessionSigs, setSessionSigs] = useState<SessionSigsMap | null>(null)
   const { gradeAudio } = useExerciseGrading(sessionSigs)
-  const [exercises, setExercises] = useState(mockExercises)
+  const [exercises, setExercises] = useState<Exercise[]>(mockExercises)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -75,12 +75,16 @@ export function ExercisePage() {
           // Then add problem words (fill remaining slots)
           const remainingSlots = 5 - srsExercises.length
           for (const word of problemWords.slice(0, remainingSlots)) {
-            // Find a context for this word from due words or use generic
-            const dueWord = dueWords.find(d => d.word === word.word)
-            const context = dueWord?.contexts[0] || 
-              (word.commonMistakes.length > 0 
-                ? `Common mistakes: ${word.commonMistakes.join(', ')}` 
-                : `Practice saying: ${word.word}`)
+            // Get the actual lyric contexts for this problem word
+            const mistakes = await wordSRSService.getWordMistakes(word.word)
+            const contexts = mistakes
+              .flatMap(m => m.contexts)
+              .map(c => c.lineText)
+              .filter((v, i, a) => a.indexOf(v) === i) // unique
+            
+            // Use the first context or check due words
+            const dueWord = dueWords.find((d) => d.word === word.word)
+            const context = contexts[0] || dueWord?.contexts[0] || `Practice saying: ${word.word}`
             
             srsExercises.push({
               id: `problem-${srsExercises.length}`,
@@ -123,7 +127,7 @@ export function ExercisePage() {
           // Process the result for SRS tracking
           await wordSRSService.processLineResult(
             index,
-            exercise.word, // Use just the word for expected text
+            exercise.context, // Use the full context line for expected text
             result.transcript,
             result.isCorrect ? 1.0 : 0.0,
             0 // No specific song ID for exercises

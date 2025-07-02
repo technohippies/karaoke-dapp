@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
 import { Microphone, StopCircle } from '@phosphor-icons/react'
 import { Button } from '../ui/button'
 import { Spinner } from '../ui/spinner'

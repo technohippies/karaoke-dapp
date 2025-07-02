@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useMachine } from '@xstate/react'
 import { AnimatePresence } from 'framer-motion'
-import { exerciseMachine, getExerciseProgress, shouldShowRetry } from '../../machines/exerciseMachine'
+import { exerciseMachine, getExerciseProgress } from '../../machines/exerciseMachine'
 import { ExerciseFooter } from './exercise-footer'
 import { ExerciseRecordingFooter } from './exercise-recording-footer'
 import { SayItBack } from './exercises/say-it-back'
@@ -18,7 +18,7 @@ export interface ExerciseContainerProps {
     blank?: { start: number; end: number }
   }>
   onComplete: (results: any[]) => void
-  onGrade?: (expectedText: string, audioBlob: Blob) => Promise<{ isCorrect: boolean; transcript: string }>
+  onGrade?: (expectedText: string, answer: string | Blob) => Promise<{ isCorrect: boolean; transcript?: string }>
 }
 
 export function ExerciseContainer({

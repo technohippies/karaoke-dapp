@@ -1,4 +1,4 @@
-import { fsrs, generatorParameters, Grade, Rating, Card } from 'ts-fsrs'
+import { Card, createEmptyCard } from 'ts-fsrs'
 
 export interface WordPerformance {
   word: string
@@ -64,14 +64,14 @@ export class WorstPerformanceScheduler implements SchedulerStrategy {
 }
 
 export class SRSScheduler implements SchedulerStrategy {
-  private f = fsrs(generatorParameters({ enable_fuzz: false }))
+  // private f = fsrs(generatorParameters({ enable_fuzz: false })) // For future use when implementing full FSRS scheduling
 
   selectExercises(words: WordPerformance[], limit = 5): Exercise[] {
     // Calculate which words are due for review
     const wordsWithScheduling = words.map(word => {
-      const card = word.fsrsCard || this.createDefaultCard()
+      const card = word.card || this.createDefaultCard()
       const now = new Date()
-      const schedulingInfo = this.f.repeat(card, now)
+      // For future use: const schedulingInfo = this.f.repeat(card, now)
       
       // Calculate priority based on how overdue the card is
       const dueDate = new Date(card.due)
@@ -109,7 +109,7 @@ export class SRSScheduler implements SchedulerStrategy {
   }
 
   private createDefaultCard() {
-    return this.f.createEmptyCard()
+    return createEmptyCard()
   }
 
   private createExercise(word: WordPerformance): Exercise {
@@ -162,8 +162,8 @@ export class ExerciseScheduler {
   }
 
   async scheduleExercises(
-    songId: number,
-    userId: string,
+    _songId: number,
+    _userId: string,
     limit = 5
   ): Promise<Exercise[]> {
     // This will be implemented to fetch from IndexedDB

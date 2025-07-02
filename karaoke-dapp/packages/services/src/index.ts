@@ -7,3 +7,4 @@ export * from './sync.service';
 export * from './karaoke-data-pipeline';
 export * from './user-table-service';
 export * from './session-storage';
+export * from './exercise-scheduler';
