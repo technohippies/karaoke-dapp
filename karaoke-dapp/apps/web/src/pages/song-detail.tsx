@@ -59,6 +59,7 @@ function SongDetailContent({ song }: { song: Song }) {
   
   const [lineGrades, setLineGrades] = useState<Map<number, number>>(new Map())
   const [isSavingProgress, setIsSavingProgress] = useState(false)
+  const [hasSavedProgress, setHasSavedProgress] = useState(false)
   
   useEffect(() => {
     async function loadLyrics() {
@@ -268,6 +269,7 @@ function SongDetailContent({ song }: { song: Song }) {
                 size="icon"
                 onClick={() => {
                   pause()
+                  setHasSavedProgress(false)
                   send({ type: 'EXIT' })
                 }}
               >
@@ -297,6 +299,7 @@ function SongDetailContent({ song }: { song: Song }) {
                 size="icon"
                 onClick={() => {
                   pause()
+                  setHasSavedProgress(false)
                   karaokeActor?.send({ type: 'STOP' })
                 }}
               >
@@ -342,23 +345,22 @@ function SongDetailContent({ song }: { song: Song }) {
                     console.log('✅ Sync started')
                   }
                   
-                  // Navigate to progress page
-                  navigate('/progress')
+                  // Mark as saved instead of navigating
+                  setIsSavingProgress(false)
+                  setHasSavedProgress(true)
                 } catch (error) {
                   console.error('Failed to save progress:', error)
                   setIsSavingProgress(false)
                 }
               }}
-              onSkip={() => send({ type: 'EXIT' })}
+              onSkip={() => {
+                setHasSavedProgress(false)
+                send({ type: 'EXIT' })
+              }}
+              onPractice={() => navigate('/exercise')}
               isSaving={isSavingProgress}
+              isSaved={hasSavedProgress}
             />
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => send({ type: 'EXIT' })}
-            >
-              Back to Song
-            </Button>
           </div>
         </div>
       )

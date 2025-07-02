@@ -10,7 +10,9 @@ interface KaraokeScoreProps {
   artist?: string
   onSaveProgress?: () => void
   onSkip?: () => void
+  onPractice?: () => void
   isSaving?: boolean
+  isSaved?: boolean
   className?: string
 }
 
@@ -21,7 +23,9 @@ export function KaraokeScore({
   artist,
   onSaveProgress,
   onSkip,
+  onPractice,
   isSaving = false,
+  isSaved = false,
   className
 }: KaraokeScoreProps) {
   
@@ -138,8 +142,8 @@ export function KaraokeScore({
             animate={{ opacity: 1 }}
             transition={{ delay: 1.6 }}
           >
-            <h3 className={cn("text-2xl font-semibold", getScoreColor(score))}>
-              {getScoreMessage(score)}
+            <h3 className={cn("text-2xl font-semibold", isSaved ? "text-green-400" : getScoreColor(score))}>
+              {isSaved ? "Saved!" : getScoreMessage(score)}
             </h3>
           </motion.div>
         </motion.div>
@@ -148,32 +152,43 @@ export function KaraokeScore({
       {/* Fixed footer with action buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-neutral-800/80 backdrop-blur-lg border-t border-neutral-700">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex gap-3">
+          {isSaved ? (
             <Button 
-              className="flex-1" 
-              size="lg"
-              variant="outline"
-              onClick={onSkip}
-            >
-              Skip
-            </Button>
-            <Button 
-              className="flex-1" 
+              className="w-full" 
               size="lg"
               variant="default"
-              onClick={onSaveProgress}
-              disabled={isSaving}
+              onClick={onPractice}
             >
-              {isSaving ? (
-                <div className="flex items-center gap-2">
-                  <Spinner size="sm" />
-                  <span>Saving...</span>
-                </div>
-              ) : (
-                'Save Progress'
-              )}
+              Practice Exercises
             </Button>
-          </div>
+          ) : (
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1" 
+                size="lg"
+                variant="outline"
+                onClick={onSkip}
+              >
+                Skip
+              </Button>
+              <Button 
+                className="flex-1" 
+                size="lg"
+                variant="default"
+                onClick={onSaveProgress}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <div className="flex items-center gap-2">
+                    <Spinner size="sm" />
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  'Save Progress'
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
