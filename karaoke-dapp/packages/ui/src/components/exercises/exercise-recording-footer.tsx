@@ -5,7 +5,7 @@ import { Button } from '../ui/button'
 import { Spinner } from '../ui/spinner'
 
 export interface ExerciseRecordingFooterProps {
-  onSubmit: (transcript: string) => void
+  onSubmit: (audioBlob: Blob) => void
   isChecking: boolean
 }
 
@@ -45,14 +45,9 @@ export function ExerciseRecordingFooter({
       
       mediaRecorder.onstop = async () => {
         setIsProcessing(true)
-        // const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-        // Here we would send to transcription service
-        // For now, mock a transcription
-        setTimeout(() => {
-          const mockTranscript = "Mock transcript" // In real app, this would come from transcription service
-          setIsProcessing(false)
-          onSubmit(mockTranscript)
-        }, 1500)
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        setIsProcessing(false)
+        onSubmit(audioBlob)
       }
       
       mediaRecorder.start()

@@ -18,7 +18,7 @@ export interface ExerciseContainerProps {
     blank?: { start: number; end: number }
   }>
   onComplete: (results: any[]) => void
-  onGrade?: (word: string, answer: string) => Promise<boolean>
+  onGrade?: (expectedText: string, audioBlob: Blob) => Promise<{ isCorrect: boolean; transcript: string }>
 }
 
 export function ExerciseContainer({
@@ -33,8 +33,6 @@ export function ExerciseContainer({
       onGrade
     }
   })
-  
-  const [transcript, setTranscript] = useState<string>('')
 
   useEffect(() => {
     if (exercises.length > 0) {
@@ -44,24 +42,24 @@ export function ExerciseContainer({
 
   const progress = getExerciseProgress(state.context)
   
-  const handleSubmit = (answer: string) => {
-    setTranscript(answer)
-    send({ type: 'SUBMIT_ANSWER', answer })
+  const handleSubmit = (audioBlob: Blob) => {
+    // For say-it-back, the answer is the audio blob
+    send({ type: 'SUBMIT_ANSWER', answer: audioBlob as any })
   }
 
   const handleNext = () => {
-    setTranscript('') // Clear transcript for next exercise
     send({ type: 'NEXT' })
   }
 
   const handleRetry = () => {
-    setTranscript('') // Clear transcript for retry
     send({ type: 'RETRY' })
   }
 
-  const isCorrect = state.context.results.length > 0
-    ? state.context.results[state.context.results.length - 1].isCorrect
+  const lastResult = state.context.results.length > 0
+    ? state.context.results[state.context.results.length - 1]
     : null
+  const isCorrect = lastResult?.isCorrect ?? null
+  const transcript = lastResult?.userAnswer
 
   const progressPercentage = state.context.exercises.length > 0
     ? ((state.context.currentIndex + 1) / state.context.exercises.length) * 100

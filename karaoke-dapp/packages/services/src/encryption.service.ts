@@ -133,6 +133,13 @@ export class EncryptionService {
   }
 
   /**
+   * Request session signatures for a specific user address
+   */
+  async requestSessionSigs(userAddress: string): Promise<SessionSigsMap> {
+    return this.getSessionSigs();
+  }
+
+  /**
    * Get session signatures for extended access without repeated signing
    */
   async getSessionSigs(): Promise<SessionSigsMap> {

@@ -7,6 +7,7 @@ import { SongDetailPage } from './pages/song-detail'
 import { KaraokePage } from './pages/karaoke'
 import AccountPage from './pages/account'
 import { ProgressPage } from './pages/progress'
+import { ExercisePage } from './pages/exercise'
 import { useEffect } from 'react'
 import { karaokeDataPipeline } from '@karaoke-dapp/services'
 
@@ -33,6 +34,7 @@ export default function App() {
         {/* Future routes */}
         <Route path="/account" element={<AccountPage />} />
         <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/exercise" element={<ExercisePage />} />
         <Route path="/search" element={<div>Search page coming soon</div>} />
         <Route path="/leaderboard" element={<div>Leaderboard coming soon</div>} />
       </Routes>
