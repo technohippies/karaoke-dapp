@@ -42,10 +42,7 @@ export function KaraokeScore({
         className
       )}>
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Spinner size="lg" />
-            <p className="text-xl text-neutral-300">Calculating Score...</p>
-          </div>
+          <Spinner size="lg" />
         </div>
       </div>
     )

@@ -10,7 +10,6 @@ export * from './components/ui/media-row';
 export * from './components/ui/spinner';
 
 // Karaoke Components
-export * from './components/karaoke/lyric-sheet';
 export * from './components/karaoke/lyric-line';
 export * from './components/karaoke/karaoke-display';
 export * from './components/karaoke/microphone-permission';

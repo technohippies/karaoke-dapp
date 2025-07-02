@@ -37,17 +37,26 @@ type MergedKaraokeEvent = KaraokeEvent
   | { type: 'RETRY' }
 
 // Timer service for countdown
-const countdownTimer = fromPromise<void, { duration: number }>(
-  async ({ input, emit }) => {
+const countdownTimer = fromCallback<{ type: 'UPDATE_COUNTDOWN'; value: number }, { duration: number }>(
+  ({ input, sendBack }) => {
     let remaining = input.duration
     
-    while (remaining > 0) {
-      emit({ type: 'UPDATE_COUNTDOWN', value: remaining } as any)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      remaining--
-    }
+    // Send initial value immediately
+    sendBack({ type: 'UPDATE_COUNTDOWN', value: remaining })
     
-    emit({ type: 'UPDATE_COUNTDOWN', value: 0 } as any)
+    const interval = setInterval(() => {
+      remaining--
+      sendBack({ type: 'UPDATE_COUNTDOWN', value: remaining })
+      
+      if (remaining <= 0) {
+        clearInterval(interval)
+      }
+    }, 1000)
+    
+    // Cleanup function
+    return () => {
+      clearInterval(interval)
+    }
   }
 )
 

@@ -13,8 +13,10 @@ const meta = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div style={{ height: '600px', backgroundColor: '#171717' }}>
-        <Story />
+      <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
+        <div className="flex-1">
+          <Story />
+        </div>
       </div>
     ),
   ],
@@ -71,10 +73,10 @@ export const WithScores: Story = {
     lines: sampleLyrics,
     currentTime: 13000, // Past some scored lines
     lineColors: new Map([
-      [1, 0.95], // Almost perfect - bright green
-      [2, 0.8],  // Good - green
-      [3, 0.6],  // OK - yellow-green
-      [4, 0.3],  // Poor - orange-red
+      [1, 0.95], // Line ID 1: Almost perfect - bright green
+      [2, 0.8],  // Line ID 2: Good - green
+      [3, 0.6],  // Line ID 3: OK - yellow-green
+      [4, 0.3],  // Line ID 4: Poor - orange-red
     ]),
   },
 };
@@ -119,5 +121,24 @@ export const ActivePlayback: Story = {
       [1, 0.85], // Already sung - green
       [2, 0.7],  // Already sung - green
     ]),
+  },
+};
+
+export const RealisticKaraoke: Story = {
+  args: {
+    lines: sampleLyrics,
+    currentTime: 10000, // In the middle of line 4
+    lineColors: new Map([
+      [1, 0.92], // Great performance
+      [2, 0.65], // OK performance  
+      [3, 0.45], // Missed some words
+    ]),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Simulates actual karaoke playback with varying performance scores. Past lines show color-coded scores while the current line is highlighted.',
+      },
+    },
   },
 };
