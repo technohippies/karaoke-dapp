@@ -28,6 +28,7 @@ export interface ExerciseMachineContext {
   results: ExerciseResult[]
   startTime: number
   exerciseStartTime: number
+  onGrade?: (expectedText: string, answer: string | Blob) => Promise<{ isCorrect: boolean; transcript?: string }>
 }
 
 export type ExerciseMachineEvent =
@@ -55,7 +56,8 @@ export const exerciseMachine = createMachine({
     maxAttempts: 2,
     results: [],
     startTime: 0,
-    exerciseStartTime: 0
+    exerciseStartTime: 0,
+    onGrade: input.onGrade
   }),
   types: {} as {
     context: ExerciseMachineContext
@@ -98,10 +100,9 @@ export const exerciseMachine = createMachine({
       invoke: {
         id: 'checkAnswer',
         src: 'checkAnswer',
-        input: ({ context, event }: { context: ExerciseMachineContext; event: ExerciseMachineEvent }, { input: machineInput }: { input: ExerciseMachineInput }) => ({ 
+        input: ({ context, event }) => ({ 
           context, 
-          event, 
-          onGrade: machineInput.onGrade 
+          event
         }),
         onDone: {
           target: 'feedback',
@@ -177,7 +178,8 @@ export const exerciseMachine = createMachine({
 }).provide({
   actors: {
     checkAnswer: fromPromise(async ({ input }: { input: { context: ExerciseMachineContext; event: ExerciseMachineEvent; onGrade?: (expectedText: string, answer: Blob | string) => Promise<{ isCorrect: boolean; transcript?: string }> } }) => {
-      const { context, event, onGrade } = input
+      const { context, event } = input
+      const onGrade = context.onGrade // Get onGrade from context, not input
       
       if (event.type !== 'SUBMIT_ANSWER' || !context.currentExercise) {
         return { isCorrect: false }

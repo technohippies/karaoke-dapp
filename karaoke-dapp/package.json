@@ -14,6 +14,7 @@
     "verify-song": "tsx scripts/process-songs.ts verify",
     "test-decrypt": "tsx scripts/test-decryption.ts test",
     "test-integration": "tsx scripts/integration-test.ts",
+    "test-srs-tables": "tsx scripts/test-srs-tables.ts",
     "deploy-songs-table": "tsx scripts/deploy-songs-table.ts",
     "deploy-midi-decryptor": "tsx scripts/deploy-midi-decryptor.ts",
     "docs:dev": "vitepress dev docs --port=5174",

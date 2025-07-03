@@ -30,7 +30,14 @@ export class KaraokeDataPipeline {
     finalResult: any,
     userAddress: string
   ): Promise<ProcessingResult> {
-    console.log('🚀 Processing karaoke session:', sessionId);
+    console.log('🚀 Processing karaoke session:', {
+      sessionId,
+      userAddress,
+      hasUserAddress: !!userAddress,
+      songId,
+      gradingResultsCount: gradingResults.size,
+      finalResultKeys: Object.keys(finalResult || {})
+    });
     
     let wordsProcessed = 0;
     
@@ -77,10 +84,12 @@ export class KaraokeDataPipeline {
       await sessionStorage.saveSession(sessionData);
       
       // 3. Queue for Tableland sync
+      console.log('🔄 About to queue session for sync, syncService initialized:', syncService.isInitialized);
       await syncService.queueSession({
         ...sessionData,
         userAddress
       });
+      console.log('✅ Session queued for sync successfully');
       
       // 4. Check if we should sync word progress (every 10 sessions)
       const sessions = await sessionStorage.getAllSessions();
@@ -182,11 +191,17 @@ export class KaraokeDataPipeline {
    * Initialize all services
    */
   async initialize(): Promise<void> {
-    await Promise.all([
-      wordSRSService.initialize(),
-      syncService.initialize()
-    ]);
-    console.log('✅ Karaoke data pipeline initialized');
+    console.log('🚀 Initializing karaoke data pipeline...');
+    try {
+      await Promise.all([
+        wordSRSService.initialize(),
+        syncService.initialize()
+      ]);
+      console.log('✅ Karaoke data pipeline initialized, syncService state:', syncService.isInitialized);
+    } catch (error) {
+      console.error('❌ Failed to initialize karaoke data pipeline:', error);
+      throw error;
+    }
   }
 }
 

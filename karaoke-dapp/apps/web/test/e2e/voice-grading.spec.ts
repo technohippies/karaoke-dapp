@@ -199,7 +199,7 @@ test.describe('Voice Grading Flow', () => {
     // Wait for processing - table creation can take time
     await page.waitForTimeout(5000)
     
-    // Check logs for expected behavior
+    // Check logs for expected behavior and userAddress issues
     const processingLogs = logs.filter(log => 
       log.includes('Session data processed') ||
       log.includes('Karaoke data pipeline initialized') ||
@@ -211,9 +211,40 @@ test.describe('Voice Grading Flow', () => {
       log.includes('Creating Tableland tables')
     )
     
+    // Check for userAddress validation errors
+    const userAddressErrors = logs.filter(log => 
+      log.includes('Invalid userAddress') ||
+      log.includes('userAddress provided to getUserTables:') ||
+      log.includes('userAddress provided to createUserTables')
+    )
+    
+    // Check for sync service state
+    const syncLogs = logs.filter(log =>
+      log.includes('About to queue session for sync') ||
+      log.includes('syncService initialized') ||
+      log.includes('Queued session') ||
+      log.includes('Starting sync') ||
+      log.includes('Failed to batch sync sessions')
+    )
+    
     console.log('\n📊 Save Progress Analysis:')
     console.log(`Processing logs: ${processingLogs.length}`)
     processingLogs.forEach(log => console.log('- ' + log))
+    
+    console.log('\n🔍 UserAddress Validation Check:')
+    console.log(`UserAddress errors: ${userAddressErrors.length}`)
+    userAddressErrors.forEach(log => console.log('❌ ' + log))
+    
+    console.log('\n🔄 Sync Service Analysis:')
+    console.log(`Sync logs: ${syncLogs.length}`)
+    syncLogs.forEach(log => console.log('- ' + log))
+    
+    // CRITICAL TEST: No userAddress validation errors should occur
+    if (userAddressErrors.length > 0) {
+      console.log('\n💥 CRITICAL ISSUE: UserAddress validation errors detected!')
+      console.log('This indicates the wallet address is not being passed properly through the system.')
+      throw new Error(`UserAddress validation failed: ${userAddressErrors[0]}`)
+    }
     
     // Verify data pipeline was initialized
     const pipelineInitialized = logs.some(log => log.includes('Karaoke data pipeline initialized'))

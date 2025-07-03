@@ -19,7 +19,7 @@ import { useUserTable } from '../hooks/use-user-table'
 function SongDetailContent({ song }: { song: Song }) {
   const navigate = useNavigate()
   const { isConnected, address } = useAccount()
-  const { hasTables } = useUserTable()
+  const { hasTables, checkUserTables } = useUserTable()
   const { connectors, connect, status, error: connectError } = useConnect()
   const [lyrics, setLyrics] = useState<string[]>([])
   const [karaokeLyrics, setKaraokeLyrics] = useState<KaraokeLyricLine[]>([])
@@ -333,8 +333,17 @@ function SongDetailContent({ song }: { song: Song }) {
                 const { karaokeDataPipeline } = await import('@karaoke-dapp/services')
                 
                 try {
+                  // Validate address before proceeding
+                  if (!address || address.trim() === '') {
+                    console.warn('No wallet address available for saving progress')
+                    return
+                  }
+                  
+                  // Check tables first
+                  await checkUserTables()
+                  
                   const result = await karaokeDataPipeline.handleSaveProgress(
-                    address!,
+                    address,
                     hasTables
                   )
                   

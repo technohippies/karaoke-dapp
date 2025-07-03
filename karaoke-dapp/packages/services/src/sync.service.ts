@@ -50,8 +50,15 @@ export class SyncService {
   private syncInterval: any = null;
   private isSyncing = false;
 
+  // Public getter for debugging
+  get isInitialized() {
+    return !!this.db;
+  }
+
   async initialize(): Promise<void> {
-    this.db = await openDB<SyncDB>('karaoke-sync', 1, {
+    console.log('🔧 Initializing sync service...');
+    try {
+      this.db = await openDB<SyncDB>('karaoke-sync', 1, {
       upgrade(db) {
         // Sync queue for pending operations
         if (!db.objectStoreNames.contains('syncQueue')) {
@@ -71,10 +78,15 @@ export class SyncService {
           db.createObjectStore('syncCheckpoints');
         }
       },
-    });
+      });
 
-    // Start periodic sync
-    this.startPeriodicSync();
+      // Start periodic sync
+      this.startPeriodicSync();
+      console.log('✅ Sync service initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize sync service:', error);
+      throw error;
+    }
   }
 
   /**

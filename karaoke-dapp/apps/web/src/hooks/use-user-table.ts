@@ -8,6 +8,7 @@ export function useUserTable() {
   const [userTables, setUserTables] = useState<UserTableInfo | null>(null)
   const [isCreatingTables, setIsCreatingTables] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasCheckedTables, setHasCheckedTables] = useState(false)
 
   // Initialize service when wallet connects
   useEffect(() => {
@@ -20,12 +21,9 @@ export function useUserTable() {
       try {
         const provider = await connector.getProvider()
         await userTableService.initialize(provider)
-        
-        // Check if user already has tables
-        const existingTables = await userTableService.getUserTables(address)
-        setUserTables(existingTables)
         setIsInitialized(true)
         setError(null)
+        // Don't check for tables until actually needed
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to initialize'
         setError(message)
@@ -35,6 +33,23 @@ export function useUserTable() {
 
     init()
   }, [connector, address])
+
+  const checkUserTables = useCallback(async () => {
+    if (!address || !isInitialized || hasCheckedTables) {
+      return userTables
+    }
+
+    setHasCheckedTables(true)
+    try {
+      const existingTables = await userTableService.getUserTables(address)
+      setUserTables(existingTables)
+      return existingTables
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to check tables'
+      setError(message)
+      return null
+    }
+  }, [address, isInitialized, hasCheckedTables, userTables])
 
   const createUserTables = useCallback(async () => {
     if (!address || !isInitialized) {
@@ -59,6 +74,11 @@ export function useUserTable() {
   }, [address, isInitialized])
 
   const saveSession = useCallback(async (session: KaraokeSession, songId?: number) => {
+    // Check tables first if we haven't already
+    if (!hasCheckedTables) {
+      await checkUserTables()
+    }
+
     if (!address || !isInitialized) {
       setError('Wallet not connected')
       throw new Error('Wallet not connected')
@@ -130,6 +150,7 @@ export function useUserTable() {
     isCreatingTables,
     error,
     hasTables: !!userTables,
+    checkUserTables,
     createUserTables,
     saveSession,
     saveExerciseSession,

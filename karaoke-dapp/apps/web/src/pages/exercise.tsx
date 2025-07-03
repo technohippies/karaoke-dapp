@@ -169,7 +169,7 @@ export function ExercisePage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900">
+    <div className="min-h-screen bg-neutral-900 flex flex-col">
       <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
       <ExerciseContainer
         exercises={exercises}

@@ -338,6 +338,7 @@ export const songMachine = createMachine({
         src: 'karaokeMachine',
         input: ({ context }) => ({
           songId: context.songId,
+          userAddress: context.userAddress,
           midiData: context.midiData,
           audioUrl: context.audioUrl,
           lyricsUrl: context.lyricsUrl,

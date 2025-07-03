@@ -66,7 +66,7 @@ export function ExerciseContainer({
     : 0
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
+    <div className="flex-1 bg-neutral-950 text-white flex flex-col">
       {/* Progress bar at the top */}
       <Progress value={progressPercentage} className="h-1" />
       

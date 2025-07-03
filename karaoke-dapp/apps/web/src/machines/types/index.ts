@@ -65,3 +65,60 @@ export type KaraokeEvent =
   | { type: 'SUBMIT_SCORE' }
   | { type: 'RESTART' }
   | { type: 'ERROR'; error: string };
+
+// Tableland state machine types
+export interface TablelandContext {
+  userAddress: string;
+  tableInfo?: UserTableInfo;
+  pendingOperations: TablelandOperation[];
+  retryCount: number;
+  error?: string;
+  sessionData?: KaraokeSessionData;
+  exerciseData?: ExerciseSessionData;
+}
+
+export interface UserTableInfo {
+  userAddress: string;
+  karaokeSessionsTable: string;
+  karaokeLinesTable: string;
+  exerciseSessionsTable: string;
+  chainId: number;
+  createdAt: string;
+}
+
+export interface TablelandOperation {
+  type: 'session' | 'line' | 'exercise';
+  statement: string;
+  bindings: any[];
+}
+
+export interface KaraokeSessionData {
+  sessionId: string;
+  songId: number;
+  songTitle: string;
+  artistName: string;
+  totalScore: number;
+  startedAt: number;
+  completedAt: number;
+  lines: KaraokeLineData[];
+}
+
+export interface KaraokeLineData {
+  songId: number;
+  lineIndex: number;
+  expectedText: string;
+  accuracy: number;
+  wasCorrect: boolean;
+}
+
+export interface ExerciseSessionData {
+  sessionId: string;
+  cardsReviewed: number;
+  cardsCorrect: number;
+}
+
+export type TablelandEvent =
+  | { type: 'SAVE_SESSION'; data: KaraokeSessionData }
+  | { type: 'SAVE_EXERCISE'; data: ExerciseSessionData }
+  | { type: 'RETRY' }
+  | { type: 'RESET' };

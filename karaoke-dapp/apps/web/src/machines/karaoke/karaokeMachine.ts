@@ -219,6 +219,9 @@ export const karaokeMachine = createMachine({
   context: ({ input }) => ({
     // Base context
     songId: input?.songId || 0,
+    userAddress: input?.userAddress,
+    songTitle: input?.songTitle,
+    artistName: input?.artistName,
     midiData: input?.midiData || new Uint8Array(),
     audioUrl: input?.audioUrl,
     lyricsUrl: input?.lyricsUrl,
@@ -605,12 +608,22 @@ export const karaokeMachine = createMachine({
                 finalScore: context.score || 0,
                 accuracy: context.score ? context.score / 100 : 0,
                 songTitle: context.songTitle || 'Unknown',
-                artistName: 'Unknown', // Would need to pass this in context
+                artistName: context.artistName || 'Unknown',
                 startTime: Date.now() - 300000, // Approximate
                 fullTranscript: Array.from(context.gradingResults.values())
                   .map(r => r.transcript)
                   .join(' ')
               }
+              
+              // Debug logging for userAddress
+              console.log('🔍 Karaoke machine context before processing session:', {
+                userAddress: context.userAddress,
+                hasUserAddress: !!context.userAddress,
+                songTitle: context.songTitle,
+                artistName: context.artistName,
+                sessionId: context.sessionId,
+                songId: context.songId
+              })
               
               // Process the session
               await karaokeDataPipeline.processCompletedSession(
