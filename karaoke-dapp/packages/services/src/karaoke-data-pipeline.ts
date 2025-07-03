@@ -30,8 +30,14 @@ export class KaraokeDataPipeline {
     finalResult: any,
     userAddress: string
   ): Promise<ProcessingResult> {
+    // Generate a unique session ID if not provided or empty
+    const actualSessionId = sessionId && sessionId.trim() !== '' 
+      ? sessionId 
+      : `karaoke-${songId}-${userAddress.slice(-6)}-${Date.now()}`
+    
     console.log('🚀 Processing karaoke session:', {
-      sessionId,
+      originalSessionId: sessionId,
+      actualSessionId,
       userAddress,
       hasUserAddress: !!userAddress,
       songId,
@@ -56,7 +62,7 @@ export class KaraokeDataPipeline {
       
       // 2. Save complete session to local storage
       const sessionData = {
-        sessionId,
+        sessionId: actualSessionId,
         userId: userAddress,
         songId,
         songTitle: finalResult.songTitle || 'Unknown',
@@ -98,7 +104,7 @@ export class KaraokeDataPipeline {
       }
       
       console.log('✅ Session processing complete:', {
-        sessionId,
+        sessionId: actualSessionId,
         wordsProcessed,
         totalLines: gradingResults.size
       });

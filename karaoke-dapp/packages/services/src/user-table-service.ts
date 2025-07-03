@@ -553,21 +553,13 @@ export class UserTableService {
       )
     })
 
-    try {
-      // Batch insert all sessions in a single transaction
-      await this.db.batch(statements)
-      console.log(`✅ Batch saved ${sessions.length} sessions to Tableland`)
-      
-      // Batch update line cards for all sessions
-      await this.batchUpdateLineCards(userAddress, sessions, tables)
-    } catch (error) {
-      console.error('Failed to batch save sessions:', error)
-      throw error
-    }
+    // Use single atomic transaction for both sessions and line cards (1 signature!)
+    await this.batchSaveSessionsAndLines(userAddress, sessions, tables, statements)
   }
 
   /**
    * Save sessions and update line cards in a single transaction (1 signature)
+   * Uses Tableland's multi-table transaction capability with separate strings per table
    */
   private async batchSaveSessionsAndLines(
     userAddress: string, 
@@ -593,157 +585,78 @@ export class UserTableService {
       }
     }
 
-    if (lineUpdates.length === 0) {
-      // No line updates, just do session inserts
-      await this.db.batch(sessionStatements)
-      console.log(`✅ Batch saved ${sessions.length} sessions to Tableland`)
-      return
-    }
-
-    // Check which lines already exist
-    const whereConditions = lineUpdates.map(update => 
-      `(song_id = ${update.songId} AND line_index = ${update.lineIndex})`
-    ).join(' OR ')
+    // Check which lines already exist first
+    let existingLinesMap = new Map<string, { reps: number; lapses: number; stability: number }>()
     
-    const { results: existingLines } = await this.db
-      .prepare(`
-        SELECT song_id, line_index, reps, lapses, stability FROM ${tables.karaokeLinesTable}
-        WHERE ${whereConditions}
-      `)
-      .all<{ song_id: number; line_index: number; reps: number; lapses: number; stability: number }>()
+    if (lineUpdates.length > 0) {
+      const whereConditions = lineUpdates.map(update => 
+        `(song_id = ${update.songId} AND line_index = ${update.lineIndex})`
+      ).join(' OR ')
+      
+      const { results: existingLines } = await this.db
+        .prepare(`
+          SELECT song_id, line_index, reps, lapses, stability FROM ${tables.karaokeLinesTable}
+          WHERE ${whereConditions}
+        `)
+        .all<{ song_id: number; line_index: number; reps: number; lapses: number; stability: number }>()
 
-    const existingLinesMap = new Map<string, { reps: number; lapses: number; stability: number }>()
-    existingLines.forEach(line => {
-      existingLinesMap.set(`${line.song_id}-${line.line_index}`, {
-        reps: line.reps,
-        lapses: line.lapses,
-        stability: line.stability
+      existingLines.forEach(line => {
+        existingLinesMap.set(`${line.song_id}-${line.line_index}`, {
+          reps: line.reps,
+          lapses: line.lapses,
+          stability: line.stability
+        })
       })
-    })
-
-    // Build SQL statements as strings for db.exec()
-    let allSqlStatements: string[] = []
-
-    // Add session INSERT statements (rebuild from original data)
-    for (const { session, songId } of sessions) {
-      const sessionSql = `INSERT INTO ${tables.karaokeSessionsTable} (
-        session_id, song_id, song_title, artist_name,
-        total_score, started_at, completed_at
-      ) VALUES (
-        '${session.sessionId}',
-        ${songId},
-        '${session.songTitle.replace(/'/g, "''")}',
-        '${session.artistName.replace(/'/g, "''")}',
-        ${Math.round((session.totalScore || 0) * 100)},
-        ${session.startTime},
-        ${session.endTime || Date.now()}
-      )`
-      allSqlStatements.push(sessionSql)
     }
 
-    // Add line statements
-    for (const update of lineUpdates) {
-      const key = `${update.songId}-${update.lineIndex}`
-      const existing = existingLinesMap.get(key)
-
-      if (!existing) {
-        // New line card - INSERT
-        const insertSql = `INSERT INTO ${tables.karaokeLinesTable} (
-          song_id, line_index, line_text,
-          difficulty, stability, elapsed_days, scheduled_days,
-          reps, lapses, state, last_review, due_date,
-          created_at, updated_at
-        ) VALUES (${update.songId}, ${update.lineIndex}, '${update.lineText.replace(/'/g, "''")}',
-          250, 100, 0, 1,
-          1, ${update.wasCorrect ? 0 : 1}, ${update.wasCorrect ? 1 : 0}, ${update.reviewTime},
-          ${now + 86400000}, ${now}, ${now})`
-        allSqlStatements.push(insertSql)
-      } else {
-        // Existing line card - UPDATE
-        const newReps = existing.reps + 1
-        const newLapses = existing.lapses + (update.wasCorrect ? 0 : 1)
-        const newStability = update.wasCorrect 
-          ? Math.min(existing.stability * 2, 36500)
-          : Math.max(existing.stability / 2, 100)
-        const newDueDate = update.reviewTime + (newStability * 10)
-        
-        const updateSql = `UPDATE ${tables.karaokeLinesTable}
-          SET reps = ${newReps}, lapses = ${newLapses}, stability = ${newStability}, 
-              last_review = ${update.reviewTime}, due_date = ${newDueDate}, updated_at = ${Date.now()},
-              state = ${update.wasCorrect ? 2 : 3}
-          WHERE song_id = ${update.songId} AND line_index = ${update.lineIndex}`
-        allSqlStatements.push(updateSql)
-      }
-    }
-
-    // Execute all statements in a single transaction using db.exec()
-    const combinedSql = allSqlStatements.join('; ')
-    const result = await this.db.exec(combinedSql)
-    await result.txn?.wait()
-
-    console.log(`✅ Single transaction: saved ${sessions.length} sessions and processed ${lineUpdates.length} line cards`)
+    // Execute all operations in a single batch with prepared statements
+    await this.executeMultiTableTransaction(sessions, lineUpdates, tables, existingLinesMap)
+    
+    console.log(`✅ Single atomic transaction: saved ${sessions.length} sessions and processed ${lineUpdates.length} line cards`)
   }
 
   /**
-   * Batch update line cards for multiple sessions to reduce signatures
+   * Execute multiple prepared statements across different tables in a single atomic transaction
    */
-  private async batchUpdateLineCards(
-    userAddress: string, 
+  private async executeMultiTableTransaction(
     sessions: Array<{ session: KaraokeSession; songId: number }>,
-    tables: UserTableInfo
+    lineUpdates: Array<{ songId: number; lineIndex: number; lineText: string; wasCorrect: boolean; reviewTime: number }>,
+    tables: UserTableInfo,
+    existingLinesMap: Map<string, { reps: number; lapses: number; stability: number }>
   ): Promise<void> {
     if (!this.db) throw new Error('Database not initialized')
-
-    const now = Date.now()
-    const lineUpdates: Array<{ songId: number; lineIndex: number; lineText: string; wasCorrect: boolean; reviewTime: number }> = []
     
-    // Collect all line updates
+    const now = Date.now()
+    const allStatements = []
+
+    // Add session INSERT statements
     for (const { session, songId } of sessions) {
-      for (const line of session.lines) {
-        lineUpdates.push({
+      allStatements.push(
+        this.db.prepare(`
+          INSERT INTO ${tables.karaokeSessionsTable} (
+            session_id, song_id, song_title, artist_name,
+            total_score, started_at, completed_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          session.sessionId,
           songId,
-          lineIndex: line.lineIndex,
-          lineText: line.expectedText,
-          wasCorrect: line.accuracy >= 0.7,
-          reviewTime: now
-        })
-      }
+          session.songTitle,
+          session.artistName,
+          Math.round((session.totalScore || 0) * 100),
+          session.startTime,
+          session.endTime || Date.now()
+        )
+      )
     }
 
-    if (lineUpdates.length === 0) return
-
-    // First, check which lines already exist (using OR conditions instead of IN with tuples)
-    const whereConditions = lineUpdates.map(update => 
-      `(song_id = ${update.songId} AND line_index = ${update.lineIndex})`
-    ).join(' OR ')
-    
-    const { results: existingLines } = await this.db
-      .prepare(`
-        SELECT song_id, line_index, reps, lapses, stability FROM ${tables.karaokeLinesTable}
-        WHERE ${whereConditions}
-      `)
-      .all<{ song_id: number; line_index: number; reps: number; lapses: number; stability: number }>()
-
-    const existingLinesMap = new Map<string, { reps: number; lapses: number; stability: number }>()
-    existingLines.forEach(line => {
-      existingLinesMap.set(`${line.song_id}-${line.line_index}`, {
-        reps: line.reps,
-        lapses: line.lapses,
-        stability: line.stability
-      })
-    })
-
-    // Prepare insert and update statements
-    const insertStatements = []
-    const updateStatements = []
-
+    // Add line INSERT/UPDATE statements
     for (const update of lineUpdates) {
       const key = `${update.songId}-${update.lineIndex}`
       const existing = existingLinesMap.get(key)
 
       if (!existing) {
         // New line card - INSERT
-        insertStatements.push(
+        allStatements.push(
           this.db.prepare(`
             INSERT INTO ${tables.karaokeLinesTable} (
               song_id, line_index, line_text,
@@ -753,25 +666,21 @@ export class UserTableService {
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(
             update.songId, update.lineIndex, update.lineText,
-            250, 100, 0, 1, // FSRS defaults
+            250, 100, 0, 1,
             1, update.wasCorrect ? 0 : 1, update.wasCorrect ? 1 : 0, update.reviewTime,
-            now + 86400000, // Due tomorrow
-            now, now
+            now + 86400000, now, now
           )
         )
       } else {
         // Existing line card - UPDATE
         const newReps = existing.reps + 1
         const newLapses = existing.lapses + (update.wasCorrect ? 0 : 1)
-        
-        // Simple FSRS-like update
         const newStability = update.wasCorrect 
-          ? Math.min(existing.stability * 2, 36500) // Max ~100 days
-          : Math.max(existing.stability / 2, 100) // Min 1 day
+          ? Math.min(existing.stability * 2, 36500)
+          : Math.max(existing.stability / 2, 100)
+        const newDueDate = update.reviewTime + (newStability * 10)
         
-        const newDueDate = update.reviewTime + (newStability * 10) // stability in 0.01 days
-        
-        updateStatements.push(
+        allStatements.push(
           this.db.prepare(`
             UPDATE ${tables.karaokeLinesTable}
             SET reps = ?, lapses = ?, stability = ?, 
@@ -781,24 +690,22 @@ export class UserTableService {
           `).bind(
             newReps, newLapses, newStability,
             update.reviewTime, newDueDate, Date.now(),
-            update.wasCorrect ? 2 : 3, // 2=review, 3=relearning
+            update.wasCorrect ? 2 : 3,
             update.songId, update.lineIndex
           )
         )
       }
     }
 
-    // Execute all statements in batches to minimize signatures
-    if (insertStatements.length > 0) {
-      await this.db.batch(insertStatements)
-      console.log(`✅ Batch inserted ${insertStatements.length} new line cards`)
-    }
-
-    if (updateStatements.length > 0) {
-      await this.db.batch(updateStatements)
-      console.log(`✅ Batch updated ${updateStatements.length} existing line cards`)
+    // Execute all statements in a single batch (multiple tables, mixed INSERT/UPDATE)
+    const results = await this.db.batch(allStatements)
+    
+    // Wait for the transaction to be mined
+    if (results[0]?.meta?.txn) {
+      await results[0].meta.txn.wait()
     }
   }
+
 }
 
 // Singleton instance
