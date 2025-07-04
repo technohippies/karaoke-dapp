@@ -34,7 +34,6 @@ type Story = StoryObj<typeof meta>;
 // New user flow - shows combo pack for $3
 export const NewUser: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: false,
     currentSongCredits: 0,
     currentVoiceCredits: 0,
@@ -49,7 +48,6 @@ export const NewUser: Story = {
 // Existing user with no credits
 export const ExistingUserNoCredits: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: true,
     currentSongCredits: 0,
     currentVoiceCredits: 0,
@@ -64,7 +62,6 @@ export const ExistingUserNoCredits: Story = {
 // Existing user with some credits
 export const ExistingUserWithCredits: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: true,
     currentSongCredits: 3,
     currentVoiceCredits: 45,
@@ -79,7 +76,6 @@ export const ExistingUserWithCredits: Story = {
 // Loading state
 export const PurchasingState: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: false,
     currentSongCredits: 0,
     currentVoiceCredits: 0,
@@ -94,7 +90,6 @@ export const PurchasingState: Story = {
 // Existing user purchasing more songs
 export const ExistingUserPurchasingSongs: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: true,
     currentSongCredits: 1,
     currentVoiceCredits: 75,
@@ -106,17 +101,23 @@ export const ExistingUserPurchasingSongs: Story = {
   },
 };
 
-// Existing user low on voice credits
+// Existing user low on voice credits - this is the tabbed interface you see in the app
 export const ExistingUserLowVoiceCredits: Story = {
   args: {
-    songTitle: 'Royals',
     hasExistingPurchases: true,
     currentSongCredits: 5,
-    currentVoiceCredits: 10,
+    currentVoiceCredits: 2,
     isPurchasing: false,
     onPurchaseCombo: () => console.log('Purchasing combo pack'),
     onPurchaseSongs: () => console.log('Purchasing songs'),
     onPurchaseVoice: () => console.log('Purchasing voice credits'),
-    children: <Button variant="destructive">Low on Voice Credits</Button>,
+    children: <Button variant="destructive">Purchase Credits</Button>,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'This shows the tabbed interface that appears when an existing user needs more credits. The tabs should have a lighter background (neutral-700) so they stand out from the dark sheet background.',
+      },
+    },
   },
 };

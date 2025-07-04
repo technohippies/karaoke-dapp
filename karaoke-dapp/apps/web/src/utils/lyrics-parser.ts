@@ -119,10 +119,10 @@ export function prepareKaraokeSegments(
     const nextLine = lyrics[i + 1]
     
     // Start recording 1s before the line starts
-    // For the first line, ensure we have at least 200ms for MediaRecorder initialization
+    // For the first line, start from 0 to capture MediaRecorder initialization chunks
     const baseStartTime = currentLine.startTime * 1000 - bufferMs
     const recordStartTime = i === 0 
-      ? Math.max(200, baseStartTime)  // First line needs 200ms minimum
+      ? 0  // First line starts from beginning to include WebM headers
       : Math.max(0, baseStartTime)
     
     // End recording when next line starts (or after max duration)
@@ -143,7 +143,15 @@ export function prepareKaraokeSegments(
       recordEndTime = recordStartTime + 5000 // Cap at 5s
     }
     
-    // Removed verbose segment logging to clean up console output
+    // Log first segment timing for debugging
+    if (i === 0) {
+      console.log(`🎵 FIRST LYRIC TIMING:`)
+      console.log(`   Lyric starts at: ${currentLine.startTime}s (${currentLine.startTime * 1000}ms)`)
+      console.log(`   Buffer before: ${bufferMs}ms`)
+      console.log(`   Recording starts at: ${recordStartTime}ms`)
+      console.log(`   Recording ends at: ${recordEndTime}ms`)
+      console.log(`   Recording duration: ${recordEndTime - recordStartTime}ms`)
+    }
     
     // Prepare expected text for grading
     // Remove parentheses for background vocals and inline parenthetical content

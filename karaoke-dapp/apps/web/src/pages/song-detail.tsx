@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider, AdaptivePurchaseSlider, BundledPurchaseButton } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider, AdaptivePurchaseSlider } from "@karaoke-dapp/ui"
 import { CaretLeft } from "@phosphor-icons/react"
 import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
@@ -15,7 +15,7 @@ import { KaraokeGradingService } from '../services/karaoke-grading.service'
 import { FinalGradingService } from '../services/final-grading.service'
 import { useRef } from 'react'
 import { useUserTable } from '../hooks/use-user-table'
-import { useBundledPurchase } from '../hooks/use-bundled-purchase'
+// import { useBundledPurchase } from '../hooks/use-bundled-purchase'
 
 
 function SongDetailContent({ song }: { song: Song }) {
@@ -67,24 +67,8 @@ function SongDetailContent({ song }: { song: Song }) {
     (voiceCredits !== undefined && voiceCredits > 0)
   
   // Bundled purchase hook
-  const {
-    executeBundledPurchase,
-    isPending: isBundledPurchasePending,
-    isConfirming: isBundledPurchaseConfirming,
-    isConfirmed: isBundledPurchaseConfirmed,
-  } = useBundledPurchase()
-  
-  // Handle bundled purchase
-  const handleBundledPurchase = async () => {
-    try {
-      await executeBundledPurchase(state.context)
-      // The state machine will handle the success
-      send({ type: 'PURCHASE_SUCCESS', txHash: 'bundled' })
-    } catch (error) {
-      console.error('Bundled purchase failed:', error)
-      send({ type: 'PURCHASE_ERROR', error: error instanceof Error ? error.message : 'Purchase failed' })
-    }
-  }
+  // Bundled purchase hook - keeping for future use
+  // const { executeBundledPurchase } = useBundledPurchase()
   
   // Audio context
   const {
@@ -261,6 +245,7 @@ function SongDetailContent({ song }: { song: Song }) {
       // Wait for MIDI to be loaded before playing
       if (hasMidi) {
         console.log('🎵 MIDI is ready, starting playback')
+        console.log(`🎵 Song play() called at: ${Date.now()}`)
         play()
       } else {
         console.log('⏳ Waiting for MIDI to load...')
@@ -556,7 +541,6 @@ function SongDetailContent({ song }: { song: Song }) {
                 {machineError}
               </div>
               <AdaptivePurchaseSlider
-                songTitle={song.title}
                 onPurchaseCombo={() => purchaseComboPack()}
                 onPurchaseSongs={() => buttonState.action?.()}
                 onPurchaseVoice={() => purchaseVoiceCredits()}
@@ -597,7 +581,6 @@ function SongDetailContent({ song }: { song: Song }) {
             </div>
           ) : buttonState.text === 'Purchase' ? (
             <AdaptivePurchaseSlider
-              songTitle={song.title}
               onPurchaseCombo={() => buttonState.action?.()}
               onPurchaseSongs={() => buttonState.action?.()}
               onPurchaseVoice={() => purchaseVoiceCredits()}

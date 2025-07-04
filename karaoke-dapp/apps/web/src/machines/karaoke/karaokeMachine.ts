@@ -4,6 +4,7 @@ import type { KaraokeSegment } from '../../utils/lyrics-parser'
 import type { RecordingSegment } from '../../services/recording-manager.service'
 import { KaraokeGradingService } from '../../services/karaoke-grading.service'
 import { FinalGradingService } from '../../services/final-grading.service'
+import { pcmRecordingService } from './pcmRecorder'
 
 interface AudioChunk {
   data: Blob
@@ -12,7 +13,7 @@ interface AudioChunk {
 
 interface MergedKaraokeContext extends KaraokeContext {
   // Recording state
-  mediaRecorder: MediaRecorder | null
+  mediaStream: MediaStream | null
   audioChunks: AudioChunk[]
   recordingStartTime: number | null
   
@@ -44,6 +45,7 @@ type MergedKaraokeEvent = KaraokeEvent
   | { type: 'SEGMENT_READY'; segment: KaraokeSegment }
   | { type: 'GRADING_COMPLETE'; lineId: number; transcript: string; accuracy: number; signature?: string; expectedText: string; timestamp: number }
   | { type: 'SONG_ENDED' }
+  | { type: 'GET_SEGMENTS' }
   | { type: 'UPDATE_CONTEXT'; 
       segments?: KaraokeSegment[]; 
       gradingService?: KaraokeGradingService | null; 
@@ -80,10 +82,10 @@ const countdownTimer = fromCallback<{ type: 'UPDATE_COUNTDOWN'; value: number },
   }
 )
 
-// Setup MediaRecorder service
-const setupMediaRecorder = fromPromise<MediaRecorder, void>(
+// Setup Media Stream service
+const setupMediaStream = fromPromise<MediaStream, void>(
   async () => {
-    console.log('🎤 Setting up MediaRecorder...')
+    console.log('🎤 Setting up media stream...')
     const stream = await navigator.mediaDevices.getUserMedia({ 
       audio: {
         echoCancellation: true,
@@ -93,25 +95,13 @@ const setupMediaRecorder = fromPromise<MediaRecorder, void>(
     })
     
     console.log('🎤 Got media stream:', stream.getAudioTracks().length, 'audio tracks')
-    
-    const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm']
-    let selectedMimeType = 'audio/webm'
-    
-    for (const mimeType of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mimeType)) {
-        selectedMimeType = mimeType
-        break
-      }
-    }
-    
-    console.log('🎤 Creating MediaRecorder with mime type:', selectedMimeType)
-    const recorder = new MediaRecorder(stream, { mimeType: selectedMimeType })
-    console.log('✅ MediaRecorder created successfully')
-    return recorder
+    console.log('✅ Media stream ready for PCM recording')
+    return stream
   }
 )
 
-// Continuous recording service
+// OLD MediaRecorder service - replaced by PCM recorder
+/*
 const recordingService = fromCallback<
   MergedKaraokeEvent,
   { 
@@ -130,14 +120,30 @@ const recordingService = fromCallback<
   
   // Listen for audio chunks
   let chunkCount = 0
+  let firstChunkTime: number | null = null
+  let mediaRecorderActualStartTime: number | null = null
+  
+  // Log when ondataavailable is set up
+  console.log(`📎 Setting up ondataavailable handler, MediaRecorder state: ${mediaRecorder.state}`)
+  
   mediaRecorder.ondataavailable = async (event) => {
     if (event.data.size > 0) {
       chunkCount++
+      const now = Date.now()
       // Calculate timestamp relative to recording start (song start)
-      const chunkTimestamp = Date.now() - recordingStartTime
+      const chunkTimestamp = now - recordingStartTime
       
-      // Log first few chunks and every 10th chunk
-      if (chunkCount <= 3) {
+      // Special logging for first chunk
+      if (chunkCount === 1) {
+        firstChunkTime = now
+        mediaRecorderActualStartTime = now - 100 // Approximate based on timeslice
+        console.log(`🎤 FIRST CHUNK RECEIVED:`)
+        console.log(`   Size: ${event.data.size} bytes`)
+        console.log(`   Time since song start: ${chunkTimestamp}ms`)
+        console.log(`   Absolute time: ${now}`)
+        console.log(`   Recording start time was: ${recordingStartTime}`)
+        console.log(`   Estimated MediaRecorder actual start: ${mediaRecorderActualStartTime}`)
+      } else if (chunkCount <= 5) {
         console.log(`🎤 CHUNK ${chunkCount}: ${event.data.size} bytes at ${chunkTimestamp}ms from song start`)
       } else if (chunkCount % 10 === 0 && import.meta.env.DEV) {
         console.log(`🎤 Audio chunk ${chunkCount} received: ${event.data.size} bytes`)
@@ -191,6 +197,7 @@ const recordingService = fromCallback<
     clearInterval(checkSegments)
   }
 })
+*/
 
 // Final grading service
 const finalGradingActor = fromPromise<
@@ -240,7 +247,7 @@ export const karaokeMachine = createMachine({
     countdown: undefined,
     
     // Recording context
-    mediaRecorder: null,
+    mediaStream: null,
     audioChunks: [],
     recordingStartTime: null,
     
@@ -282,15 +289,15 @@ export const karaokeMachine = createMachine({
     },
     
     preparing: {
-      entry: () => console.log('🎬 In preparing state, about to setup MediaRecorder'),
+      entry: () => console.log('🎬 In preparing state, about to setup media stream'),
       invoke: {
-        src: setupMediaRecorder,
+        src: setupMediaStream,
         onDone: {
           target: 'countdown',
           actions: [
-            ({ event }) => console.log('✅ MediaRecorder setup complete:', event.output),
+            ({ event }) => console.log('✅ Media stream setup complete:', event.output),
             assign({
-              mediaRecorder: ({ event }) => event.output
+              mediaStream: ({ event }) => event.output
             })
           ]
         },
@@ -350,114 +357,77 @@ export const karaokeMachine = createMachine({
     recording: {
       entry: [
         () => console.log('🎬 ENTERED RECORDING STATE!'),
-        // Start continuous recording
-        ({ context }) => {
-          if (context.mediaRecorder) {
-            console.log('🎙️ Starting continuous recording, recorder state:', context.mediaRecorder.state)
-            try {
-              context.mediaRecorder.start(100) // Get chunks every 100ms
-              console.log('✅ MediaRecorder.start() called successfully')
-            } catch (error) {
-              console.error('❌ Failed to start MediaRecorder:', error)
-            }
-          } else {
-            console.error('❌ No MediaRecorder available in context')
-          }
-        },
+        // PCM recording starts automatically via the invoked service
         assign({
-          audioChunks: [],
-          recordingStartTime: () => Date.now(),
+          audioChunks: [], // Keep for compatibility but not used
+          recordingStartTime: () => {
+            const time = Date.now()
+            console.log(`📌 Recording start time set to: ${time}`)
+            return time
+          },
           processedSegments: () => new Set()
         })
       ],
       
       invoke: {
-        src: recordingService,
+        src: pcmRecordingService,
         input: ({ context }) => ({
-          mediaRecorder: context.mediaRecorder!,
-          segments: context.segments,
+          mediaStream: context.mediaStream!,
+          segmentCount: context.segments.length,
           recordingStartTime: context.recordingStartTime!,
-          processedSegments: context.processedSegments
+          segments: context.segments
         })
       },
       
       on: {
-        AUDIO_CHUNK: {
-          actions: assign({
-            audioChunks: ({ context, event }) => {
-              const newChunk = {
-                data: (event as any).chunk,
-                timestamp: (event as any).timestamp
-              }
-              const updatedChunks = [...context.audioChunks, newChunk]
-              
-              // Log every 50th chunk to verify continuous recording
-              if (updatedChunks.length % 50 === 0) {
-                console.log(`💾 Total chunks stored: ${updatedChunks.length}, latest timestamp: ${(newChunk.timestamp/1000).toFixed(2)}s`)
-              }
-              
-              return updatedChunks
+        GET_SEGMENTS: {
+          actions: ({ context }) => {
+            // Send segments data to PCM recorder via postMessage
+            if (typeof window !== 'undefined') {
+              window.postMessage({
+                type: 'SEGMENTS_DATA',
+                segments: context.segments
+              }, '*')
             }
-          })
+          }
         },
+        
+        // AUDIO_CHUNK handler removed - PCM recorder handles audio internally
         
         SEGMENT_READY: {
           actions: ({ context, event, self }) => {
-            const segment = (event as any).segment as KaraokeSegment
+            const segment = (event as any).segment
             
             // Skip if already processed
             if (context.processedSegments.has(segment.lyricLine.id)) return
             
-            console.log(`📦 Processing segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
+            console.log(`📦 Received segment ${segment.lyricLine.id} from PCM recorder: "${segment.expectedText}"`)
             
-            // Extract audio chunks for this segment's time window
-            const segmentStart = segment.recordStartTime
-            const segmentEnd = segment.recordEndTime
+            // The PCM recorder already created the audio blob
+            const audioBlob = segment.audioBlob
             
-            // For WebM format, we need to include the initial chunks that contain headers
-            // Get the first few chunks (headers) plus the segment-specific chunks
-            const headerChunks = context.audioChunks.slice(0, 3) // First 3 chunks contain WebM headers
-            const segmentChunks = context.audioChunks.filter(chunk => 
-              chunk.timestamp >= segmentStart && 
-              chunk.timestamp <= segmentEnd
-            )
-            
-            // Combine headers with segment chunks
-            // For first segment, it already has headers since recording just started
-            const allChunks = segment.lyricLine.id === 1 
-              ? segmentChunks 
-              : [...headerChunks, ...segmentChunks]
-            
-            console.log(`🔍 Segment ${segment.lyricLine.id} chunk search:`, {
-              segmentWindow: `${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s`,
-              totalChunks: context.audioChunks.length,
-              chunkTimeRange: context.audioChunks.length > 0 ? 
-                `${(context.audioChunks[0]?.timestamp/1000).toFixed(2)}s - ${(context.audioChunks[context.audioChunks.length - 1]?.timestamp/1000).toFixed(2)}s` : 'none',
-              segmentChunks: segmentChunks.length,
-              headerChunks: segment.lyricLine.id > 1 ? headerChunks.length : 0,
-              totalChunksUsed: allChunks.length
-            })
-            
-            if (allChunks.length === 0) {
-              console.warn(`❌ No chunks found for segment ${segment.lyricLine.id} (${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s)`)
+            if (!audioBlob) {
+              console.error(`❌ No audio blob in segment ${segment.lyricLine.id}`)
               return
             }
             
-            // Create blob - ensure we're using fresh chunk data
-            const chunkData = allChunks.map(c => c.data)
-            console.log(`🎵 Creating blob from ${chunkData.length} chunks, first chunk size: ${chunkData[0]?.size || 0}`)
-            
-            const audioBlob = new Blob(
-              chunkData,
-              { type: 'audio/webm' }
-            )
-            
-            console.log(`📦 Extracted segment ${segment.lyricLine.id}: ${audioBlob.size} bytes from ${allChunks.length} chunks`)
+            console.log(`📦 Segment ${segment.lyricLine.id}: ${audioBlob.size} bytes (MP3)`)
             
             // Verify blob is valid
             if (audioBlob.size === 0) {
               console.error(`❌ Created empty blob for segment ${segment.lyricLine.id}`)
               return
+            }
+            
+            // DEBUG: Download all segments for analysis
+            if (segment.lyricLine.id <= 3 && import.meta.env.DEV) {
+              const url = URL.createObjectURL(audioBlob)
+              console.log(`🎵 DEBUG: Segment ${segment.lyricLine.id} blob URL: ${url}`)
+              
+              // Store URLs for manual access
+              ;(window as any)[`segment${segment.lyricLine.id}Url`] = url
+              
+              // MP3 files are auto-downloaded by the PCM recorder
             }
             
             // Mark as processed
@@ -476,7 +446,7 @@ export const karaokeMachine = createMachine({
               }
               
               console.log(`🎯 Starting grading for segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
-            console.log(`🎤 MediaRecorder state: ${context.mediaRecorder?.state}`)
+            console.log(`🎤 Recording service active`)
               
               context.gradingService.gradeSegment(recordingSegment).then(result => {
                 console.log(`✅ Grading complete for segment ${segment.lyricLine.id}`)
@@ -556,12 +526,11 @@ export const karaokeMachine = createMachine({
     processingRemaining: {
       entry: ({ context }) => {
         // Process any remaining segments
-        context.segments.forEach(segment => {
-          if (!context.processedSegments.has(segment.lyricLine.id)) {
-            console.log(`Processing remaining segment ${segment.lyricLine.id}`)
-            // Would trigger SEGMENT_READY for remaining segments
-          }
-        })
+        // Skip logging remaining segments in dev mode
+        const unprocessedCount = context.segments.filter(s => !context.processedSegments.has(s.lyricLine.id)).length
+        if (unprocessedCount > 0) {
+          console.log(`📊 Skipped ${unprocessedCount} remaining segments (dev mode)`)
+        }
       },
       always: 'completed'
     },
@@ -572,9 +541,7 @@ export const karaokeMachine = createMachine({
       states: {
         grading: {
           entry: ({ context }) => {
-            if (context.mediaRecorder?.state === 'recording') {
-              context.mediaRecorder.stop()
-            }
+            // PCM recorder will stop automatically when the service is stopped
             console.log(`🏁 Processing final score for ${context.gradingResults.size} segments...`)
           },
           
@@ -668,10 +635,8 @@ export const karaokeMachine = createMachine({
     },
     
     stopped: {
-      entry: ({ context }) => {
-        if (context.mediaRecorder?.state === 'recording') {
-          context.mediaRecorder.stop()
-        }
+      entry: () => {
+        // PCM recorder will stop automatically when the service is stopped
         console.log('⏹️ Recording stopped by user')
       },
       type: 'final'

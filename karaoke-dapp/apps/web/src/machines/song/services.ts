@@ -1002,7 +1002,18 @@ export const songServices = {
       const sig = signature.slice(2);
       const r = `0x${sig.slice(0, 64)}` as `0x${string}`;
       const s = `0x${sig.slice(64, 128)}` as `0x${string}`;
-      const v = parseInt(sig.slice(128, 130), 16);
+      let v = parseInt(sig.slice(128, 130), 16);
+      
+      console.log('🔍 Signature components:', {
+        signature,
+        r,
+        s,
+        vOriginal: v,
+        vHex: sig.slice(128, 130)
+      });
+      
+      // Keep v as-is for now - the contract expects 27/28
+      console.log('🔍 Using v value:', v);
       
       // Buy voice pack with permit
       const txHash = await writeContract(wagmiConfig, {
@@ -1105,7 +1116,18 @@ export const songServices = {
       const sig = signature.slice(2);
       const r = `0x${sig.slice(0, 64)}` as `0x${string}`;
       const s = `0x${sig.slice(64, 128)}` as `0x${string}`;
-      const v = parseInt(sig.slice(128, 130), 16);
+      let v = parseInt(sig.slice(128, 130), 16);
+      
+      console.log('🔍 Combo pack signature components:', {
+        signature,
+        r,
+        s,
+        vOriginal: v,
+        vHex: sig.slice(128, 130)
+      });
+      
+      // Keep v as-is for now - the contract expects 27/28
+      console.log('🔍 Combo pack using v value:', v);
       
       // Buy combo pack with permit
       const txHash = await writeContract(wagmiConfig, {
