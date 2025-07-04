@@ -15,7 +15,6 @@ interface MergedKaraokeContext extends KaraokeContext {
   mediaRecorder: MediaRecorder | null
   audioChunks: AudioChunk[]
   recordingStartTime: number | null
-  mediaRecorderStartTime: number | null // When MediaRecorder actually started
   
   // Segment tracking
   segments: KaraokeSegment[]
@@ -119,29 +118,27 @@ const recordingService = fromCallback<
     mediaRecorder: MediaRecorder
     segments: KaraokeSegment[]
     recordingStartTime: number
-    mediaRecorderStartTime: number
     processedSegments: Set<number>
   }
 >(({ input, sendBack }) => {
   console.log('🔴 Recording service invoked with:', {
     hasMediaRecorder: !!input.mediaRecorder,
     segmentCount: input.segments.length,
-    recordingStartTime: input.recordingStartTime,
-    mediaRecorderStartTime: input.mediaRecorderStartTime
+    recordingStartTime: input.recordingStartTime
   })
-  const { mediaRecorder, segments, recordingStartTime, mediaRecorderStartTime, processedSegments } = input
+  const { mediaRecorder, segments, recordingStartTime, processedSegments } = input
   
   // Listen for audio chunks
   let chunkCount = 0
   mediaRecorder.ondataavailable = async (event) => {
     if (event.data.size > 0) {
       chunkCount++
-      // Calculate timestamp relative to when MediaRecorder started (not song start)
-      const chunkTimestamp = Date.now() - mediaRecorderStartTime
+      // Calculate timestamp relative to recording start (song start)
+      const chunkTimestamp = Date.now() - recordingStartTime
       
       // Log first chunk and every 10th chunk
       if (chunkCount === 1) {
-        console.log(`🎤 FIRST CHUNK: ${event.data.size} bytes at ${chunkTimestamp}ms from MediaRecorder start`)
+        console.log(`🎤 FIRST CHUNK: ${event.data.size} bytes at ${chunkTimestamp}ms from song start`)
       } else if (chunkCount % 10 === 0 && import.meta.env.DEV) {
         console.log(`🎤 Audio chunk ${chunkCount} received: ${event.data.size} bytes`)
       }
@@ -246,7 +243,6 @@ export const karaokeMachine = createMachine({
     mediaRecorder: null,
     audioChunks: [],
     recordingStartTime: null,
-    mediaRecorderStartTime: null,
     
     // Segment tracking
     segments: input?.segments || [],
@@ -314,10 +310,7 @@ export const karaokeMachine = createMachine({
       entry: [
         () => console.log('⏰ Entered countdown state'),
         assign({ countdown: 3 }),
-        // Start continuous recording during countdown to avoid initialization delay
-        assign({
-          mediaRecorderStartTime: () => Date.now()
-        }),
+        // Start MediaRecorder during countdown for warm-up
         ({ context }) => {
           if (context.mediaRecorder && context.mediaRecorder.state === 'inactive') {
             try {
@@ -388,7 +381,6 @@ export const karaokeMachine = createMachine({
           }
         },
         assign({
-          audioChunks: () => [], // Initialize empty chunks array
           recordingStartTime: () => Date.now(),
           processedSegments: () => new Set()
         })
@@ -400,7 +392,6 @@ export const karaokeMachine = createMachine({
           mediaRecorder: context.mediaRecorder!,
           segments: context.segments,
           recordingStartTime: context.recordingStartTime!,
-          mediaRecorderStartTime: context.mediaRecorderStartTime!,
           processedSegments: context.processedSegments
         })
       },
@@ -434,13 +425,9 @@ export const karaokeMachine = createMachine({
             
             console.log(`📦 Processing segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
             
-            // Calculate the offset between MediaRecorder start and song start
-            const offset = context.recordingStartTime! - context.mediaRecorderStartTime!
-            
             // Extract audio chunks for this segment's time window
-            // Adjust segment times by the offset since chunks are timestamped from MediaRecorder start
-            const segmentStart = segment.recordStartTime + offset
-            const segmentEnd = segment.recordEndTime + offset
+            const segmentStart = segment.recordStartTime
+            const segmentEnd = segment.recordEndTime
             
             // For WebM format, we need to include the initial chunks that contain headers
             // Get the first few chunks (headers) plus the segment-specific chunks
@@ -454,9 +441,7 @@ export const karaokeMachine = createMachine({
             const allChunks = segment.lyricLine.id === 1 ? segmentChunks : [...headerChunks, ...segmentChunks.filter(c => c.timestamp >= headerChunks[headerChunks.length - 1]?.timestamp || 0)]
             
             console.log(`🔍 Segment ${segment.lyricLine.id} chunk search:`, {
-              offset: `${(offset/1000).toFixed(2)}s between MediaRecorder start and song start`,
-              originalWindow: `${(segment.recordStartTime/1000).toFixed(2)}s - ${(segment.recordEndTime/1000).toFixed(2)}s`,
-              adjustedWindow: `${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s`,
+              segmentWindow: `${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s`,
               totalChunks: context.audioChunks.length,
               chunkTimeRange: context.audioChunks.length > 0 ? 
                 `${(context.audioChunks[0]?.timestamp/1000).toFixed(2)}s - ${(context.audioChunks[context.audioChunks.length - 1]?.timestamp/1000).toFixed(2)}s` : 'none',

@@ -119,7 +119,11 @@ export function prepareKaraokeSegments(
     const nextLine = lyrics[i + 1]
     
     // Start recording 1s before the line starts
-    const recordStartTime = Math.max(0, currentLine.startTime * 1000 - bufferMs)
+    // For the first line, ensure we have at least 200ms for MediaRecorder initialization
+    const baseStartTime = currentLine.startTime * 1000 - bufferMs
+    const recordStartTime = i === 0 
+      ? Math.max(200, baseStartTime)  // First line needs 200ms minimum
+      : Math.max(0, baseStartTime)
     
     // End recording when next line starts (or after max duration)
     let recordEndTime: number

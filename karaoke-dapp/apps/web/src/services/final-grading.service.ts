@@ -84,7 +84,10 @@ export class FinalGradingService {
         this.options.sessionSigs
       );
       
-      const parsedResult = JSON.parse(result);
+      // The result might be a string or the full Lit Action response object
+      const parsedResult = typeof result === 'string' 
+        ? JSON.parse(result) 
+        : (result.response ? JSON.parse(result.response) : result);
       
       if (!parsedResult.success) {
         throw new Error(parsedResult.error || 'Final grading failed');

@@ -60,7 +60,10 @@ export class KaraokeGradingService {
         this.options.sessionSigs
       )
       
-      const parsedResult = JSON.parse(result)
+      // The result might be a string or the full Lit Action response object
+      const parsedResult = typeof result === 'string' 
+        ? JSON.parse(result) 
+        : (result.response ? JSON.parse(result.response) : result)
       
       // The deployed action returns a different structure
       if (!parsedResult.success) {
