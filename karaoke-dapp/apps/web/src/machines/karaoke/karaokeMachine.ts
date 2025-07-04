@@ -136,9 +136,9 @@ const recordingService = fromCallback<
       // Calculate timestamp relative to recording start (song start)
       const chunkTimestamp = Date.now() - recordingStartTime
       
-      // Log first chunk and every 10th chunk
-      if (chunkCount === 1) {
-        console.log(`🎤 FIRST CHUNK: ${event.data.size} bytes at ${chunkTimestamp}ms from song start`)
+      // Log first few chunks and every 10th chunk
+      if (chunkCount <= 3) {
+        console.log(`🎤 CHUNK ${chunkCount}: ${event.data.size} bytes at ${chunkTimestamp}ms from song start`)
       } else if (chunkCount % 10 === 0 && import.meta.env.DEV) {
         console.log(`🎤 Audio chunk ${chunkCount} received: ${event.data.size} bytes`)
       }
@@ -309,19 +309,7 @@ export const karaokeMachine = createMachine({
     countdown: {
       entry: [
         () => console.log('⏰ Entered countdown state'),
-        assign({ countdown: 3 }),
-        // Start MediaRecorder during countdown for warm-up
-        ({ context }) => {
-          if (context.mediaRecorder && context.mediaRecorder.state === 'inactive') {
-            try {
-              console.log('🎤 Starting continuous recording during countdown...')
-              context.mediaRecorder.start(100) // Get chunks every 100ms
-              console.log('✅ MediaRecorder started early for seamless recording')
-            } catch (error) {
-              console.error('❌ Failed to start MediaRecorder during countdown:', error)
-            }
-          }
-        }
+        assign({ countdown: 3 })
       ],
       invoke: {
         src: countdownTimer,
@@ -362,25 +350,22 @@ export const karaokeMachine = createMachine({
     recording: {
       entry: [
         () => console.log('🎬 ENTERED RECORDING STATE!'),
-        // MediaRecorder already running from countdown, just mark the start time
+        // Start continuous recording
         ({ context }) => {
           if (context.mediaRecorder) {
-            console.log('🎙️ MediaRecorder already running from countdown, state:', context.mediaRecorder.state)
-            if (context.mediaRecorder.state !== 'recording') {
-              // Fallback: start if not already recording
-              console.warn('⚠️ MediaRecorder not recording, starting now...')
-              try {
-                context.mediaRecorder.start(100)
-                console.log('✅ MediaRecorder started (fallback)')
-              } catch (error) {
-                console.error('❌ Failed to start MediaRecorder:', error)
-              }
+            console.log('🎙️ Starting continuous recording, recorder state:', context.mediaRecorder.state)
+            try {
+              context.mediaRecorder.start(100) // Get chunks every 100ms
+              console.log('✅ MediaRecorder.start() called successfully')
+            } catch (error) {
+              console.error('❌ Failed to start MediaRecorder:', error)
             }
           } else {
             console.error('❌ No MediaRecorder available in context')
           }
         },
         assign({
+          audioChunks: [],
           recordingStartTime: () => Date.now(),
           processedSegments: () => new Set()
         })
@@ -437,8 +422,11 @@ export const karaokeMachine = createMachine({
               chunk.timestamp <= segmentEnd
             )
             
-            // Combine headers with segment chunks (avoiding duplicates)
-            const allChunks = segment.lyricLine.id === 1 ? segmentChunks : [...headerChunks, ...segmentChunks.filter(c => c.timestamp >= headerChunks[headerChunks.length - 1]?.timestamp || 0)]
+            // Combine headers with segment chunks
+            // For first segment, it already has headers since recording just started
+            const allChunks = segment.lyricLine.id === 1 
+              ? segmentChunks 
+              : [...headerChunks, ...segmentChunks]
             
             console.log(`🔍 Segment ${segment.lyricLine.id} chunk search:`, {
               segmentWindow: `${(segmentStart/1000).toFixed(2)}s - ${(segmentEnd/1000).toFixed(2)}s`,
