@@ -947,6 +947,20 @@ export const songServices = {
           inputs: [{ name: 'owner', type: 'address' }],
           outputs: [{ type: 'uint256' }],
           stateMutability: 'view'
+        },
+        {
+          name: 'name',
+          type: 'function',
+          inputs: [],
+          outputs: [{ type: 'string' }],
+          stateMutability: 'view'
+        },
+        {
+          name: 'version',
+          type: 'function',
+          inputs: [],
+          outputs: [{ type: 'string' }],
+          stateMutability: 'view'
         }
       ] as const;
 
@@ -961,10 +975,26 @@ export const songServices = {
       // Set deadline to 5 minutes from now
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
       
-      // Create typed data for permit
+      // Get actual token name and version from USDC contract
+      const [tokenName, tokenVersion] = await Promise.all([
+        readContract(wagmiConfig, {
+          address: CONTRACTS.baseSepolia.usdc,
+          abi: USDC_PERMIT_ABI,
+          functionName: 'name',
+        }),
+        readContract(wagmiConfig, {
+          address: CONTRACTS.baseSepolia.usdc,
+          abi: USDC_PERMIT_ABI,
+          functionName: 'version',
+        })
+      ]);
+      
+      console.log('🏦 USDC Contract info:', { tokenName, tokenVersion });
+      
+      // Create typed data for permit using actual values from contract
       const domain = {
-        name: 'USD Coin',
-        version: '2',
+        name: tokenName,
+        version: tokenVersion,
         chainId: 84532, // Base Sepolia
         verifyingContract: CONTRACTS.baseSepolia.usdc as `0x${string}`,
       };
@@ -1012,8 +1042,24 @@ export const songServices = {
         vHex: sig.slice(128, 130)
       });
       
-      // Keep v as-is for now - the contract expects 27/28
+      // EIP-155 adjustment: if v is 0 or 1, add 27
+      if (v < 27) {
+        v += 27;
+      }
+      
       console.log('🔍 Using v value:', v);
+      
+      // Log all permit parameters
+      console.log('📝 Full permit parameters:', {
+        owner: context.userAddress,
+        spender: MUSIC_STORE_ADDRESS,
+        value: '1000000',
+        nonce: nonce.toString(),
+        deadline: deadline.toString(),
+        v,
+        r,
+        s
+      });
       
       // Buy voice pack with permit
       const txHash = await writeContract(wagmiConfig, {
@@ -1061,6 +1107,20 @@ export const songServices = {
           inputs: [{ name: 'owner', type: 'address' }],
           outputs: [{ type: 'uint256' }],
           stateMutability: 'view'
+        },
+        {
+          name: 'name',
+          type: 'function',
+          inputs: [],
+          outputs: [{ type: 'string' }],
+          stateMutability: 'view'
+        },
+        {
+          name: 'version',
+          type: 'function',
+          inputs: [],
+          outputs: [{ type: 'string' }],
+          stateMutability: 'view'
         }
       ] as const;
 
@@ -1075,10 +1135,26 @@ export const songServices = {
       // Set deadline to 5 minutes from now
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
       
-      // Create typed data for permit
+      // Get actual token name and version from USDC contract
+      const [tokenName, tokenVersion] = await Promise.all([
+        readContract(wagmiConfig, {
+          address: CONTRACTS.baseSepolia.usdc,
+          abi: USDC_PERMIT_ABI,
+          functionName: 'name',
+        }),
+        readContract(wagmiConfig, {
+          address: CONTRACTS.baseSepolia.usdc,
+          abi: USDC_PERMIT_ABI,
+          functionName: 'version',
+        })
+      ]);
+      
+      console.log('🏦 USDC Contract info:', { tokenName, tokenVersion });
+      
+      // Create typed data for permit using actual values from contract
       const domain = {
-        name: 'USD Coin',
-        version: '2',
+        name: tokenName,
+        version: tokenVersion,
         chainId: 84532, // Base Sepolia
         verifyingContract: CONTRACTS.baseSepolia.usdc as `0x${string}`,
       };
@@ -1126,7 +1202,11 @@ export const songServices = {
         vHex: sig.slice(128, 130)
       });
       
-      // Keep v as-is for now - the contract expects 27/28
+      // EIP-155 adjustment: if v is 0 or 1, add 27
+      if (v < 27) {
+        v += 27;
+      }
+      
       console.log('🔍 Combo pack using v value:', v);
       
       // Buy combo pack with permit
