@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, PurchaseSlider, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider, AdaptivePurchaseSlider, BundledPurchaseButton } from "@karaoke-dapp/ui"
+import { CaretLeft } from "@phosphor-icons/react"
 import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
 import { motion } from "motion/react"
@@ -14,6 +15,7 @@ import { KaraokeGradingService } from '../services/karaoke-grading.service'
 import { FinalGradingService } from '../services/final-grading.service'
 import { useRef } from 'react'
 import { useUserTable } from '../hooks/use-user-table'
+import { useBundledPurchase } from '../hooks/use-bundled-purchase'
 
 
 function SongDetailContent({ song }: { song: Song }) {
@@ -43,8 +45,46 @@ function SongDetailContent({ song }: { song: Song }) {
     isKaraokeGrading,
     karaokeCountdownValue,
     karaokeActor,
-    karaokeState
-  } = useSongMachine(song.id)
+    karaokeState,
+    // Voice credit states
+    isWaitingForCreditConfirmation,
+    voiceCredits,
+    creditsNeeded,
+    confirmCredits,
+    cancelKaraoke,
+    purchaseVoiceCredits,
+    isPurchasingVoiceCredits,
+    purchaseComboPack,
+    isPurchasingComboPack,
+    // Get song credits too
+    credits: songCredits,
+    isPurchased
+  } = useSongMachine(song.id, song.duration)
+  
+  // Determine if user has made any purchases
+  // A user has purchases if they have: owned songs, song credits, or have had voice credits
+  const hasExistingPurchases = isPurchased || (songCredits !== undefined && songCredits > 0) || 
+    (voiceCredits !== undefined && voiceCredits > 0)
+  
+  // Bundled purchase hook
+  const {
+    executeBundledPurchase,
+    isPending: isBundledPurchasePending,
+    isConfirming: isBundledPurchaseConfirming,
+    isConfirmed: isBundledPurchaseConfirmed,
+  } = useBundledPurchase()
+  
+  // Handle bundled purchase
+  const handleBundledPurchase = async () => {
+    try {
+      await executeBundledPurchase(state.context)
+      // The state machine will handle the success
+      send({ type: 'PURCHASE_SUCCESS', txHash: 'bundled' })
+    } catch (error) {
+      console.error('Bundled purchase failed:', error)
+      send({ type: 'PURCHASE_ERROR', error: error instanceof Error ? error.message : 'Purchase failed' })
+    }
+  }
   
   // Audio context
   const {
@@ -261,8 +301,8 @@ function SongDetailContent({ song }: { song: Song }) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
-            onAccountClick={handleAccountClick}
-            onLogoClick={() => navigate('/')}
+            showLogo={false}
+            showAccount={false}
             leftContent={
               <Button
                 variant="ghost"
@@ -291,8 +331,8 @@ function SongDetailContent({ song }: { song: Song }) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
           <Header 
-            onAccountClick={handleAccountClick}
-            onLogoClick={() => navigate('/')}
+            showLogo={false}
+            showAccount={false}
             leftContent={
               <Button
                 variant="ghost"
@@ -320,7 +360,16 @@ function SongDetailContent({ song }: { song: Song }) {
     if (isKaraokeStopped) {
       return (
         <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-          <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+          <Header 
+        onAccountClick={handleAccountClick}
+        showLogo={false}
+        showAccount={true}
+        leftContent={
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <CaretLeft size={24} />
+          </Button>
+        }
+      />
           <div className="flex-1 flex flex-col items-center justify-center p-8">
             <KaraokeScore
               isLoading={isKaraokeGrading}
@@ -379,7 +428,16 @@ function SongDetailContent({ song }: { song: Song }) {
   // Normal song detail view
   return (
     <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-      <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+      <Header 
+        onAccountClick={handleAccountClick}
+        showLogo={false}
+        showAccount={true}
+        leftContent={
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <CaretLeft size={24} />
+          </Button>
+        }
+      />
       
       {/* Main content area */}
       <div className="flex-1 pb-20">
@@ -478,9 +536,6 @@ function SongDetailContent({ song }: { song: Song }) {
       {/* Bottom action bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-neutral-800/80 backdrop-blur-lg border-t border-neutral-700">
         <div className="container mx-auto px-4 py-4">
-          {machineError && (
-            <div className="text-red-400 text-sm mb-2">{machineError}</div>
-          )}
           {!isConnected ? (
             <ConnectWalletSheet
               connectors={connectors}
@@ -495,8 +550,43 @@ function SongDetailContent({ song }: { song: Song }) {
                 Connect Wallet to Purchase
               </Button>
             </ConnectWalletSheet>
+          ) : machineError && machineError.includes('Insufficient voice credits') ? (
+            <div className="space-y-4">
+              <div className="text-center text-red-400 text-sm">
+                {machineError}
+              </div>
+              <AdaptivePurchaseSlider
+                songTitle={song.title}
+                onPurchaseCombo={() => purchaseComboPack()}
+                onPurchaseSongs={() => buttonState.action?.()}
+                onPurchaseVoice={() => purchaseVoiceCredits()}
+                isPurchasing={isPurchasingVoiceCredits || isPurchasingComboPack}
+                hasExistingPurchases={true} // If they're out of voice credits, they've made purchases
+                currentSongCredits={songCredits}
+                currentVoiceCredits={voiceCredits}
+              >
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  disabled={isPurchasingVoiceCredits || isPurchasingComboPack}
+                >
+                  {isPurchasingVoiceCredits || isPurchasingComboPack ? 'Purchasing...' : 'Buy Credits'}
+                </Button>
+              </AdaptivePurchaseSlider>
+              <Button 
+                className="w-full" 
+                size="lg"
+                variant="outline"
+                onClick={() => buttonState.action?.()}
+              >
+                Retry
+              </Button>
+            </div>
           ) : machineError ? (
-            <>
+            <div className="space-y-4">
+              <div className="text-center text-red-400 text-sm">
+                {machineError}
+              </div>
               <Button 
                 className="w-full" 
                 size="lg"
@@ -504,17 +594,17 @@ function SongDetailContent({ song }: { song: Song }) {
               >
                 Retry
               </Button>
-              <div className="text-left text-red-400 text-sm mt-2 leading-relaxed break-words">
-                {machineError}
-              </div>
-            </>
+            </div>
           ) : buttonState.text === 'Purchase' ? (
-            <PurchaseSlider
+            <AdaptivePurchaseSlider
               songTitle={song.title}
-              packagePrice={2}
-              packageCredits={2}
-              onPurchase={() => buttonState.action?.()}
+              onPurchaseCombo={() => buttonState.action?.()}
+              onPurchaseSongs={() => buttonState.action?.()}
+              onPurchaseVoice={() => purchaseVoiceCredits()}
               isPurchasing={buttonState.disabled}
+              hasExistingPurchases={hasExistingPurchases}
+              currentSongCredits={songCredits}
+              currentVoiceCredits={voiceCredits}
             >
               <Button 
                 className="w-full" 
@@ -523,7 +613,7 @@ function SongDetailContent({ song }: { song: Song }) {
               >
                 {buttonState.text}
               </Button>
-            </PurchaseSlider>
+            </AdaptivePurchaseSlider>
           ) : buttonState.text === 'Download' ? (
             <Button 
               className="w-full" 
@@ -533,6 +623,34 @@ function SongDetailContent({ song }: { song: Song }) {
             >
               {buttonState.disabled ? 'Decrypting...' : 'Download'}
             </Button>
+          ) : isWaitingForCreditConfirmation ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="text-sm text-neutral-300 mb-2">
+                  Cost: {creditsNeeded} credits
+                </div>
+                <div className="text-xs text-neutral-400">
+                  Balance: {voiceCredits}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  className="flex-1" 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => cancelKaraoke()}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="flex-1" 
+                  size="lg"
+                  onClick={() => confirmCredits()}
+                >
+                  Confirm & Start
+                </Button>
+              </div>
+            </div>
           ) : (
             <Button 
               className="w-full" 
@@ -595,7 +713,16 @@ export function SongDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white">
-        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+        <Header 
+        onAccountClick={handleAccountClick}
+        showLogo={false}
+        showAccount={true}
+        leftContent={
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <CaretLeft size={24} />
+          </Button>
+        }
+      />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-neutral-400">Loading song...</div>
         </div>
@@ -606,7 +733,16 @@ export function SongDetailPage() {
   if (error || !songData) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white">
-        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+        <Header 
+        onAccountClick={handleAccountClick}
+        showLogo={false}
+        showAccount={true}
+        leftContent={
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <CaretLeft size={24} />
+          </Button>
+        }
+      />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-red-400">{error || 'Song not found'}</div>
         </div>

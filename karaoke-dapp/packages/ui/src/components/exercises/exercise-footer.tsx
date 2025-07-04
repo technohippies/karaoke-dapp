@@ -23,7 +23,7 @@ export function ExerciseFooter({
   const buttonAction = showRetry ? onRetry : onNext
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-neutral-700 border-t border-neutral-600 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between">
           <AnimatePresence mode="wait">
@@ -54,13 +54,9 @@ export function ExerciseFooter({
           
           <Button
             onClick={buttonAction}
-            className={`
-              px-8 py-3 font-semibold rounded-lg transition-all
-              ${showRetry 
-                ? 'bg-orange-600 hover:bg-orange-700 text-white' 
-                : 'bg-green-600 hover:bg-green-700 text-white'
-              }
-            `}
+            variant={showRetry ? 'warning' : 'success'}
+            size="lg"
+            className="w-32"
           >
             {buttonText}
           </Button>

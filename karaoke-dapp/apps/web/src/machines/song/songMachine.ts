@@ -8,9 +8,10 @@ export const songMachine = createMachine({
   },
   id: 'song',
   initial: 'idle',
-  context: ({ input }: { input?: { songId: number; userAddress?: string } }) => ({
+  context: ({ input }: { input?: { songId: number; userAddress?: string; songDuration?: number } }) => ({
     songId: input?.songId || 0,
     userAddress: input?.userAddress,
+    songDuration: input?.songDuration,
   }),
   on: {
     UPDATE_ADDRESS: {
@@ -63,7 +64,8 @@ export const songMachine = createMachine({
     unpurchased: {
       description: 'Song not purchased - show purchase button',
       on: {
-        PURCHASE: 'approvingUSDC',
+        PURCHASE: 'purchasingWithPermit', // Skip approval, use permit!
+        PURCHASE_BUNDLED: 'purchasingBundled', // New: Bundle everything with sendCalls!
       },
     },
 
@@ -126,7 +128,7 @@ export const songMachine = createMachine({
     },
     
     purchasing: {
-      description: 'Processing purchase and unlock transaction',
+      description: 'Processing purchase and unlock transaction (legacy)',
       invoke: {
         id: 'purchaseAndUnlock',
         src: 'purchaseAndUnlock',
@@ -141,6 +143,46 @@ export const songMachine = createMachine({
           target: 'unpurchased',
           actions: assign({
             error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
+      },
+    },
+    
+    purchasingWithPermit: {
+      description: 'Processing purchase with permit (no separate approval needed!)',
+      invoke: {
+        id: 'purchaseAndUnlockWithPermit',
+        src: 'purchaseAndUnlockWithPermit',
+        input: ({ context }) => context,
+        onDone: {
+          target: 'purchased.checkingCache',
+          actions: assign({
+            tokenId: ({ event }) => event.output.tokenId,
+          }),
+        },
+        onError: {
+          target: 'unpurchased',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
+      },
+    },
+    
+    purchasingBundled: {
+      description: 'Processing bundled purchase with sendCalls (ONE transaction for everything!)',
+      // This state is managed by the React component using useBundledPurchase hook
+      on: {
+        PURCHASE_SUCCESS: {
+          target: 'purchased.checkingCache',
+          actions: assign({
+            tokenId: ({ event }) => event.txHash,
+          }),
+        },
+        PURCHASE_ERROR: {
+          target: 'unpurchased',
+          actions: assign({
+            error: ({ event }) => event.error,
           }),
         },
       },
@@ -298,13 +340,15 @@ export const songMachine = createMachine({
           on: {
             START_KARAOKE: [
               {
-                target: '#song.karaoke',
+                target: 'checkingVoiceCredits',
                 guard: ({ context }) => !!context.sessionSigs,
               },
               {
                 target: 'preparingKaraoke',
               },
             ],
+            PURCHASE_VOICE_CREDITS: '#song.purchasingVoiceCredits',
+            PURCHASE_COMBO_PACK: '#song.purchasingComboPack',
           },
         },
         
@@ -315,7 +359,7 @@ export const songMachine = createMachine({
             src: 'createSession',
             input: ({ context }) => context,
             onDone: {
-              target: '#song.karaoke',
+              target: 'checkingVoiceCredits',
               actions: assign({
                 sessionSigs: ({ event }) => event.output,
               }),
@@ -325,6 +369,107 @@ export const songMachine = createMachine({
               actions: assign({
                 error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
               }),
+            },
+          },
+        },
+
+        checkingVoiceCredits: {
+          description: 'Checking voice credits and fetching lyrics',
+          initial: 'fetchingLyrics',
+          states: {
+            fetchingLyrics: {
+              invoke: {
+                id: 'fetchLyrics',
+                src: 'fetchLyrics',
+                input: ({ context }) => context,
+                onDone: {
+                  target: 'checkingBalance',
+                  actions: assign({
+                    lyrics: ({ event }) => event.output,
+                  }),
+                },
+                onError: {
+                  target: '#song.purchased.ready',
+                  actions: assign({
+                    error: () => 'Failed to fetch lyrics',
+                  }),
+                },
+              },
+            },
+            checkingBalance: {
+              invoke: {
+                id: 'checkVoiceCredits',
+                src: 'checkVoiceCredits',
+                input: ({ context }) => context,
+                onDone: [
+                  {
+                    target: 'waitingForConfirmation',
+                    guard: ({ event }) => event.output.hasEnoughCredits,
+                    actions: assign({
+                      voiceCredits: ({ event }) => event.output.balance,
+                      creditsNeeded: ({ event }) => event.output.creditsNeeded,
+                    }),
+                  },
+                  {
+                    target: '#song.purchased.ready',
+                    actions: assign({
+                      error: ({ event }) => `Insufficient voice credits. You have ${event.output.balance} but need ${event.output.creditsNeeded}`,
+                      voiceCredits: ({ event }) => event.output.balance,
+                      creditsNeeded: ({ event }) => event.output.creditsNeeded,
+                    }),
+                  },
+                ],
+                onError: {
+                  target: '#song.purchased.ready',
+                  actions: assign({
+                    error: () => 'Failed to check voice credits',
+                  }),
+                },
+              },
+            },
+            waitingForConfirmation: {
+              on: {
+                CONFIRM_CREDITS: 'generatingSignature',
+                CANCEL_KARAOKE: '#song.purchased.ready',
+              },
+            },
+            generatingSignature: {
+              entry: assign({
+                sessionId: () => crypto.randomUUID(), // Generate unique session ID
+              }),
+              invoke: {
+                id: 'generateSignature',
+                src: 'generateVoiceSessionSignature',
+                input: ({ context }) => context,
+                onDone: {
+                  target: 'deductingCredits',
+                  actions: assign({
+                    pkpSignature: ({ event }) => event.output,
+                  }),
+                },
+                onError: {
+                  target: '#song.purchased.ready',
+                  actions: assign({
+                    error: () => 'Failed to generate signature',
+                  }),
+                },
+              },
+            },
+            deductingCredits: {
+              invoke: {
+                id: 'deductCredits',
+                src: 'deductVoiceCredits',
+                input: ({ context }) => context,
+                onDone: {
+                  target: '#song.karaoke',
+                },
+                onError: {
+                  target: '#song.purchased.ready',
+                  actions: assign({
+                    error: () => 'Failed to deduct voice credits',
+                  }),
+                },
+              },
             },
           },
         },
@@ -343,6 +488,7 @@ export const songMachine = createMachine({
           audioUrl: context.audioUrl,
           lyricsUrl: context.lyricsUrl,
           sessionSigs: context.sessionSigs,
+          sessionId: context.sessionId,
         }),
         onDone: {
           target: 'purchased.ready',
@@ -367,6 +513,48 @@ export const songMachine = createMachine({
       description: 'Error state with retry option',
       on: {
         RETRY: 'purchased.needsDownload',
+      },
+    },
+
+    purchasingVoiceCredits: {
+      description: 'Purchasing voice credits',
+      invoke: {
+        id: 'purchaseVoiceCredits',
+        src: 'purchaseVoiceCredits',
+        input: ({ context }) => context,
+        onDone: {
+          target: 'purchased.ready',
+          actions: assign({
+            error: undefined,
+          }),
+        },
+        onError: {
+          target: 'purchased.ready',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
+      },
+    },
+
+    purchasingComboPack: {
+      description: 'Purchasing combo pack (song + voice credits)',
+      invoke: {
+        id: 'purchaseComboPack',
+        src: 'purchaseComboPack',
+        input: ({ context }) => context,
+        onDone: {
+          target: 'checkingAccess',
+          actions: assign({
+            error: undefined,
+          }),
+        },
+        onError: {
+          target: 'purchased.ready',
+          actions: assign({
+            error: ({ event }) => event.error instanceof Error ? event.error.message : String(event.error),
+          }),
+        },
       },
     },
   },

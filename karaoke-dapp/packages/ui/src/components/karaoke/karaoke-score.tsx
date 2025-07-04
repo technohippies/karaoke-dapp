@@ -159,7 +159,7 @@ export function KaraokeScore({
               variant="default"
               onClick={onPractice}
             >
-              Practice Exercises
+              Practice
             </Button>
           ) : (
             <div className="flex gap-3">

@@ -313,7 +313,7 @@ export class EncryptionService {
     ipfsId: string,
     jsParams: Record<string, any>,
     sessionSigs: SessionSigsMap
-  ): Promise<string> {
+  ): Promise<any> {
     if (!this.connected) {
       await this.connect();
     }
@@ -328,7 +328,8 @@ export class EncryptionService {
       });
 
       console.log('✅ Lit Action executed successfully:', response);
-      return response.response as string;
+      // Return the full response object to include signatures
+      return response;
     } catch (error) {
       console.error('❌ Lit Action execution failed:', error);
       throw error;

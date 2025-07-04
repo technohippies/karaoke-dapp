@@ -13,7 +13,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'],
+      options: ['default', 'destructive', 'success', 'warning', 'outline', 'secondary', 'ghost', 'link'],
     },
     size: {
       control: 'select',
@@ -80,9 +80,35 @@ export const Large: Story = {
   },
 };
 
+export const Success: Story = {
+  args: {
+    variant: 'success',
+    children: 'Next',
+    className: 'w-24',
+  },
+};
+
+export const Warning: Story = {
+  args: {
+    variant: 'warning',
+    children: 'Try Again',
+    className: 'w-24',
+  },
+};
+
 export const Icon: Story = {
   args: {
     size: 'icon',
     children: <Microphone size={20} weight="bold" />,
   },
+};
+
+// Exercise button examples with consistent width
+export const ExerciseButtons: Story = {
+  render: () => (
+    <div className="flex gap-4">
+      <Button variant="success" className="w-24">Next</Button>
+      <Button variant="warning" className="w-24">Try Again</Button>
+    </div>
+  ),
 };

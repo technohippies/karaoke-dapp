@@ -2,12 +2,13 @@
 // This action aggregates karaoke session results and signs settlement for the smart contract
 
 const go = async () => {
-  // Input parameters are passed via global variables in Lit Actions
-  // Access them directly without destructuring to avoid initialization issues
+  // In Lit Actions, jsParams properties become global variables
+  // They are automatically available in the execution context
   
-  // Validate inputs
-  if (!userId || !sessionId || !creditsUsed || !pkpPublicKey) {
-    throw new Error("Missing required parameters");
+  // Validate inputs - these variables come from jsParams
+  if (typeof userId === 'undefined' || typeof sessionId === 'undefined' || 
+      typeof creditsUsed === 'undefined' || typeof pkpPublicKey === 'undefined') {
+    throw new Error("Missing required parameters: userId, sessionId, creditsUsed, or pkpPublicKey");
   }
   
   // Create the message that the smart contract expects
@@ -20,13 +21,15 @@ const go = async () => {
   const messageHash = ethers.utils.keccak256(messageData);
   
   // The contract expects an Ethereum Signed Message format
-  // This is what ECDSA.recover expects: keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message))
-  // But when using Lit Actions signEcdsa, we just sign the raw message hash
-  // The Ethereum Signed Message prefix is added by the recovery function
+  // Create the prefixed message that ECDSA.recover expects
+  const ethSignedMessage = ethers.utils.solidityKeccak256(
+    ["string", "bytes32"],
+    ["\x19Ethereum Signed Message:\n32", messageHash]
+  );
   
-  // Sign the message with PKP
+  // Sign the prefixed message with PKP
   const sigShare = await Lit.Actions.signEcdsa({
-    toSign: ethers.utils.arrayify(messageHash),
+    toSign: ethers.utils.arrayify(ethSignedMessage),
     publicKey: pkpPublicKey,
     sigName: "settlement"
   });

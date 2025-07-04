@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ExerciseContainer, Header } from '@karaoke-dapp/ui'
+import { ExerciseContainer, Header, Button } from '@karaoke-dapp/ui'
+import { X } from '@phosphor-icons/react'
 import { useExerciseGrading } from '../hooks/use-exercise-grading'
 import { wordSRSService, EncryptionService } from '@karaoke-dapp/services/browser'
 import type { Exercise } from '@karaoke-dapp/services'
@@ -142,14 +143,23 @@ export function ExercisePage() {
     navigate('/progress')
   }
 
-  const handleAccountClick = () => {
-    // Handle account/wallet click
+  const handleClose = () => {
+    console.log('🔙 Exercise close button clicked')
+    navigate('/')
   }
 
-  if (!address || !sessionSigs) {
+  if (!address) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+        <Header 
+          showLogo={false}
+          showAccount={false}
+          leftContent={
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X size={24} />
+            </Button>
+          }
+        />
         <div className="flex-1 flex items-center justify-center">
           <p>Please connect your wallet to start exercises</p>
         </div>
@@ -160,7 +170,15 @@ export function ExercisePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-900 text-white flex flex-col">
-        <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+        <Header 
+          showLogo={false}
+          showAccount={false}
+          leftContent={
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X size={24} />
+            </Button>
+          }
+        />
         <div className="flex-1 flex items-center justify-center">
           <p>Loading exercises...</p>
         </div>
@@ -170,11 +188,19 @@ export function ExercisePage() {
 
   return (
     <div className="min-h-screen bg-neutral-900 flex flex-col">
-      <Header onAccountClick={handleAccountClick} onLogoClick={() => navigate('/')} />
+      <Header 
+        showLogo={false}
+        showAccount={false}
+        leftContent={
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X size={24} />
+          </Button>
+        }
+      />
       <ExerciseContainer
         exercises={exercises}
         onComplete={handleComplete}
-        onGrade={gradeAudio}
+        onGrade={sessionSigs ? gradeAudio : undefined}
       />
     </div>
   )

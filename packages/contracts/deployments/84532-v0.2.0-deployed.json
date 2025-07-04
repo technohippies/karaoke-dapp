@@ -1,0 +1,15 @@
+{
+  "karaokeStore": "0xf8495eA3b1eBa02804483A1803275158c240200E",
+  "contractVersion": "0.2.0",
+  "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  "litPkp": "0xE2000B0ce17f260c1f3068e424Edf73b0e5052BA",
+  "chainId": 84532,
+  "deployedAt": "2025-07-04T20:15:00.000Z",
+  "transactionHash": "0x418b102d774d43735c41a0a29d6c07426df1f09f9a6408383b077ea6a534f23d",
+  "features": [
+    "voice_credits",
+    "combo_packs",
+    "on_chain_credit_tracking",
+    "session_settlement"
+  ]
+}

@@ -391,17 +391,18 @@ export class SyncService {
    * Start periodic sync
    */
   private startPeriodicSync(): void {
-    // Sync every 5 minutes
-    this.syncInterval = setInterval(() => {
-      this.performSync().catch(console.error);
-    }, 5 * 60 * 1000);
+    // Removed automatic sync - now only syncs on manual "Save Progress" button click
+    // // Sync every 5 minutes
+    // this.syncInterval = setInterval(() => {
+    //   this.performSync().catch(console.error);
+    // }, 5 * 60 * 1000);
 
-    // Also sync on visibility change
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        this.performSync().catch(console.error);
-      }
-    });
+    // // Also sync on visibility change
+    // document.addEventListener('visibilitychange', () => {
+    //   if (!document.hidden) {
+    //     this.performSync().catch(console.error);
+    //   }
+    // });
   }
 
   /**

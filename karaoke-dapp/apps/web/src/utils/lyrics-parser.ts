@@ -139,7 +139,7 @@ export function prepareKaraokeSegments(
       recordEndTime = recordStartTime + 5000 // Cap at 5s
     }
     
-    console.log(`🎯 Segment ${currentLine.id}: "${currentLine.text}" | ${(recordStartTime/1000).toFixed(2)}s - ${(recordEndTime/1000).toFixed(2)}s (${((recordEndTime-recordStartTime)/1000).toFixed(1)}s duration)`)
+    // Removed verbose segment logging to clean up console output
     
     // Prepare expected text for grading
     // Remove parentheses for background vocals and inline parenthetical content
@@ -164,4 +164,42 @@ export function prepareKaraokeSegments(
   }
   
   return segments
+}
+
+/**
+ * Calculate the total word count across all lyrics
+ * Used for determining voice credits needed
+ */
+export function calculateTotalWords(lyrics: LyricLine[]): number {
+  return lyrics.reduce((total, line) => {
+    // Split by whitespace and filter out empty strings
+    const words = line.text.split(/\s+/).filter(word => word.length > 0)
+    return total + words.length
+  }, 0)
+}
+
+import { VOICE_CREDIT_CONSTANTS } from '../constants/voice-credits'
+
+/**
+ * Calculate voice credits needed for a song based on duration
+ * Uses the constant SECONDS_PER_CREDIT for consistent pricing
+ * This aligns with Deepgram's pricing model
+ */
+export function calculateCreditsNeeded(lyrics: LyricLine[]): number {
+  // Get the total duration from the last lyric line's end time
+  if (lyrics.length === 0) return 1
+  
+  const lastLine = lyrics[lyrics.length - 1]
+  const totalDurationSeconds = lastLine.endTime
+  
+  return VOICE_CREDIT_CONSTANTS.getCreditsFromDuration(totalDurationSeconds)
+}
+
+/**
+ * Calculate voice credits needed based on song duration in seconds
+ * @param durationInSeconds Total song duration in seconds
+ * @returns Number of credits needed
+ */
+export function calculateCreditsFromDuration(durationInSeconds: number): number {
+  return VOICE_CREDIT_CONSTANTS.getCreditsFromDuration(durationInSeconds)
 }

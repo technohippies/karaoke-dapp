@@ -11,6 +11,11 @@ export function SayItBack({
   transcript,
   isCorrect: _isCorrect
 }: SayItBackProps) {
+  console.log('SayItBack render:', { transcript, trimmed: transcript?.trim(), length: transcript?.length })
+  
+  const shouldShowTranscript = transcript && transcript.trim() && transcript.trim().length > 0
+  console.log('Should show transcript:', shouldShowTranscript)
+  
   return (
     <div className="space-y-8">
       {/* Just show the line */}
@@ -18,8 +23,8 @@ export function SayItBack({
         {line}
       </p>
 
-      {/* Show transcript after recording */}
-      {transcript && (
+      {/* Show transcript after recording only if it's not empty */}
+      {shouldShowTranscript && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
-import "../src/KaraokeStore_V0_1_0.sol";
+import "../src/KaraokeStore_V0_2_0.sol";
 
 contract DeployScript is Script {
     // Base Sepolia USDC
@@ -29,9 +29,9 @@ contract DeployScript is Script {
         
         vm.startBroadcast(deployerPrivateKey);
         
-        KaraokeStore_V0_1_0 karaokeStore = new KaraokeStore_V0_1_0(usdcAddress, litPkpAddress);
+        KaraokeStore_V0_2_0 karaokeStore = new KaraokeStore_V0_2_0(usdcAddress, litPkpAddress);
         
-        console.log("KaraokeStore_V0_1_0 deployed at:", address(karaokeStore));
+        console.log("KaraokeStore_V0_2_0 deployed at:", address(karaokeStore));
         console.log("USDC address:", usdcAddress);
         console.log("Lit PKP address:", litPkpAddress);
         
@@ -40,7 +40,7 @@ contract DeployScript is Script {
         // Write deployment info to file for other scripts
         string memory deploymentInfo = string(abi.encodePacked(
             '{"karaokeStore":"', vm.toString(address(karaokeStore)), '",',
-            '"contractVersion":"0.1.0",',
+            '"contractVersion":"0.2.0",',
             '"usdc":"', vm.toString(usdcAddress), '",',
             '"litPkp":"', vm.toString(litPkpAddress), '",',
             '"chainId":', vm.toString(block.chainid), '}'

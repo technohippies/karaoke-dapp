@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
-import { Header } from '@karaoke-dapp/ui'
+import { Header, Button } from '@karaoke-dapp/ui'
+import { X, CaretLeft } from '@phosphor-icons/react'
 
 const meta = {
   title: 'Components/Header',
@@ -13,36 +14,93 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
+// Homepage: Logo + Account Button
+export const Homepage: Story = {
   args: {
     onAccountClick: () => console.log('Account clicked'),
+    onLogoClick: () => console.log('Logo clicked'),
+    showLogo: true,
+    showAccount: true,
   },
 }
 
-export const WithFallback: Story = {
-  render: (args) => (
-    <div className="bg-neutral-900 min-h-screen">
-      <Header {...args} />
-      <div className="p-8 text-neutral-50">
-        <p>Logo should display from /logo.png (may not work in Storybook)</p>
+// Song Detail: Back Button + Account Button (no logo)
+export const SongDetail: Story = {
+  args: {
+    onAccountClick: () => console.log('Account clicked'),
+    showLogo: false,
+    showAccount: true,
+    leftContent: (
+      <Button variant="ghost" size="icon">
+        <CaretLeft size={24} />
+      </Button>
+    ),
+  },
+}
+
+// Exercise: X Button only (no logo, no account)
+export const Exercise: Story = {
+  args: {
+    showLogo: false,
+    showAccount: false,
+    leftContent: (
+      <Button variant="ghost" size="icon">
+        <X size={24} />
+      </Button>
+    ),
+  },
+}
+
+// Karaoke: X Button only (no logo, no account)
+export const Karaoke: Story = {
+  args: {
+    showLogo: false,
+    showAccount: false,
+    leftContent: (
+      <Button variant="ghost" size="icon">
+        <X size={24} />
+      </Button>
+    ),
+  },
+}
+
+// All variants comparison
+export const AllVariants: Story = {
+  render: () => (
+    <div className="min-h-screen bg-neutral-900 space-y-4">
+      <div>
+        <h3 className="text-white p-4">Homepage</h3>
+        <Header 
+          onAccountClick={() => {}} 
+          onLogoClick={() => {}}
+          showLogo={true}
+          showAccount={true}
+        />
       </div>
-    </div>
-  ),
-  args: {
-    onAccountClick: () => console.log('Account clicked'),
-  },
-}
-
-export const Interactive: Story = {
-  args: {
-    onAccountClick: () => alert('Navigate to account page'),
-  },
-  render: (args) => (
-    <div className="min-h-screen bg-neutral-900">
-      <Header {...args} />
-      <div className="p-8 text-neutral-50">
-        <h1 className="text-2xl font-bold mb-4">Page Content</h1>
-        <p>Click the user icon in the header to test navigation.</p>
+      <div>
+        <h3 className="text-white p-4">Song Detail</h3>
+        <Header 
+          onAccountClick={() => {}} 
+          showLogo={false}
+          showAccount={true}
+          leftContent={<Button variant="ghost" size="icon"><ArrowLeft size={24} /></Button>}
+        />
+      </div>
+      <div>
+        <h3 className="text-white p-4">Exercise</h3>
+        <Header 
+          showLogo={false}
+          showAccount={false}
+          leftContent={<Button variant="ghost" size="icon"><X size={24} /></Button>}
+        />
+      </div>
+      <div>
+        <h3 className="text-white p-4">Karaoke</h3>
+        <Header 
+          showLogo={false}
+          showAccount={false}
+          leftContent={<Button variant="ghost" size="icon"><X size={24} /></Button>}
+        />
       </div>
     </div>
   ),

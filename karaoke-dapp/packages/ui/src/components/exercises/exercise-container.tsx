@@ -91,7 +91,7 @@ export function ExerciseContainer({
                 {state.context.currentExercise.type === 'say-it-back' && (
                   <SayItBack
                     line={state.context.currentExercise.context}
-                    transcript={state.matches('checking') ? transcript : undefined}
+                    transcript={undefined}
                     isCorrect={null}
                   />
                 )}

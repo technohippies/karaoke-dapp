@@ -85,12 +85,13 @@ export function ExerciseRecordingFooter({
   const buttonState = getButtonState()
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-neutral-900 border-t border-neutral-800 p-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-neutral-700 border-t border-neutral-600 p-4">
         <div className="max-w-2xl mx-auto">
           <Button
             onClick={handleButtonClick}
             disabled={buttonState === 'processing'}
-            className="w-full px-8 py-4 font-semibold rounded-lg transition-all flex items-center justify-center gap-3"
+            size="lg"
+            className="w-full"
           >
             {buttonState === 'processing' ? (
               <>

@@ -12,6 +12,12 @@ export interface SongContext {
   credits?: number;
   error?: string;
   lastKaraokeScore?: number;
+  lyrics?: any[]; // LyricLine[]
+  voiceCredits?: number;
+  creditsNeeded?: number;
+  sessionId?: string;
+  pkpSignature?: string;
+  songDuration?: number; // Duration in seconds
 }
 
 export interface KaraokeContext {
@@ -46,6 +52,13 @@ export type SongEvent =
   | { type: 'UNLOCK' }
   | { type: 'DOWNLOAD' }
   | { type: 'START_KARAOKE' }
+  | { type: 'CONFIRM_CREDITS' }
+  | { type: 'CANCEL_KARAOKE' }
+  | { type: 'PURCHASE_VOICE_CREDITS' }
+  | { type: 'PURCHASE_COMBO_PACK' }
+  | { type: 'PURCHASE_BUNDLED' }
+  | { type: 'PURCHASE_SUCCESS'; txHash: string }
+  | { type: 'PURCHASE_ERROR'; error: string }
   | { type: 'COUNTDOWN_COMPLETE' }
   | { type: 'COMPLETE' }
   | { type: 'EXIT' }

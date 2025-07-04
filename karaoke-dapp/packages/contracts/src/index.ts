@@ -74,6 +74,32 @@ export const MusicStoreV2ABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "buyCombopack",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "deadline", "type": "uint256" },
+      { "internalType": "uint8", "name": "v", "type": "uint8" },
+      { "internalType": "bytes32", "name": "r", "type": "bytes32" },
+      { "internalType": "bytes32", "name": "s", "type": "bytes32" }
+    ],
+    "name": "buyComboPackWithPermit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getComboPackPrice",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [
       { "internalType": "address", "name": "user", "type": "address" },
       { "internalType": "uint256", "name": "songId", "type": "uint256" }
@@ -181,12 +207,23 @@ export const MusicStoreV2ABI = [
     ],
     "name": "VoiceSessionSettled",
     "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "address", "name": "buyer", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "songCredits", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "voiceCredits", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "totalPaid", "type": "uint256" }
+    ],
+    "name": "ComboPackPurchased",
+    "type": "event"
   }
 ] as const;
 
 export const CONTRACTS = {
   baseSepolia: {
-    musicStore: '0x306466a909df4dc0508b68b4511bcf8130abcb43', // KaraokeStore_V0_1_0 on Base Sepolia
+    musicStore: '0xf8495eA3b1eBa02804483A1803275158c240200E', // KaraokeStore_V0_2_0 on Base Sepolia
     usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia USDC
   },
 } as const;

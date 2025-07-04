@@ -536,25 +536,8 @@ export class UserTableService {
       tables = await this.createUserTables(userAddress)
     }
 
-    const statements = sessions.map(({ session, songId }) => {
-      return this.db!.prepare(`
-        INSERT INTO ${tables.karaokeSessionsTable} (
-          session_id, song_id, song_title, artist_name,
-          total_score, started_at, completed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        session.sessionId,
-        songId,
-        session.songTitle,
-        session.artistName,
-        Math.round((session.totalScore || 0) * 100),
-        session.startTime,
-        session.endTime || Date.now()
-      )
-    })
-
     // Use single atomic transaction for both sessions and line cards (1 signature!)
-    await this.batchSaveSessionsAndLines(userAddress, sessions, tables, statements)
+    await this.batchSaveSessionsAndLines(sessions, tables)
   }
 
   /**
@@ -562,10 +545,8 @@ export class UserTableService {
    * Uses Tableland's multi-table transaction capability with separate strings per table
    */
   private async batchSaveSessionsAndLines(
-    userAddress: string, 
     sessions: Array<{ session: KaraokeSession; songId: number }>,
-    tables: UserTableInfo,
-    sessionStatements: any[]
+    tables: UserTableInfo
   ): Promise<void> {
     if (!this.db) throw new Error('Database not initialized')
 

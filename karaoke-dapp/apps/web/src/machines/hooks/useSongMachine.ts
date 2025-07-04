@@ -5,7 +5,7 @@ import { songMachine } from '../song/songMachine';
 import { songServices } from '../song/services';
 import { songGuards } from '../song/guards';
 
-export function useSongMachine(songId: number) {
+export function useSongMachine(songId: number, songDuration?: number) {
   const { address } = useAccount();
 
   const [state, send, actorRef] = useMachine(songMachine.provide({
@@ -15,6 +15,7 @@ export function useSongMachine(songId: number) {
     input: {
       songId,
       userAddress: address,
+      songDuration,
     },
   });
 
@@ -32,6 +33,10 @@ export function useSongMachine(songId: number) {
   const download = useCallback(() => send({ type: 'DOWNLOAD' }), [send]);
   const startKaraoke = useCallback(() => send({ type: 'START_KARAOKE' }), [send]);
   const retry = useCallback(() => send({ type: 'RETRY' }), [send]);
+  const confirmCredits = useCallback(() => send({ type: 'CONFIRM_CREDITS' }), [send]);
+  const cancelKaraoke = useCallback(() => send({ type: 'CANCEL_KARAOKE' }), [send]);
+  const purchaseVoiceCredits = useCallback(() => send({ type: 'PURCHASE_VOICE_CREDITS' }), [send]);
+  const purchaseComboPack = useCallback(() => send({ type: 'PURCHASE_COMBO_PACK' }), [send]);
 
   // Computed states for UI
   const isIdle = state.matches('idle');
@@ -40,7 +45,8 @@ export function useSongMachine(songId: number) {
   const canUnlock = state.matches('canUnlock');
   const isUnlocking = state.matches('unlocking');
   const isApprovingUSDC = state.matches('approvingUSDC');
-  const isPurchasing = state.matches('purchasing');
+  const isPurchasing = state.matches('purchasing') || state.matches('purchasingWithPermit');
+  const isPurchasingWithPermit = state.matches('purchasingWithPermit');
   const isPurchased = state.matches('purchased');
   const isCheckingCache = state.matches('purchased.checkingCache');
   const needsDownload = state.matches('purchased.needsDownload');
@@ -48,6 +54,16 @@ export function useSongMachine(songId: number) {
   const isReady = state.matches('purchased.ready');
   const isPreparingKaraoke = state.matches('purchased.preparingKaraoke');
   const hasError = state.matches('error');
+  
+  // Voice credit states
+  const isCheckingVoiceCredits = state.matches('purchased.checkingVoiceCredits');
+  const isFetchingLyrics = state.matches('purchased.checkingVoiceCredits.fetchingLyrics');
+  const isCheckingBalance = state.matches('purchased.checkingVoiceCredits.checkingBalance');
+  const isWaitingForCreditConfirmation = state.matches('purchased.checkingVoiceCredits.waitingForConfirmation');
+  const isGeneratingSignature = state.matches('purchased.checkingVoiceCredits.generatingSignature');
+  const isDeductingCredits = state.matches('purchased.checkingVoiceCredits.deductingCredits');
+  const isPurchasingVoiceCredits = state.matches('purchasingVoiceCredits');
+  const isPurchasingComboPack = state.matches('purchasingComboPack');
   
   // Karaoke states - check if karaoke machine is invoked
   const isInKaraokeMode = state.matches('karaoke');
@@ -91,14 +107,22 @@ export function useSongMachine(songId: number) {
     if (canUnlock) return { text: 'Use Credit', disabled: false, action: unlock };
     if (isUnlocking) return { text: 'Unlocking...', disabled: true };
     if (isApprovingUSDC) return { text: 'Approving USDC...', disabled: true };
+    if (isPurchasingWithPermit) return { text: 'Sign & Purchase...', disabled: true };
     if (isPurchasing) return { text: 'Purchasing...', disabled: true };
     if (needsDownload) return { text: 'Download', disabled: false, action: download };
     if (isDownloading) return { text: 'Downloading...', disabled: true };
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
     if (isPreparingKaraoke) return { text: 'Preparing...', disabled: true };
+    if (isFetchingLyrics) return { text: 'Analyzing song...', disabled: true };
+    if (isCheckingBalance) return { text: 'Checking voice credits...', disabled: true };
+    if (isWaitingForCreditConfirmation) return { text: 'Confirm Credits', disabled: false, action: confirmCredits };
+    if (isGeneratingSignature) return { text: 'Generating signature...', disabled: true };
+    if (isDeductingCredits) return { text: 'Deducting credits...', disabled: true };
+    if (isPurchasingVoiceCredits) return { text: 'Purchasing voice credits...', disabled: true };
+    if (isPurchasingComboPack) return { text: 'Purchasing combo pack...', disabled: true };
     if (hasError) return { text: 'Retry', disabled: false, action: retry };
     return { text: 'Loading...', disabled: true };
-  }, [isCheckingAccess, isCheckingCache, isUnpurchased, canUnlock, isUnlocking, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, isPreparingKaraoke, hasError, purchase, unlock, download, startKaraoke, retry]);
+  }, [isCheckingAccess, isCheckingCache, isUnpurchased, canUnlock, isUnlocking, isApprovingUSDC, isPurchasing, needsDownload, isDownloading, isReady, isPreparingKaraoke, isFetchingLyrics, isCheckingBalance, isWaitingForCreditConfirmation, isGeneratingSignature, isDeductingCredits, isPurchasingVoiceCredits, isPurchasingComboPack, hasError, purchase, unlock, download, startKaraoke, confirmCredits, retry]);
 
   return {
     state,
@@ -111,6 +135,10 @@ export function useSongMachine(songId: number) {
     download,
     startKaraoke,
     retry,
+    confirmCredits,
+    cancelKaraoke,
+    purchaseVoiceCredits,
+    purchaseComboPack,
     // States
     isIdle,
     isCheckingAccess,
@@ -126,6 +154,15 @@ export function useSongMachine(songId: number) {
     isReady,
     isPreparingKaraoke,
     hasError,
+    // Voice credit states
+    isCheckingVoiceCredits,
+    isFetchingLyrics,
+    isCheckingBalance,
+    isWaitingForCreditConfirmation,
+    isGeneratingSignature,
+    isDeductingCredits,
+    isPurchasingVoiceCredits,
+    isPurchasingComboPack,
     // Karaoke states
     isInKaraokeMode,
     isKaraokeCountdown,
@@ -139,5 +176,7 @@ export function useSongMachine(songId: number) {
     getButtonState,
     error: state.context.error,
     credits: state.context.credits,
+    voiceCredits: state.context.voiceCredits,
+    creditsNeeded: state.context.creditsNeeded,
   };
 }
