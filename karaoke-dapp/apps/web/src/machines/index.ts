@@ -3,8 +3,9 @@ export * from './types';
 
 // Song Machine
 export { songMachine } from './song/songMachine';
+export { songMachineV2 } from './song/songMachineV2';
 export { songServices } from './song/services';
-export { songGuards } from './song/guards';
+export { songGuards, songGuardsV2 } from './song/guards';
 
 // Karaoke Machine
 export { karaokeMachine } from './karaoke/karaokeMachine';

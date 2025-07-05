@@ -1,15 +1,15 @@
 import { useMachine } from '@xstate/react';
 import { useAccount } from 'wagmi';
 import { useEffect, useCallback, useState } from 'react';
-import { songMachine } from '../song/songMachine';
+import { songMachineV2 } from '../song/songMachineV2';
 import { songServices } from '../song/services';
-import { songGuards } from '../song/guards';
+import { songGuardsV2 } from '../song/guards';
 
 export function useSongMachine(songId: number, songDuration?: number) {
   const { address } = useAccount();
 
-  const [state, send, actorRef] = useMachine(songMachine.provide({
-    guards: songGuards,
+  const [state, send, actorRef] = useMachine(songMachineV2.provide({
+    guards: songGuardsV2,
     actors: songServices,
   }), {
     input: {
@@ -39,14 +39,23 @@ export function useSongMachine(songId: number, songDuration?: number) {
   const purchaseComboPack = useCallback(() => send({ type: 'PURCHASE_COMBO_PACK' }), [send]);
 
   // Computed states for UI
+  const isDetectingWallet = state.matches('detectingWallet');
   const isIdle = state.matches('idle');
   const isCheckingAccess = state.matches('checkingAccess');
   const isUnpurchased = state.matches('unpurchased');
   const canUnlock = state.matches('canUnlock');
   const isUnlocking = state.matches('unlocking');
   const isApprovingUSDC = state.matches('approvingUSDC');
-  const isPurchasing = state.matches('purchasing') || state.matches('purchasingWithPermit');
+  const isPurchasing = state.matches('purchasing') || 
+    state.matches('purchasingWithPermit') || 
+    state.matches('purchasingWithPortoSession') ||
+    state.matches('purchasingWithMetaMaskSession');
   const isPurchasingWithPermit = state.matches('purchasingWithPermit');
+  const isPurchasingWithPorto = state.matches('purchasingWithPortoSession');
+  const isPurchasingWithMetaMask = state.matches('purchasingWithMetaMaskSession');
+  const isPortoSessionActive = state.matches('purchased.portoSessionActive');
+  const isMetaMaskSessionActive = state.matches('purchased.metaMaskSessionActive');
+  const isInitializingMetaMaskSession = state.matches('purchased.initializingMetaMaskSession');
   const isPurchased = state.matches('purchased');
   const isCheckingCache = state.matches('purchased.checkingCache');
   const needsDownload = state.matches('purchased.needsDownload');
@@ -57,7 +66,8 @@ export function useSongMachine(songId: number, songDuration?: number) {
   
   // Voice credit states
   const isCheckingVoiceCredits = state.matches('purchased.checkingVoiceCredits');
-  const isFetchingLyrics = state.matches('purchased.checkingVoiceCredits.fetchingLyrics');
+  const isFetchingLyrics = state.matches('purchased.checkingVoiceCredits.fetchingLyrics') || 
+    state.matches('purchased.karaokeWithMetaMaskSession.fetchingLyrics');
   const isCheckingBalance = state.matches('purchased.checkingVoiceCredits.checkingBalance');
   const isWaitingForCreditConfirmation = state.matches('purchased.checkingVoiceCredits.waitingForConfirmation');
   const isGeneratingSignature = state.matches('purchased.checkingVoiceCredits.generatingSignature');
@@ -102,7 +112,7 @@ export function useSongMachine(songId: number, songDuration?: number) {
 
   // Get button state and text
   const getButtonState = useCallback(() => {
-    if (isCheckingAccess || isCheckingCache) return { text: 'Loading...', disabled: true };
+    if (isDetectingWallet || isCheckingAccess || isCheckingCache) return { text: 'Loading...', disabled: true };
     if (isUnpurchased) return { text: 'Purchase', disabled: false, action: purchase };
     if (canUnlock) return { text: 'Use Credit', disabled: false, action: unlock };
     if (isUnlocking) return { text: 'Unlocking...', disabled: true };
@@ -112,6 +122,7 @@ export function useSongMachine(songId: number, songDuration?: number) {
     if (needsDownload) return { text: 'Download', disabled: false, action: download };
     if (isDownloading) return { text: 'Downloading...', disabled: true };
     if (isReady) return { text: 'Start Karaoke', disabled: false, action: startKaraoke };
+    if (isInitializingMetaMaskSession) return { text: 'Setting up gasless session...', disabled: true };
     if (isPreparingKaraoke) return { text: 'Preparing...', disabled: true };
     if (isFetchingLyrics) return { text: 'Analyzing song...', disabled: true };
     if (isCheckingBalance) return { text: 'Checking voice credits...', disabled: true };
@@ -140,6 +151,7 @@ export function useSongMachine(songId: number, songDuration?: number) {
     purchaseVoiceCredits,
     purchaseComboPack,
     // States
+    isDetectingWallet,
     isIdle,
     isCheckingAccess,
     isUnpurchased,
@@ -147,6 +159,11 @@ export function useSongMachine(songId: number, songDuration?: number) {
     isUnlocking,
     isApprovingUSDC,
     isPurchasing,
+    isPurchasingWithPorto,
+    isPurchasingWithMetaMask,
+    isPortoSessionActive,
+    isMetaMaskSessionActive,
+    isInitializingMetaMaskSession,
     isPurchased,
     isCheckingCache,
     needsDownload,

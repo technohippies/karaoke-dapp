@@ -223,7 +223,170 @@ export const MusicStoreV2ABI = [
 
 export const CONTRACTS = {
   baseSepolia: {
-    musicStore: '0xf8495eA3b1eBa02804483A1803275158c240200E', // KaraokeStore_V0_2_0 on Base Sepolia
+    musicStore: '0xfb593e79CDFd4F1d8c9F1f0d6Ff75623bba42728', // KaraokeStore_V0_3_0 with Porto sessions
+    karaokeStoreV030: '0xfb593e79CDFd4F1d8c9F1f0d6Ff75623bba42728', // KaraokeStore_V0_3_0 with Porto sessions
     usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia USDC
   },
 } as const;
+
+// KaraokeStore V0.3.0 ABI with Porto session support
+export const KaraokeStoreV030ABI = [
+  // Purchase functions with permit
+  {
+    name: 'buyComboPackWithPermit',
+    type: 'function',
+    inputs: [
+      { name: 'deadline', type: 'uint256' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'buySongPackWithPermit',
+    type: 'function',
+    inputs: [
+      { name: 'deadline', type: 'uint256' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'buyVoicePackWithPermit',
+    type: 'function',
+    inputs: [
+      { name: 'deadline', type: 'uint256' },
+      { name: 'v', type: 'uint8' },
+      { name: 'r', type: 'bytes32' },
+      { name: 's', type: 'bytes32' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  
+  // Song access
+  {
+    name: 'unlockSong',
+    type: 'function',
+    inputs: [{ name: 'songId', type: 'uint256' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'checkAccess',
+    type: 'function',
+    inputs: [
+      { name: 'user', type: 'address' },
+      { name: 'songId', type: 'uint256' }
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view'
+  },
+  
+  // Session management
+  {
+    name: 'initializeSession',
+    type: 'function',
+    inputs: [
+      { name: 'songId', type: 'uint256' },
+      { name: 'sessionKey', type: 'address' },
+      { name: 'maxCredits', type: 'uint256' }
+    ],
+    outputs: [{ name: 'sessionId', type: 'bytes32' }],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'processKaraokeLine',
+    type: 'function',
+    inputs: [
+      { name: 'sessionId', type: 'bytes32' },
+      { name: 'lineIndex', type: 'uint256' },
+      { name: 'accuracy', type: 'uint256' },
+      { name: 'creditsForLine', type: 'uint256' },
+      { name: 'pkpSignature', type: 'bytes' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'finalizeSession',
+    type: 'function',
+    inputs: [{ name: 'sessionId', type: 'bytes32' }],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'getSession',
+    type: 'function',
+    inputs: [{ name: 'sessionId', type: 'bytes32' }],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'user', type: 'address' },
+          { name: 'songId', type: 'uint256' },
+          { name: 'sessionKey', type: 'address' },
+          { name: 'startTime', type: 'uint256' },
+          { name: 'maxCredits', type: 'uint256' },
+          { name: 'creditsUsed', type: 'uint256' },
+          { name: 'linesProcessed', type: 'uint256' },
+          { name: 'finalized', type: 'bool' }
+        ]
+      }
+    ],
+    stateMutability: 'view'
+  },
+  
+  // Credit queries
+  {
+    name: 'getCredits',
+    type: 'function',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  {
+    name: 'getVoiceCredits',
+    type: 'function',
+    inputs: [{ name: 'user', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view'
+  },
+  
+  // Events
+  {
+    name: 'SessionStarted',
+    type: 'event',
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: true, name: 'user', type: 'address' },
+      { indexed: true, name: 'songId', type: 'uint256' },
+      { indexed: false, name: 'sessionKey', type: 'address' }
+    ]
+  },
+  {
+    name: 'LineProcessed',
+    type: 'event',
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: false, name: 'lineIndex', type: 'uint256' },
+      { indexed: false, name: 'accuracy', type: 'uint256' },
+      { indexed: false, name: 'creditsUsed', type: 'uint256' }
+    ]
+  },
+  {
+    name: 'SessionFinalized',
+    type: 'event',
+    inputs: [
+      { indexed: true, name: 'sessionId', type: 'bytes32' },
+      { indexed: false, name: 'totalCreditsUsed', type: 'uint256' },
+      { indexed: false, name: 'totalLines', type: 'uint256' }
+    ]
+  }
+] as const;

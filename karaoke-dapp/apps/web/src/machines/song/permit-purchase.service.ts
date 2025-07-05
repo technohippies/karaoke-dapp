@@ -40,6 +40,83 @@ const USDC_PERMIT_ABI = [
 ] as const;
 
 /**
+ * Sign a permit for USDC spending
+ */
+export const signPermit = async (userAddress: string, amount: bigint) => {
+  // Get nonce for permit
+  const nonce = await readContract(wagmiConfig, {
+    address: USDC_ADDRESS,
+    abi: USDC_PERMIT_ABI,
+    functionName: 'nonces',
+    args: [userAddress as `0x${string}`],
+  });
+  
+  // Set deadline to 5 minutes from now
+  const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
+  
+  // Get token info for domain
+  const [tokenName, tokenVersion] = await Promise.all([
+    readContract(wagmiConfig, {
+      address: USDC_ADDRESS,
+      abi: USDC_PERMIT_ABI,
+      functionName: 'name',
+    }),
+    readContract(wagmiConfig, {
+      address: USDC_ADDRESS,
+      abi: USDC_PERMIT_ABI,
+      functionName: 'version',
+    })
+  ]);
+  
+  // Create typed data for permit
+  const domain = {
+    name: tokenName,
+    version: tokenVersion,
+    chainId: 84532, // Base Sepolia
+    verifyingContract: USDC_ADDRESS as `0x${string}`,
+  };
+  
+  const types = {
+    Permit: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+    ],
+  } as const;
+  
+  const message = {
+    owner: userAddress as `0x${string}`,
+    spender: MUSIC_STORE_ADDRESS as `0x${string}`,
+    value: amount,
+    nonce: nonce,
+    deadline: deadline,
+  };
+  
+  // Sign the permit
+  const signature = await signTypedData(wagmiConfig, {
+    domain,
+    types,
+    primaryType: 'Permit',
+    message,
+  });
+  
+  // Extract r, s, v from signature
+  const sig = signature.slice(2);
+  const r = `0x${sig.slice(0, 64)}` as `0x${string}`;
+  const s = `0x${sig.slice(64, 128)}` as `0x${string}`;
+  let v = parseInt(sig.slice(128, 130), 16);
+  
+  // EIP-155 adjustment: if v is 0 or 1, add 27
+  if (v < 27) {
+    v += 27;
+  }
+  
+  return { deadline, v, r, s };
+};
+
+/**
  * Purchase and unlock with permit - reduces 3 transactions to 2
  * Transaction 1: Buy pack with permit (includes gasless approval)
  * Transaction 2: Unlock song
@@ -100,113 +177,16 @@ export const purchaseAndUnlockWithPermit = async ({ input }: { input: SongContex
       const functionName = isNewUser ? 'buyComboPackWithPermit' : 'buyCreditPackWithPermit';
       const packType = isNewUser ? 'combo pack' : 'credit pack';
       
-      // Get nonce for permit
-      const nonce = await readContract(wagmiConfig, {
-        address: USDC_ADDRESS,
-        abi: USDC_PERMIT_ABI,
-        functionName: 'nonces',
-        args: [context.userAddress as `0x${string}`],
-      });
-      
-      // Set deadline to 5 minutes from now
-      const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
-      
       console.log(`📝 Preparing ${packType} purchase with permit...`);
       
-      // Get DOMAIN_SEPARATOR and token info to verify domain parameters
-      const [domainSeparator, tokenName, tokenVersion] = await Promise.all([
-        readContract(wagmiConfig, {
-          address: USDC_ADDRESS,
-          abi: USDC_PERMIT_ABI,
-          functionName: 'DOMAIN_SEPARATOR',
-        }),
-        readContract(wagmiConfig, {
-          address: USDC_ADDRESS,
-          abi: USDC_PERMIT_ABI,
-          functionName: 'name',
-        }),
-        readContract(wagmiConfig, {
-          address: USDC_ADDRESS,
-          abi: USDC_PERMIT_ABI,
-          functionName: 'version',
-        })
-      ]);
-      console.log('Domain separator from contract:', domainSeparator);
-      console.log('Token name:', tokenName);
-      console.log('Token version:', tokenVersion);
-      
-      // Create typed data for permit using actual values from contract
-      const domain = {
-        name: tokenName,
-        version: tokenVersion,
-        chainId: 84532, // Base Sepolia
-        verifyingContract: USDC_ADDRESS as `0x${string}`,
-      };
-      
-      // Verify our domain matches
-      const computedSeparator = keccak256(
-        encodePacked(
-          ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
-          [
-            keccak256(toHex('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
-            keccak256(toHex(domain.name)),
-            keccak256(toHex(domain.version)),
-            BigInt(domain.chainId),
-            domain.verifyingContract
-          ]
-        )
-      );
-      console.log('Computed domain separator:', computedSeparator);
-      console.log('Domain matches:', computedSeparator === domainSeparator);
-      
-      const types = {
-        Permit: [
-          { name: 'owner', type: 'address' },
-          { name: 'spender', type: 'address' },
-          { name: 'value', type: 'uint256' },
-          { name: 'nonce', type: 'uint256' },
-          { name: 'deadline', type: 'uint256' },
-        ],
-      } as const;
-      
-      const message = {
-        owner: context.userAddress as `0x${string}`,
-        spender: MUSIC_STORE_ADDRESS as `0x${string}`,
-        value: packPrice,
-        nonce: nonce,
-        deadline: deadline,
-      };
-      
-      console.log('🖊️ Requesting permit signature...');
-      console.log('Permit details:', {
-        owner: message.owner,
-        spender: message.spender,
-        value: message.value.toString(),
-        nonce: message.nonce.toString(),
-        deadline: message.deadline.toString(),
-        domain
-      });
-      
       // Sign the permit
-      const signature = await signTypedData(wagmiConfig, {
-        domain,
-        types,
-        primaryType: 'Permit',
-        message,
+      const permitSig = await signPermit(context.userAddress, packPrice);
+      
+      console.log('Signature components:', { 
+        r: permitSig.r, 
+        s: permitSig.s, 
+        v: permitSig.v 
       });
-      
-      // Extract r, s, v from signature
-      const sig = signature.slice(2);
-      const r = `0x${sig.slice(0, 64)}` as `0x${string}`;
-      const s = `0x${sig.slice(64, 128)}` as `0x${string}`;
-      let v = parseInt(sig.slice(128, 130), 16);
-      
-      // EIP-155 adjustment: if v is 0 or 1, add 27
-      if (v < 27) {
-        v += 27;
-      }
-      
-      console.log('Signature components:', { r, s, v });
       
       console.log(`💳 Buying ${packType} with permit...`);
       
@@ -215,7 +195,7 @@ export const purchaseAndUnlockWithPermit = async ({ input }: { input: SongContex
         address: MUSIC_STORE_ADDRESS,
         abi: MusicStoreV2ABI,
         functionName: functionName as any,
-        args: [deadline, v, r, s],
+        args: [permitSig.deadline, permitSig.v, permitSig.r, permitSig.s],
       });
       
       console.log(`${packType} purchase tx:`, hash);

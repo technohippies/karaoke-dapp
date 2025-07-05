@@ -5,6 +5,8 @@ import type { RecordingSegment } from '../../services/recording-manager.service'
 import { KaraokeGradingService } from '../../services/karaoke-grading.service'
 import { FinalGradingService } from '../../services/final-grading.service'
 import { pcmRecordingService } from './pcmRecorder'
+import { portoKaraokeSessionService } from '../../services/porto-karaoke-session.service'
+import type { Hex } from 'viem'
 
 interface AudioChunk {
   data: Blob
@@ -35,6 +37,11 @@ interface MergedKaraokeContext extends KaraokeContext {
     expectedText: string;
     timestamp: number;
   }>
+  
+  // Porto session support
+  portoSessionId?: Hex
+  portoSessionKey?: string
+  isPortoSession?: boolean
 }
 
 type MergedKaraokeEvent = KaraokeEvent
@@ -262,7 +269,12 @@ export const karaokeMachine = createMachine({
     // Grading
     gradingService: input?.gradingService || null,
     finalGradingService: input?.finalGradingService || null,
-    gradingResults: new Map()
+    gradingResults: new Map(),
+    
+    // Porto session
+    portoSessionId: input?.portoSessionId,
+    portoSessionKey: input?.portoSessionKey,
+    isPortoSession: !!input?.portoSessionId
   }),
   
   on: {
@@ -289,7 +301,29 @@ export const karaokeMachine = createMachine({
     },
     
     preparing: {
-      entry: () => console.log('🎬 In preparing state, about to setup media stream'),
+      entry: ({ context }) => {
+        console.log('🎬 In preparing state, about to setup media stream');
+        
+        // If Porto session is active, set it up in the service
+        if (context.isPortoSession && context.portoSessionId && context.portoSessionKey) {
+          console.log('🔑 Setting up Porto session for gasless karaoke');
+          // Note: The session should already be stored in portoSessionService
+          // We'll retrieve it from localStorage if needed
+          const sessionData = localStorage.getItem(`karaoke-session-${context.portoSessionId}`);
+          if (sessionData) {
+            try {
+              const session = JSON.parse(sessionData);
+              // Add the private key back (it should be passed from the parent machine)
+              session.sessionKeyPrivate = context.portoSessionKey;
+              portoKaraokeSessionService.setActiveSession(session);
+            } catch (error) {
+              console.error('Failed to parse Porto session:', error);
+            }
+          } else {
+            console.warn('⚠️ Porto session not found in localStorage');
+          }
+        }
+      },
       invoke: {
         src: setupMediaStream,
         onDone: {
@@ -448,8 +482,29 @@ export const karaokeMachine = createMachine({
               console.log(`🎯 Starting grading for segment ${segment.lyricLine.id}: "${segment.expectedText}"`)
             console.log(`🎤 Recording service active`)
               
-              context.gradingService.gradeSegment(recordingSegment).then(result => {
+              context.gradingService.gradeSegment(recordingSegment).then(async result => {
                 console.log(`✅ Grading complete for segment ${segment.lyricLine.id}`)
+                
+                // If Porto session is active, submit the line result
+                if (context.isPortoSession && context.portoSessionId) {
+                  try {
+                    // Calculate credits for this line (based on duration)
+                    const lineDuration = segment.recordEndTime - segment.recordStartTime;
+                    const creditsUsed = Math.max(1, Math.ceil(lineDuration / 30000)); // 1 credit per 30 seconds
+                    
+                    await portoKaraokeSessionService.submitLineResult({
+                      lineIndex: segment.lyricLine.id,
+                      accuracy: Math.round(result.similarity * 100), // Convert to percentage
+                      creditsUsed,
+                      pkpSignature: result.signature as Hex || '0x' as Hex
+                    });
+                    
+                    console.log(`📤 Porto session: Line ${segment.lyricLine.id} submitted on-chain`);
+                  } catch (error) {
+                    console.error(`❌ Porto session: Failed to submit line ${segment.lyricLine.id}:`, error);
+                  }
+                }
+                
                 self.send({
                   type: 'GRADING_COMPLETE',
                   lineId: segment.lyricLine.id,
@@ -584,6 +639,17 @@ export const karaokeMachine = createMachine({
           entry: async ({ context }) => {
             // Process completed session data
             try {
+              // If Porto session is active, finalize it
+              if (context.isPortoSession && context.portoSessionId) {
+                console.log('🏁 Finalizing Porto session...');
+                try {
+                  await portoKaraokeSessionService.finalizeSession();
+                  console.log('✅ Porto session finalized');
+                } catch (error) {
+                  console.error('❌ Failed to finalize Porto session:', error);
+                }
+              }
+              
               const { karaokeDataPipeline } = await import('@karaoke-dapp/services')
               
               // Extract final result data from context
@@ -605,7 +671,8 @@ export const karaokeMachine = createMachine({
                 songTitle: context.songTitle,
                 artistName: context.artistName,
                 sessionId: context.sessionId,
-                songId: context.songId
+                songId: context.songId,
+                isPortoSession: context.isPortoSession
               })
               
               // Process the session
@@ -635,9 +702,20 @@ export const karaokeMachine = createMachine({
     },
     
     stopped: {
-      entry: () => {
+      entry: async ({ context }) => {
         // PCM recorder will stop automatically when the service is stopped
         console.log('⏹️ Recording stopped by user')
+        
+        // If Porto session is active, finalize it
+        if (context.isPortoSession && context.portoSessionId) {
+          console.log('🏁 Finalizing Porto session (stopped by user)...');
+          try {
+            await portoKaraokeSessionService.finalizeSession();
+            console.log('✅ Porto session finalized');
+          } catch (error) {
+            console.error('❌ Failed to finalize Porto session:', error);
+          }
+        }
       },
       type: 'final'
     },

@@ -23,3 +23,9 @@ export const songGuards = {
     return event.output && Object.keys(event.output).length > 0;
   },
 };
+
+// V2 guards with Porto support
+export const songGuardsV2 = {
+  ...songGuards,
+  hasPortoWallet: ({ context }: any) => context.isPortoWallet === true,
+};

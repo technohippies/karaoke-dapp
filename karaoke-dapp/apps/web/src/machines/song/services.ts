@@ -1,7 +1,7 @@
 import { fromPromise } from 'xstate';
 import { readContract, writeContract, waitForTransactionReceipt } from 'wagmi/actions';
 import { wagmiConfig } from '../../wagmi';
-import { MusicStoreV2ABI, CONTRACTS } from '@karaoke-dapp/contracts';
+import { MusicStoreV2ABI, KaraokeStoreV030ABI, CONTRACTS } from '@karaoke-dapp/contracts';
 import { EncryptionService, DatabaseService, LIT_ACTION_CIDS, PKP_CONFIG } from '@karaoke-dapp/services/browser';
 import { openDB } from 'idb';
 import type { SongContext } from '../types';
@@ -11,6 +11,8 @@ import { karaokeServices } from '../karaoke/services';
 import { karaokeActions, karaokeGuards } from '../karaoke/actions';
 import { parseLRC, calculateCreditsNeeded } from '../../utils/lyrics-parser';
 import { purchaseAndUnlockWithPermit as purchaseAndUnlockWithPermitService } from './permit-purchase.service';
+import { portoServices } from './porto-services';
+import { metamaskServices } from './metamask-services';
 
 const MUSIC_STORE_ADDRESS = CONTRACTS.baseSepolia.musicStore;
 const SESSION_STORAGE_KEY = 'lit-session-sigs';
@@ -790,10 +792,16 @@ export const songServices = {
   }),
 
   // Pre-emptively deduct voice credits
-  deductVoiceCredits: fromPromise(async ({ input }: { input: SongContext & { creditsNeeded: number; sessionId: string; pkpSignature: string } }) => {
+  deductVoiceCredits: fromPromise(async ({ input }: { input: SongContext & { creditsNeeded: number; sessionId: string; pkpSignature: string; isMetaMaskSmartAccount?: boolean; metaMaskSessionId?: string } }) => {
     const context = input;
     if (!context.userAddress) {
       throw new Error('No user address');
+    }
+
+    // Skip if using MetaMask session (gasless)
+    if (context.isMetaMaskSmartAccount && context.metaMaskSessionId) {
+      console.log('🦊 Skipping credit deduction - using MetaMask session for gasless karaoke');
+      return { success: true, txHash: '0x0' };
     }
 
     console.log('💸 Deducting voice credits:', {
@@ -805,6 +813,18 @@ export const songServices = {
     // Convert session ID to bytes32 format
     const sessionIdBytes32 = '0x' + Buffer.from(context.sessionId).toString('hex').padEnd(64, '0').slice(0, 64);
 
+    // The signature might have 0x prefix, ensure it's properly formatted
+    let formattedSignature = context.pkpSignature;
+    if (!formattedSignature.startsWith('0x')) {
+      formattedSignature = '0x' + formattedSignature;
+    }
+
+    console.log('📝 Signature format check:', {
+      original: context.pkpSignature.substring(0, 10) + '...',
+      formatted: formattedSignature.substring(0, 10) + '...',
+      length: formattedSignature.length
+    });
+
     // Call smart contract to deduct credits
     const txHash = await writeContract(wagmiConfig, {
       address: MUSIC_STORE_ADDRESS,
@@ -814,7 +834,7 @@ export const songServices = {
         context.userAddress as `0x${string}`,
         sessionIdBytes32 as `0x${string}`,
         BigInt(context.creditsNeeded),
-        context.pkpSignature as `0x${string}`
+        formattedSignature as `0x${string}`
       ],
     });
 
@@ -884,8 +904,14 @@ export const songServices = {
       }
     } else if (result.response?.success && result.signatures?.settlement?.signature) {
       // If it's already an object
+      const signature = result.signatures.settlement.signature;
       console.log('✅ PKP signature generated from object');
-      return result.signatures.settlement.signature;
+      console.log('📝 Signature details:', {
+        signature: signature.substring(0, 10) + '...',
+        length: signature.length,
+        hasPrefix: signature.startsWith('0x')
+      });
+      return signature;
     }
     
     console.error('❌ Signature not found in result structure');
@@ -1236,4 +1262,19 @@ export const songServices = {
       throw error;
     }
   }),
+
+  // Porto-specific services
+  checkPortoConnection: portoServices.checkPortoConnection,
+  purchaseWithPortoSession: portoServices.purchaseWithPortoSession,
+  initializePortoSession: portoServices.initializePortoSession,
+  processLineWithPortoSession: portoServices.processLineWithPortoSession,
+  getPortoSessionProgress: portoServices.getPortoSessionProgress,
+  finalizePortoSession: portoServices.finalizePortoSession,
+
+  // MetaMask Smart Account services
+  checkMetaMaskSmartAccount: metamaskServices.checkMetaMaskSmartAccount,
+  purchaseWithMetaMaskSession: metamaskServices.purchaseWithMetaMaskSession,
+  processKaraokeLineWithSession: metamaskServices.processKaraokeLineWithSession,
+  finalizeMetaMaskSession: metamaskServices.finalizeMetaMaskSession,
+  initializeMetaMaskSessionForKaraoke: metamaskServices.initializeMetaMaskSessionForKaraoke,
 };

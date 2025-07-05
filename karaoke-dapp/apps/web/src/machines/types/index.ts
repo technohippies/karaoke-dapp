@@ -66,7 +66,10 @@ export type SongEvent =
   | { type: 'CANCEL' }
   | { type: 'RETRY' }
   | { type: 'UPDATE_ADDRESS'; address: string }
-  | { type: 'ERROR'; error: string };
+  | { type: 'ERROR'; error: string }
+  | { type: 'PORTO_DETECTED'; isPorto: boolean }
+  | { type: 'END_KARAOKE' }
+  | { type: 'END_SESSION' };
 
 export type KaraokeEvent =
   | { type: 'UPDATE_COUNTDOWN'; value: number }
