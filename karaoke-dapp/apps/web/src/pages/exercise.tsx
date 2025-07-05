@@ -154,24 +154,76 @@ export function ExercisePage() {
   }, [address])
 
   const handleComplete = async (results: any[]) => {
-    console.log('Exercise session complete!', results)
+    console.log('📊 Exercise session complete! Results:', results)
     
     // Save results to SRS service
     try {
+      let processedCount = 0
       for (const [index, result] of results.entries()) {
         const exercise = exercises[index]
-        if (exercise && result.transcript) {
+        console.log(`📝 Processing exercise ${index}:`, {
+          exercise: exercise?.context,
+          transcript: result.transcript,
+          isCorrect: result.isCorrect,
+          hasTranscript: !!result.transcript
+        })
+        
+        if (exercise && result.transcript !== undefined) {
           // Process the result for SRS tracking
           await wordSRSService.processLineResult(
             index,
             exercise.context, // Use the full context line for expected text
-            result.transcript,
+            result.transcript || '', // Handle empty transcripts
             result.isCorrect ? 1.0 : 0.0,
             0 // No specific song ID for exercises
           )
+          processedCount++
         }
       }
-      console.log('✅ Exercise results saved to SRS')
+      console.log(`✅ Exercise results saved to IndexedDB SRS (${processedCount}/${results.length} processed)`)
+      
+      // Also update Tableland if user has tables
+      if (address) {
+        try {
+          const { userTableService } = await import('@karaoke-dapp/services')
+          const provider = await window.ethereum
+          if (provider) {
+            await userTableService.initialize(provider)
+            
+            // Create a pseudo-session for exercises
+            const sessionId = `exercise-${Date.now()}`
+            const sessionData = {
+              sessionId,
+              userId: address,
+              songId: 0, // 0 for exercises
+              songTitle: 'Practice Exercises',
+              artistName: 'SRS Review',
+              totalScore: results.filter(r => r.isCorrect).length / results.length,
+              accuracy: results.filter(r => r.isCorrect).length / results.length,
+              creditsUsed: 0,
+              startTime: Date.now() - (results.length * 10000), // Estimate
+              endTime: Date.now(),
+              lines: results.map((result, idx) => ({
+                lineIndex: idx,
+                expectedText: exercises[idx]?.context || '',
+                actualText: result.transcript || '',
+                accuracy: result.isCorrect ? 1.0 : 0.0
+              })),
+              settled: true
+            }
+            
+            await userTableService.saveExerciseSession(
+              address,
+              sessionId,
+              results.length,
+              results.filter(r => r.isCorrect).length
+            )
+            console.log('✅ Exercise session saved to Tableland')
+          }
+        } catch (error) {
+          console.error('Failed to save to Tableland:', error)
+        }
+      }
     } catch (error) {
       console.error('Failed to save exercise results:', error)
     }

@@ -37,6 +37,14 @@ export class KaraokeGradingService {
       // Convert audio blob to base64
       const audioBase64 = await this.blobToBase64(segment.audioBlob)
       console.log(`🔊 Segment ${segment.lyricLineId} audio: ${segment.audioBlob.size} bytes → ${audioBase64.length} base64 chars`)
+    
+    // Additional debugging for audio issues
+    if (segment.audioBlob.size < 1000) {
+      console.warn(`⚠️ Very small audio blob for segment ${segment.lyricLineId}: ${segment.audioBlob.size} bytes`)
+    }
+    if (audioBase64.length < 1000) {
+      console.warn(`⚠️ Very short base64 audio for segment ${segment.lyricLineId}: ${audioBase64.length} chars`)
+    }
       
       
       // Note: Keywords are now handled within the deployed Lit Action
@@ -77,6 +85,16 @@ export class KaraokeGradingService {
       console.log(`   Expected: "${segment.expectedText}"`)
       console.log(`   Got:      "${lineResult.transcript}"`)
       console.log(`   Accuracy: ${(lineResult.accuracy * 100).toFixed(0)}%`)
+      
+      // Debug empty transcripts
+      if (!lineResult.transcript || lineResult.transcript.length === 0) {
+        console.warn(`⚠️ Empty transcript for line ${segment.lyricLineId}`)
+        console.log(`   Audio blob size: ${segment.audioBlob.size} bytes`)
+        console.log(`   Expected text length: ${segment.expectedText.length} chars`)
+        if (lineResult.debug) {
+          console.log(`   Debug info:`, lineResult.debug)
+        }
+      }
       
       return {
         segmentId: segment.segmentId,
