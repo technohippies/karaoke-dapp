@@ -11,10 +11,8 @@ export function SayItBack({
   transcript,
   isCorrect: _isCorrect
 }: SayItBackProps) {
-  console.log('SayItBack render:', { transcript, trimmed: transcript?.trim(), length: transcript?.length })
-  
+  // Only log when transcript changes from undefined to a value
   const shouldShowTranscript = transcript && transcript.trim() && transcript.trim().length > 0
-  console.log('Should show transcript:', shouldShowTranscript)
   
   return (
     <div className="space-y-8">
