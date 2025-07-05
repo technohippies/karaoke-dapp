@@ -45,20 +45,28 @@ export class WordSRSService {
   private fsrs = fsrs(generatorParameters({ enable_fuzz: true }));
 
   async initialize(): Promise<void> {
-    this.db = await openDB<WordSRSDB>('karaoke-word-srs', 1, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('wordMistakes')) {
-          db.createObjectStore('wordMistakes');
-        }
-        if (!db.objectStoreNames.contains('wordCards')) {
-          db.createObjectStore('wordCards');
-        }
-        if (!db.objectStoreNames.contains('practiceQueue')) {
-          const store = db.createObjectStore('practiceQueue');
-          store.createIndex('byDueDate', 'dueDate');
-        }
-      },
-    });
+    try {
+      console.log('🔧 Initializing WordSRSService...');
+      this.db = await openDB<WordSRSDB>('karaoke-word-srs', 1, {
+        upgrade(db) {
+          console.log('📦 Creating/upgrading WordSRS database stores...');
+          if (!db.objectStoreNames.contains('wordMistakes')) {
+            db.createObjectStore('wordMistakes');
+          }
+          if (!db.objectStoreNames.contains('wordCards')) {
+            db.createObjectStore('wordCards');
+          }
+          if (!db.objectStoreNames.contains('practiceQueue')) {
+            const store = db.createObjectStore('practiceQueue');
+            store.createIndex('byDueDate', 'dueDate');
+          }
+        },
+      });
+      console.log('✅ WordSRSService initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize WordSRSService:', error);
+      throw error;
+    }
   }
 
   /**
@@ -73,6 +81,13 @@ export class WordSRSService {
   ): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
+    console.log(`🔍 Processing line ${lineIndex} for word mistakes:`, {
+      expectedText,
+      transcribedText,
+      accuracy: _accuracy,
+      songId
+    });
+
     // Simple word tokenization (could be improved)
     const expectedWords = expectedText.toLowerCase().split(/\s+/);
     const transcribedWords = transcribedText.toLowerCase().split(/\s+/);
@@ -80,11 +95,16 @@ export class WordSRSService {
     // Align words (basic approach - could use edit distance)
     const maxLength = Math.max(expectedWords.length, transcribedWords.length);
     
+    let mistakeCount = 0;
+    let correctCount = 0;
+    
     for (let i = 0; i < maxLength; i++) {
       const expected = expectedWords[i] || '';
       const transcribed = transcribedWords[i] || '';
       
       if (expected && transcribed && expected !== transcribed) {
+        mistakeCount++;
+        console.log(`  ❌ Word mistake: "${expected}" → "${transcribed}"`);
         await this.recordMistake(
           expected,
           transcribed,
@@ -96,10 +116,14 @@ export class WordSRSService {
           }
         );
       } else if (expected && transcribed && expected === transcribed) {
+        correctCount++;
+        console.log(`  ✅ Correct word: "${expected}"`);
         // Correct pronunciation - update SRS as "Easy"
         await this.updateWordCard(expected, Rating.Easy);
       }
     }
+    
+    console.log(`  📊 Line ${lineIndex} summary: ${correctCount} correct, ${mistakeCount} mistakes`);
   }
 
   /**

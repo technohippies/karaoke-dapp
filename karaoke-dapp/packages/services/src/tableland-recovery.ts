@@ -78,32 +78,48 @@ export class TablelandRecoveryService {
     let karaokeLinesTable: string | null = null
     let exerciseSessionsTable: string | null = null
     
+    // We need to identify tables based on their structure
+    // Since we know the user prefix, we can build the expected table names
+    const userPrefix = userAddress.slice(2, 8).toLowerCase()
+    
     for (const { tableId, chainId } of tables) {
       if (chainId !== CHAIN_ID) continue
       
       try {
-        // Query table structure to identify what it is
-        const tableName = `_${chainId}_${tableId}`
-        const schemaResult = await db.prepare(`PRAGMA table_info(${tableName})`).all()
+        // Tableland table names follow the pattern: {prefix}_{chainId}_{tableId}
+        // We'll check each possible prefix
+        const possiblePrefixes = [
+          `karaoke_sessions_${userPrefix}`,
+          `karaoke_lines_${userPrefix}`,
+          `exercise_sessions_${userPrefix}`
+        ]
         
-        // Check if this is one of our tables based on schema
-        const columns = schemaResult.results.map((col: any) => col.name)
-        
-        if (columns.includes('song_id') && columns.includes('transcript') && columns.includes('accuracy')) {
-          // This is a karaoke_lines table
-          karaokeLinesTable = tableName
-          console.log(`Identified karaoke_lines table: ${tableName}`)
-        } else if (columns.includes('song_id') && columns.includes('overall_accuracy') && columns.includes('completed_at')) {
-          // This is a karaoke_sessions table
-          karaokeSessionsTable = tableName
-          console.log(`Identified karaoke_sessions table: ${tableName}`)
-        } else if (columns.includes('exercise_type') && columns.includes('accuracy') && columns.includes('completed_at')) {
-          // This is an exercise_sessions table
-          exerciseSessionsTable = tableName
-          console.log(`Identified exercise_sessions table: ${tableName}`)
+        for (const prefix of possiblePrefixes) {
+          const tableName = `${prefix}_${chainId}_${tableId}`
+          
+          try {
+            // Try to query the table - if it succeeds, it exists
+            await db.prepare(`SELECT 1 FROM ${tableName} LIMIT 1`).all()
+            
+            // Table exists! Identify which type it is
+            if (prefix.startsWith('karaoke_sessions')) {
+              karaokeSessionsTable = tableName
+              console.log(`✅ Identified karaoke_sessions table: ${tableName}`)
+            } else if (prefix.startsWith('karaoke_lines')) {
+              karaokeLinesTable = tableName
+              console.log(`✅ Identified karaoke_lines table: ${tableName}`)
+            } else if (prefix.startsWith('exercise_sessions')) {
+              exerciseSessionsTable = tableName
+              console.log(`✅ Identified exercise_sessions table: ${tableName}`)
+            }
+            
+            break // Found the right prefix for this tableId
+          } catch {
+            // This prefix doesn't match, try the next one
+          }
         }
       } catch (error) {
-        console.log(`Failed to identify table _${chainId}_${tableId}:`, error)
+        console.log(`Failed to identify table with ID ${tableId}:`, error)
       }
     }
     
@@ -122,6 +138,7 @@ export class TablelandRecoveryService {
       return tableInfo
     }
     
+    console.log('❌ Could not find all required tables')
     return null
   }
 

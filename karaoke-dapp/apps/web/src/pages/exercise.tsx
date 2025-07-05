@@ -59,6 +59,13 @@ export function ExercisePage() {
             wordSRSService.getProblemWords(1) // Min 1 mistake
           ])
           
+          console.log('📚 Exercise data from SRS:', {
+            dueWordsCount: dueWords.length,
+            dueWords: dueWords.slice(0, 3),
+            problemWordsCount: problemWords.length,
+            problemWords: problemWords.slice(0, 3)
+          })
+          
           const srsExercises: Exercise[] = []
           
           // First add due words (up to 3)
@@ -95,9 +102,38 @@ export function ExercisePage() {
             })
           }
           
+          // If we have no exercises from IndexedDB, try Tableland
+          if (srsExercises.length === 0) {
+            console.log('📊 No exercises from IndexedDB, checking Tableland...')
+            try {
+              const { userTableService } = await import('@karaoke-dapp/services')
+              // Initialize service with provider
+              const provider = await window.ethereum
+              if (provider) {
+                await userTableService.initialize(provider)
+                const tablelandCards = await userTableService.getDueCards(address, 10)
+                console.log(`📊 Found ${tablelandCards.length} cards from Tableland`)
+              
+                if (tablelandCards.length > 0) {
+                  const tablelandExercises = tablelandCards.slice(0, 5).map((card, idx) => ({
+                    id: `tableland-${idx}`,
+                    word: card.line_text.split(' ').slice(0, 3).join(' '), // First few words
+                    context: card.line_text,
+                    type: 'say-it-back' as const
+                  }))
+                  setExercises(tablelandExercises)
+                  return
+                }
+              }
+            } catch (error) {
+              console.error('Failed to fetch from Tableland:', error)
+            }
+          }
+          
           // If we still have less than 5 exercises, use mock exercises
           if (srsExercises.length < 5) {
             const remaining = 5 - srsExercises.length
+            console.log(`⚠️ Only ${srsExercises.length} exercises from your data, adding ${remaining} mock exercises`)
             setExercises([...srsExercises, ...mockExercises.slice(0, remaining)])
           } else {
             setExercises(srsExercises)

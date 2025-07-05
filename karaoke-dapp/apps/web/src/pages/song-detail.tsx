@@ -374,15 +374,15 @@ function SongDetailContent({ song }: { song: Song }) {
                   }
                   
                   // Check tables first
-                  await checkUserTables()
+                  const existingTables = await checkUserTables()
                   
                   const result = await karaokeDataPipeline.handleSaveProgress(
                     address,
-                    hasTables
+                    !!existingTables
                   )
                   
                   if (result.tablelandCreated) {
-                    console.log('✅ Tableland table created')
+                    console.log('✅ Tableland tables were created for the first time')
                   }
                   if (result.syncStarted) {
                     console.log('✅ Sync started')

@@ -95,46 +95,8 @@ export class UserTableService {
       }
     }
     
-    // Try a quick check for tables with common naming patterns
-    if (this.db) {
-      const userPrefix = userAddress.slice(2, 8).toLowerCase()
-      const possibleNames = {
-        sessions: `karaoke_sessions_${userPrefix}`,
-        lines: `karaoke_lines_${userPrefix}`,
-        exercise: `exercise_sessions_${userPrefix}`
-      }
-      
-      try {
-        // Check if all three tables exist
-        await Promise.all([
-          this.db.prepare(`SELECT 1 FROM ${possibleNames.sessions} LIMIT 1`).all(),
-          this.db.prepare(`SELECT 1 FROM ${possibleNames.lines} LIMIT 1`).all(),
-          this.db.prepare(`SELECT 1 FROM ${possibleNames.exercise} LIMIT 1`).all()
-        ])
-        
-        // If we get here, all tables exist
-        const tableInfo: UserTableInfo = {
-          userAddress,
-          karaokeSessionsTable: possibleNames.sessions,
-          karaokeLinesTable: possibleNames.lines,
-          exerciseSessionsTable: possibleNames.exercise,
-          chainId: 84532,
-          createdAt: new Date().toISOString()
-        }
-        
-        // Save to localStorage for next time
-        localStorage.setItem(
-          `${this.STORAGE_KEY}_${userAddress}`,
-          JSON.stringify(tableInfo)
-        )
-        
-        console.log('✅ Found existing tables with standard naming')
-        return tableInfo
-      } catch (error) {
-        // Tables with standard naming don't exist
-        console.log('Tables with standard naming not found')
-      }
-    }
+    // Skip trying to search for tables - Tableland doesn't support sqlite_master
+    // We'll rely on the recovery service which uses the Registry API
     
     // Last resort: try blockchain recovery for non-standard table names
     if (this.recoveryService) {

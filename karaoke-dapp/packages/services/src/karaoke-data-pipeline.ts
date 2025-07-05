@@ -48,6 +48,12 @@ export class KaraokeDataPipeline {
     let wordsProcessed = 0;
     
     try {
+      // Ensure wordSRSService is initialized
+      if (!wordSRSService['db']) {
+        console.log('⚠️ WordSRSService not initialized, initializing now...');
+        await wordSRSService.initialize();
+      }
+      
       // 1. Process each line for word-level mistakes
       for (const [lineIndex, result] of gradingResults) {
         await wordSRSService.processLineResult(
