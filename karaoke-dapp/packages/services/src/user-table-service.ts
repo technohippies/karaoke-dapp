@@ -88,33 +88,57 @@ export class UserTableService {
           
           return tableInfo
         } catch (error) {
-          // Tables don't exist anymore, try to recover from on-chain
-          console.warn('Tables not accessible, attempting recovery...', error)
-          
-          // Try to recover from CreateTable events
-          if (this.recoveryService) {
-            const recovered = await this.recoveryService.recoverUserTables(userAddress)
-            if (recovered) {
-              // Update localStorage with recovered info
-              localStorage.setItem(
-                `${this.STORAGE_KEY}_${userAddress}`,
-                JSON.stringify(recovered)
-              )
-              console.log('✅ Successfully recovered tables from on-chain events')
-              return recovered
-            }
-          }
-          
-          // If recovery failed, clear localStorage
-          console.warn('Could not recover tables, clearing localStorage')
+          // Tables don't exist anymore, clear localStorage
+          console.warn('Tables not accessible, clearing cache...', error)
           localStorage.removeItem(`${this.STORAGE_KEY}_${userAddress}`)
         }
       }
     }
     
-    // Final fallback: try to recover from on-chain events
+    // Try a quick check for tables with common naming patterns
+    if (this.db) {
+      const userPrefix = userAddress.slice(2, 8).toLowerCase()
+      const possibleNames = {
+        sessions: `karaoke_sessions_${userPrefix}`,
+        lines: `karaoke_lines_${userPrefix}`,
+        exercise: `exercise_sessions_${userPrefix}`
+      }
+      
+      try {
+        // Check if all three tables exist
+        await Promise.all([
+          this.db.prepare(`SELECT 1 FROM ${possibleNames.sessions} LIMIT 1`).all(),
+          this.db.prepare(`SELECT 1 FROM ${possibleNames.lines} LIMIT 1`).all(),
+          this.db.prepare(`SELECT 1 FROM ${possibleNames.exercise} LIMIT 1`).all()
+        ])
+        
+        // If we get here, all tables exist
+        const tableInfo: UserTableInfo = {
+          userAddress,
+          karaokeSessionsTable: possibleNames.sessions,
+          karaokeLinesTable: possibleNames.lines,
+          exerciseSessionsTable: possibleNames.exercise,
+          chainId: 84532,
+          createdAt: new Date().toISOString()
+        }
+        
+        // Save to localStorage for next time
+        localStorage.setItem(
+          `${this.STORAGE_KEY}_${userAddress}`,
+          JSON.stringify(tableInfo)
+        )
+        
+        console.log('✅ Found existing tables with standard naming')
+        return tableInfo
+      } catch (error) {
+        // Tables with standard naming don't exist
+        console.log('Tables with standard naming not found')
+      }
+    }
+    
+    // Last resort: try blockchain recovery for non-standard table names
     if (this.recoveryService) {
-      console.log('Checking for tables on-chain...')
+      console.log('Attempting blockchain recovery for non-standard table names...')
       const recovered = await this.recoveryService.recoverUserTables(userAddress)
       if (recovered) {
         // Save to localStorage for next time

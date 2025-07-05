@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Header, LyricLine, Button, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider, AdaptivePurchaseSlider } from "@karaoke-dapp/ui"
+import { Header, LyricLine, Button, ConnectWalletSheet, KaraokeDisplay, KaraokeScore, LyricsSlider, StreamingSlider, AdaptivePurchaseSlider, VoiceCreditsSlider } from "@karaoke-dapp/ui"
 import { CaretLeft } from "@phosphor-icons/react"
 import { useParams, useNavigate } from "react-router-dom"
 import { DatabaseService, type Song } from "@karaoke-dapp/services/browser"
@@ -537,26 +537,20 @@ function SongDetailContent({ song }: { song: Song }) {
             </ConnectWalletSheet>
           ) : machineError && machineError.includes('Insufficient voice credits') ? (
             <div className="space-y-4">
-              <div className="text-center text-red-400 text-sm">
-                {machineError}
-              </div>
-              <AdaptivePurchaseSlider
-                onPurchaseCombo={() => purchaseComboPack()}
-                onPurchaseSongs={() => buttonState.action?.()}
+              <VoiceCreditsSlider
                 onPurchaseVoice={() => purchaseVoiceCredits()}
-                isPurchasing={isPurchasingVoiceCredits || isPurchasingComboPack}
-                hasExistingPurchases={true} // If they're out of voice credits, they've made purchases
-                currentSongCredits={songCredits}
+                isPurchasing={isPurchasingVoiceCredits}
                 currentVoiceCredits={voiceCredits}
+                creditsNeeded={creditsNeeded}
               >
                 <Button 
                   className="w-full" 
                   size="lg"
-                  disabled={isPurchasingVoiceCredits || isPurchasingComboPack}
+                  disabled={isPurchasingVoiceCredits}
                 >
-                  {isPurchasingVoiceCredits || isPurchasingComboPack ? 'Purchasing...' : 'Buy Credits'}
+                  {isPurchasingVoiceCredits ? 'Purchasing...' : 'Buy Voice Credits'}
                 </Button>
-              </AdaptivePurchaseSlider>
+              </VoiceCreditsSlider>
               <Button 
                 className="w-full" 
                 size="lg"

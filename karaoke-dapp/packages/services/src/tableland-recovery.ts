@@ -1,4 +1,4 @@
-import { Database } from "@tableland/sdk"
+import { Database, Registry } from "@tableland/sdk"
 import { ethers } from "ethers"
 import type { UserTableInfo } from "./user-table-service"
 
@@ -26,8 +26,7 @@ export class TablelandRecoveryService {
   }
 
   /**
-   * Recover user tables by searching for CreateTable events
-   * This is more reliable than trying to enumerate NFTs
+   * Recover user tables using Tableland SDK Registry
    */
   async recoverUserTables(userAddress: string): Promise<UserTableInfo | null> {
     if (!userAddress || userAddress.trim() === '') {
@@ -36,74 +35,94 @@ export class TablelandRecoveryService {
     }
     
     try {
-      console.log('🔍 Attempting to recover tables for:', userAddress)
+      console.log('🔍 Attempting to recover tables using Tableland Registry for:', userAddress)
       
-      // Get all CreateTable events for this user
-      const filter = this.contract.filters.CreateTable(userAddress)
-      const events = await this.contract.queryFilter(filter)
+      // Use the Tableland SDK Registry to list tables
+      const signer = await this.provider.getSigner()
+      const registry = new Registry({ signer })
       
-      console.log(`Found ${events.length} CreateTable events`)
-      
-      // Look for our specific table patterns
-      let karaokeSessionsTable: string | null = null
-      let karaokeLinesTable: string | null = null
-      let exerciseSessionsTable: string | null = null
-      
-      for (const event of events) {
-        const tableId = (event as any).args[1].toString()
-        const statement = (event as any).args[2]
+      try {
+        // List all tables owned by the user
+        const tables = await registry.listTables(userAddress)
+        console.log(`Found ${tables.length} tables owned by user`)
         
-        // Extract table name from CREATE TABLE statement
-        const match = statement.match(/CREATE TABLE ([a-zA-Z0-9_]+)/i)
-        if (match) {
-          const tableName = match[1]
-          console.log(`Found table: ${tableName} (ID: ${tableId})`)
-          
-          // Check if this user still owns the table
-          try {
-            const currentOwner = await this.contract.ownerOf(tableId)
-            if (currentOwner.toLowerCase() !== userAddress.toLowerCase()) {
-              console.log(`Table ${tableName} was transferred to another owner`)
-              continue
-            }
-          } catch (error) {
-            console.log(`Table ${tableName} might have been burned`)
-            continue
-          }
-          
-          // Match our expected table patterns
-          if (tableName.includes('karaoke_sessions')) {
-            karaokeSessionsTable = tableName
-          } else if (tableName.includes('karaoke_lines')) {
-            karaokeLinesTable = tableName
-          } else if (tableName.includes('exercise_sessions')) {
-            exerciseSessionsTable = tableName
+        if (tables.length > 0) {
+          // Filter for Base Sepolia tables only
+          const baseSepoliaTables = tables.filter(t => t.chainId === CHAIN_ID)
+          if (baseSepoliaTables.length > 0) {
+            return await this.identifyUserTables(baseSepoliaTables, userAddress)
           }
         }
+      } catch (error) {
+        console.log('Registry.listTables failed:', error)
       }
       
-      // If we found all three tables, return the info
-      if (karaokeSessionsTable && karaokeLinesTable && exerciseSessionsTable) {
-        const tableInfo: UserTableInfo = {
-          userAddress,
-          karaokeSessionsTable,
-          karaokeLinesTable,
-          exerciseSessionsTable,
-          chainId: CHAIN_ID,
-          createdAt: new Date().toISOString()
-        }
-        
-        console.log('✅ Successfully recovered all tables:', tableInfo)
-        return tableInfo
-      }
-      
-      console.log('❌ Could not find all required tables')
+      console.log('❌ Could not recover tables from Registry')
       return null
       
     } catch (error) {
       console.error('Failed to recover tables:', error)
       return null
     }
+  }
+
+  /**
+   * Identify user tables from a list of table IDs
+   */
+  private async identifyUserTables(
+    tables: Array<{ tableId: string; chainId: number }>,
+    userAddress: string
+  ): Promise<UserTableInfo | null> {
+    const db = new Database()
+    let karaokeSessionsTable: string | null = null
+    let karaokeLinesTable: string | null = null
+    let exerciseSessionsTable: string | null = null
+    
+    for (const { tableId, chainId } of tables) {
+      if (chainId !== CHAIN_ID) continue
+      
+      try {
+        // Query table structure to identify what it is
+        const tableName = `_${chainId}_${tableId}`
+        const schemaResult = await db.prepare(`PRAGMA table_info(${tableName})`).all()
+        
+        // Check if this is one of our tables based on schema
+        const columns = schemaResult.results.map((col: any) => col.name)
+        
+        if (columns.includes('song_id') && columns.includes('transcript') && columns.includes('accuracy')) {
+          // This is a karaoke_lines table
+          karaokeLinesTable = tableName
+          console.log(`Identified karaoke_lines table: ${tableName}`)
+        } else if (columns.includes('song_id') && columns.includes('overall_accuracy') && columns.includes('completed_at')) {
+          // This is a karaoke_sessions table
+          karaokeSessionsTable = tableName
+          console.log(`Identified karaoke_sessions table: ${tableName}`)
+        } else if (columns.includes('exercise_type') && columns.includes('accuracy') && columns.includes('completed_at')) {
+          // This is an exercise_sessions table
+          exerciseSessionsTable = tableName
+          console.log(`Identified exercise_sessions table: ${tableName}`)
+        }
+      } catch (error) {
+        console.log(`Failed to identify table _${chainId}_${tableId}:`, error)
+      }
+    }
+    
+    // If we found all three tables, return the info
+    if (karaokeSessionsTable && karaokeLinesTable && exerciseSessionsTable) {
+      const tableInfo: UserTableInfo = {
+        userAddress,
+        karaokeSessionsTable,
+        karaokeLinesTable,
+        exerciseSessionsTable,
+        chainId: CHAIN_ID,
+        createdAt: new Date().toISOString()
+      }
+      
+      console.log('✅ Successfully identified all tables:', tableInfo)
+      return tableInfo
+    }
+    
+    return null
   }
 
   /**
