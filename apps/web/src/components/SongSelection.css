@@ -1,0 +1,121 @@
+.song-selection {
+  max-width: 800px;
+  width: 100%;
+}
+
+.song-selection h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+}
+
+.credits-display {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  font-size: 1.125rem;
+}
+
+.credits-display span {
+  background-color: #1f2937;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #374151;
+}
+
+.song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.song-card {
+  background-color: #1f2937;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #374151;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.song-card:hover {
+  border-color: #6366f1;
+}
+
+.song-card.unlocked {
+  border-color: #10b981;
+  background-color: #064e3b0a;
+}
+
+.song-info h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.artist {
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+.song-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.duration {
+  color: #9ca3af;
+}
+
+.difficulty {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.difficulty.easy {
+  background-color: #10b98133;
+  color: #10b981;
+}
+
+.difficulty.medium {
+  background-color: #f59e0b33;
+  color: #f59e0b;
+}
+
+.difficulty.hard {
+  background-color: #ef444433;
+  color: #ef4444;
+}
+
+.song-action {
+  flex-shrink: 0;
+}
+
+.select-button {
+  background-color: #10b981;
+}
+
+.select-button:hover {
+  background-color: #059669;
+}
+
+.unlock-button {
+  background-color: #6366f1;
+}
+
+.unlock-button:hover:not(:disabled) {
+  background-color: #5558e3;
+}
+
+.hint {
+  text-align: center;
+  color: #9ca3af;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+}

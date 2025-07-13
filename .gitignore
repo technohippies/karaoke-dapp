@@ -36,3 +36,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Local Claude settings
 .claude/settings.local.json
+
+# Vite
+apps/web/dist
+apps/web/.vite

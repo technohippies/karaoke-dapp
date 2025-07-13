@@ -1,0 +1,153 @@
+.karaoke-session {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.song-header {
+  margin-bottom: 2rem;
+}
+
+.song-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.song-header .artist {
+  color: #9ca3af;
+  font-size: 1.25rem;
+}
+
+.session-start {
+  background-color: #1f2937;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #374151;
+}
+
+.session-start p {
+  margin-bottom: 1rem;
+}
+
+.credit-info {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.recording-interface {
+  background-color: #1f2937;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #374151;
+}
+
+.recording-status {
+  margin-bottom: 2rem;
+}
+
+.recording-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ef4444;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.recording-dot {
+  width: 12px;
+  height: 12px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.duration {
+  font-size: 3rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-button {
+  font-size: 1.25rem;
+  padding: 1rem 2rem;
+  margin-bottom: 1rem;
+}
+
+.record-button.recording {
+  background-color: #ef4444;
+}
+
+.record-button.recording:hover {
+  background-color: #dc2626;
+}
+
+.recorded-info {
+  color: #10b981;
+  font-size: 0.875rem;
+}
+
+.processing {
+  padding: 2rem;
+}
+
+.grade-result {
+  background-color: #1f2937;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #374151;
+}
+
+.grade-result h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.grade-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.grade-score,
+.credits-used {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.grade-score .label,
+.credits-used .label {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.grade-score .value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #10b981;
+}
+
+.credits-used .value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #6366f1;
+}
