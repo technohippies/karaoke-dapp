@@ -36,19 +36,7 @@ export function useLitSession() {
         throw new Error('Capacity delegation not configured')
       }
 
-      console.log('📋 Using capacity delegation:', {
-        address: capacityDelegationAuthSig.address,
-        hasSig: !!capacityDelegationAuthSig.sig,
-        signedMessage: capacityDelegationAuthSig.signedMessage?.substring(0, 100) + '...'
-      })
-
-      // Create session signatures that allow executing our Lit Action
-      console.log('🔑 Creating session with params:', {
-        chain: 'ethereum',
-        expiration: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
-        hasCapacityDelegation: !!capacityDelegationAuthSig,
-        resourceRequests: 1
-      })
+      console.log('📋 Using capacity delegation from:', capacityDelegationAuthSig.address)
 
       const sessionSigs = await litProtocolService.litNodeClient.getSessionSigs({
         chain: 'ethereum',
@@ -89,25 +77,6 @@ export function useLitSession() {
       })
 
       console.log('✅ Session created successfully')
-      console.log('📋 Session details:', {
-        numNodes: Object.keys(sessionSigs).length,
-        firstNode: Object.keys(sessionSigs)[0],
-        sessionStructure: Object.keys(sessionSigs[Object.keys(sessionSigs)[0]] || {})
-      })
-      
-      // Check the signed message for capabilities
-      const firstSession = sessionSigs[Object.keys(sessionSigs)[0]]
-      if (firstSession?.signedMessage) {
-        try {
-          const parsed = JSON.parse(firstSession.signedMessage)
-          console.log('📋 Session capabilities:', {
-            hasCapabilities: !!parsed.capabilities,
-            numCapabilities: parsed.capabilities?.length || 0
-          })
-        } catch (e) {
-          console.log('📋 Could not parse signed message')
-        }
-      }
       
       setSessionSigs(sessionSigs)
       

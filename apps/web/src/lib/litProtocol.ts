@@ -84,32 +84,7 @@ export class LitProtocolService {
       }
     }
     
-    console.log('📝 Executing with session sigs:', {
-      numSigs: Object.keys(this.sessionSigs).length,
-      firstNodeUrl: Object.keys(this.sessionSigs)[0],
-      hasCapabilities
-    })
-    
-    // Log the actual session sig structure
-    const firstSig = this.sessionSigs[Object.keys(this.sessionSigs)[0]]
-    console.log('📝 First session sig structure:', {
-      keys: Object.keys(firstSig),
-      hasSignedMessage: !!firstSig.signedMessage,
-      signedMessageLength: firstSig.signedMessage?.length
-    })
-
-    // Execute the Lit Action with retry logic for 502 errors
-    console.log('🚀 Executing Lit Action with params:', {
-      ipfsId: LIT_ACTION_CID,
-      hasSessionSigs: !!this.sessionSigs,
-      jsParams: {
-        publicKey: PKP_PUBLIC_KEY,
-        sessionToken,
-        audioDataLength: audioArray.length,
-        contractAddress: KARAOKE_STORE_V5_ADDRESS,
-        hasTokenSignature: !!tokenSignature
-      }
-    })
+    console.log('🎙️ Grading voice with Lit Protocol...')
     
     let response
     let lastError: Error | null = null
@@ -117,7 +92,9 @@ export class LitProtocolService {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔄 Attempt ${attempt}/${maxRetries} to execute Lit Action...`)
+        if (attempt > 1) {
+          console.log(`🔄 Retry attempt ${attempt}/${maxRetries}...`)
+        }
         
         response = await this.litNodeClient.executeJs({
           ipfsId: LIT_ACTION_CID,
@@ -132,7 +109,6 @@ export class LitProtocolService {
         })
         
         // Success - break out of retry loop
-        console.log(`✅ Lit Action executed successfully on attempt ${attempt}`)
         break
       } catch (error: any) {
         lastError = error
@@ -159,10 +135,8 @@ export class LitProtocolService {
       throw lastError || new Error('Failed to execute Lit Action after retries')
     }
 
-    // Log the raw response for debugging
-    console.log('📝 Lit Action raw response:', response)
-    console.log('📝 Response.response:', response.response)
-    console.log('📝 Response.signatures:', response.signatures)
+    // Log the response
+    console.log('📝 Lit Action executed successfully')
     
     // Parse the response - it's returned as a JSON string
     let result
@@ -181,25 +155,12 @@ export class LitProtocolService {
       throw new Error(result?.error || 'Lit Action failed')
     }
 
-    // The signature is in the result object, not in response.signatures
-    console.log('📝 Result contains signature:', !!result.signature)
-    
     // Get the signature from the parsed result
     const signature = result.signature
     
     if (!signature) {
-      // Fallback: check response.signatures
-      console.log('📝 Checking response.signatures:', response.signatures)
-      const sigFromSigs = response.signatures?.gradeSignature || response.signatures?.debugSig
-      if (sigFromSigs) {
-        result.signature = sigFromSigs
-      } else {
-        throw new Error('No signature found in response')
-      }
+      throw new Error('No signature found in response')
     }
-    
-    console.log('📝 Signature:', signature)
-    console.log('📝 Signature type:', typeof signature)
 
     // The signature from our Lit Action is already a properly formatted hex string
     const formattedSignature = signature

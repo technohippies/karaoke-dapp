@@ -29,24 +29,7 @@ function App() {
   const { state, context } = useKaraokeMachineContext()
   const { connectors } = useConnect()
   
-  console.log('🔄 App re-rendering, state:', state.value)
   
-  // Debug state
-  useEffect(() => {
-    console.log('🎮 Current state:', JSON.stringify(state.value))
-    console.log('🎮 State value type:', typeof state.value)
-    console.log('🎯 State matches selectSong?', state.matches('selectSong'))
-    console.log('🎯 State matches karaoke?', state.matches('karaoke'))
-    console.log('🎯 State matches karaoke.idle?', state.matches('karaoke.idle'))
-    console.log('🎯 State matches karaoke.recording?', state.matches('karaoke.recording'))
-    console.log('📊 Context:', {
-      voiceCredits: context.voiceCredits,
-      songCredits: context.songCredits,
-      unlockedSongs: context.unlockedSongs,
-      selectedSong: context.selectedSong,
-      hasActiveSession: context.hasActiveSession
-    })
-  }, [state.value, context])
   
   // Initialize Lit Protocol on mount
   useEffect(() => {
@@ -150,11 +133,6 @@ function App() {
         
         {(() => {
           const isKaraoke = state.matches('karaoke')
-          console.log('🎤 Checking karaoke render:', {
-            stateValue: state.value,
-            isKaraoke,
-            willRender: isKaraoke
-          })
           if (isKaraoke) {
             return (
               <div key="karaoke">
