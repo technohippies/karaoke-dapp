@@ -150,47 +150,28 @@ export class LitProtocolService {
       throw new Error(result?.error || 'Lit Action failed')
     }
 
-    // Log signature structure for debugging
-    console.log('📝 Signatures object:', response.signatures)
-    console.log('📝 Signatures keys:', Object.keys(response.signatures || {}))
+    // The signature is in the result object, not in response.signatures
+    console.log('📝 Result contains signature:', !!result.signature)
     
-    // Get the signature from the Lit Action
-    // The signature might be under 'debugSig' or 'gradeSignature' depending on the Lit Action version
-    const signature = response.signatures?.gradeSignature || response.signatures?.debugSig
+    // Get the signature from the parsed result
+    const signature = result.signature
     
     if (!signature) {
-      console.error('Available signatures:', Object.keys(response.signatures || {}))
-      throw new Error('No signature found in response')
+      // Fallback: check response.signatures
+      console.log('📝 Checking response.signatures:', response.signatures)
+      const sigFromSigs = response.signatures?.gradeSignature || response.signatures?.debugSig
+      if (sigFromSigs) {
+        result.signature = sigFromSigs
+      } else {
+        throw new Error('No signature found in response')
+      }
     }
     
-    console.log('📝 Signature object:', signature)
+    console.log('📝 Signature:', signature)
     console.log('📝 Signature type:', typeof signature)
 
-    // Convert signature to the format expected by the contract
-    // The signature might be in different formats depending on the Lit Action
-    let formattedSignature: string
-    
-    if (typeof signature === 'string') {
-      // If it's already a string, use it directly
-      formattedSignature = signature
-    } else if (signature.signature) {
-      // If it has a signature property
-      const sig = signature.signature
-      formattedSignature = ethers.utils.joinSignature({
-        r: '0x' + sig.slice(0, 64),
-        s: '0x' + sig.slice(64, 128),
-        v: parseInt(sig.slice(128, 130), 16)
-      })
-    } else if (signature.r && signature.s && signature.v) {
-      // If it has r, s, v properties
-      formattedSignature = ethers.utils.joinSignature({
-        r: signature.r,
-        s: signature.s,
-        v: signature.v
-      })
-    } else {
-      throw new Error('Unknown signature format')
-    }
+    // The signature from our Lit Action is already a properly formatted hex string
+    const formattedSignature = signature
 
     return {
       grade: result.grade,

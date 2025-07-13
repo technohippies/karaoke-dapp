@@ -5,16 +5,10 @@
 
 const go = async () => {
   try {
-    console.log('Voice Grader starting...');
-    
     // Validate required parameters
     if (!publicKey || !sessionToken || !audioData || !contractAddress) {
       throw new Error('Missing required parameters');
     }
-    
-    console.log('Session token:', sessionToken);
-    console.log('Contract address:', contractAddress);
-    console.log('Audio data length:', audioData.length);
     
     // 1. Verify session token signature
     const domain = {
@@ -53,22 +47,19 @@ const go = async () => {
       throw new Error('Session token expired');
     }
     
-    console.log('Session validated successfully');
-    
     // 3. Grade audio
     const audioBuffer = new Uint8Array(audioData);
     const durationSeconds = audioBuffer.length / 16000; // 16kHz sample rate
     const creditsUsed = Math.max(1, Math.ceil(durationSeconds));
     
-    // Simplified grading - must be deterministic
-    // Use a hash of the audio data to generate a consistent grade
+    // Grade audio based on analysis
+    // TODO: Implement actual audio grading logic
+    // For now, using a deterministic placeholder based on audio data
     let audioSum = 0;
     for (let i = 0; i < Math.min(audioData.length, 100); i++) {
       audioSum += audioData[i];
     }
-    const grade = 85 + (audioSum % 10); // 85-94 score, deterministic
-    
-    console.log(`Graded: score=${grade}, creditsUsed=${creditsUsed}`);
+    const grade = 85 + (audioSum % 10); // Placeholder: 85-94 score
     
     // 4. Create message for contract verification
     const nonce = Math.floor(Date.now() / 1000); // Use Unix seconds
@@ -83,16 +74,11 @@ const go = async () => {
       ]
     );
     
-    console.log('Message hash:', messageHash);
-    
     // 5. Sign with PKP
     let pkpPubKey = publicKey;
     if (pkpPubKey.startsWith('0x')) {
       pkpPubKey = pkpPubKey.slice(2);
     }
-    
-    console.log('PKP public key:', pkpPubKey);
-    console.log('PKP public key length:', pkpPubKey.length);
     
     // Verify it's the correct format (130 hex chars starting with 04)
     if (pkpPubKey.length !== 130 || !pkpPubKey.startsWith('04')) {
@@ -102,10 +88,6 @@ const go = async () => {
     const messageBytes = ethers.utils.arrayify(messageHash);
     const toSignArray = Array.from(messageBytes);
     
-    console.log('Message to sign (hex):', messageHash);
-    console.log('Message bytes array length:', toSignArray.length);
-    console.log('Signing with PKP...');
-    
     let hexSignature;
     try {
       const signature = await Lit.Actions.signAndCombineEcdsa({
@@ -114,17 +96,12 @@ const go = async () => {
         sigName: 'gradeSignature'
       });
       
-      console.log('Signature generated successfully');
-      
       // Parse and format the signature
       const jsonSignature = JSON.parse(signature);
       jsonSignature.r = "0x" + jsonSignature.r.substring(2);
       jsonSignature.s = "0x" + jsonSignature.s;
       hexSignature = ethers.utils.joinSignature(jsonSignature);
-      
-      console.log('Signature:', hexSignature);
     } catch (sigError) {
-      console.error('Signing error:', sigError);
       throw new Error(`Failed to sign with PKP: ${sigError.message || sigError}`);
     }
     
@@ -149,7 +126,6 @@ const go = async () => {
     });
     
   } catch (error) {
-    console.error('Error:', error.message);
     Lit.Actions.setResponse({
       response: JSON.stringify({
         success: false,

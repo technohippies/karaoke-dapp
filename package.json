@@ -9,6 +9,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "latest",
+    "ethers": "^5.7.2",
     "typescript": "latest",
     "vite": "latest"
   },
@@ -22,15 +23,12 @@
     "axios": "latest",
     "bs58": "^6.0.0",
     "dotenv": "latest",
-    "ethers": "^6.13.4",
     "form-data": "latest"
   },
   "scripts": {
-    "mint-pkp": "bun run scripts/mint-pkp.ts",
-    "mint-capacity": "bun run scripts/mint-capacity-credits.ts",
-    "upload-action": "bun run scripts/upload-action.ts",
-    "test-action": "bun run scripts/test-action.ts",
-    "verify-pkp": "bun run scripts/verify-pkp.ts",
-    "dev:web": "cd apps/web && bun run dev"
+    "upload-action": "npx tsx scripts/upload-lit-action.ts",
+    "mint-pkp": "npx tsx scripts/mint-pkp-with-permissions.ts",
+    "mint-pkp:self-owned": "npx tsx scripts/mint-pkp-with-permissions.ts --self-owned",
+    "dev": "cd apps/web && npm run dev"
   }
 }

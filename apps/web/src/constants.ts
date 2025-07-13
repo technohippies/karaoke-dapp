@@ -132,7 +132,7 @@ export const COMBO_PRICE = 3_000_000n // 3 USDC (6 decimals)
 export const LIT_NETWORK = 'datil'
 export const LIT_RPC_URL = 'https://sepolia.base.org' // Using public Base Sepolia RPC
 
-// PKP Details (from your .env)
-export const PKP_PUBLIC_KEY = '0x04a19b108f783dd8c2ab93ab6c66796710afff5b91b86b92ec724cf7067b239b5ba0e3fa2e9136814c1134f8c19323eeb11e597407ae7785dfa0ed2b11c5ce748d'
-export const PKP_ADDRESS = '0x2E344E7869553B045f01153d19dDD103C13f5DBC'
-export const LIT_ACTION_CID = 'QmeYb1pkTTtfEtMNuByZZSqxPb1tRsmvDdefGLJmvezc71' // Fixed PKP public key format
+// PKP Details (newly minted with current Lit Action permission)
+export const PKP_PUBLIC_KEY = '0x042e2a2a872e757014fa06c99cac4c5dd8744cb1040e00efc1a45046714bcb9d2b7ef762577f7ee2714cfc8d89925d524271b754c90916ff6e42eb2046d3de885b'
+export const PKP_ADDRESS = '0x223Dd2dc484187ACa659A571ee7E75f163A8dfa4'
+export const LIT_ACTION_CID = 'QmdwiuVVcY7GV22ez7CBvZpsCj2hhK6PGj2H8PLKeSzLh4' // Current with signAndCombineEcdsa

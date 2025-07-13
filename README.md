@@ -1,131 +1,241 @@
-# Lit Protocol PKP Voice Grader
+# Lit Protocol Karaoke Turbo
 
-This project implements a secure PKP-based voice grading system for a karaoke dapp using Lit Protocol. The implementation uses Unix timestamp seconds for nonces to avoid JavaScript number precision issues.
+A decentralized karaoke application using Lit Protocol PKPs for secure voice grading and on-chain session management.
 
-## Project Structure
+## 🚨 Critical Lit Protocol Gotchas & Solutions
 
-- `/scripts` - Setup and testing scripts for Lit Protocol
-- `/lit-actions` - Lit Action code for voice grading
-- `/apps/web` - React frontend for the karaoke application
+This project encountered numerous challenges with Lit Protocol. Here are the key issues and their solutions:
 
-## Architecture
+### 1. PKP Signing Method: `signEcdsa` vs `signAndCombineEcdsa`
 
-- **Dapp Owner**: Owns the PKP and controls what it can sign
-- **Users**: Create regular sessions to execute the Lit Action
-- **Lit Action**: Has permission to sign with the PKP, validates all inputs
-- **Smart Contract**: Verifies PKP signatures for refunds
+**Issue**: `signEcdsa` only generates signature shares, not a combined signature.
 
-## Setup Steps
-
-### 1. Install Dependencies
-
-```bash
-bun install
+**Solution**: Use `signAndCombineEcdsa` which returns a properly formatted signature:
+```javascript
+const signature = await Lit.Actions.signAndCombineEcdsa({
+  toSign: toSignArray,
+  publicKey: pkpPubKey,
+  sigName: 'gradeSignature'
+});
 ```
 
-### 2. Configure Environment
+### 2. Self-Owned PKPs Cannot Add Permissions After Minting
 
-Copy `.env.example` to `.env` and add your private key:
+**Issue**: Self-owned PKPs own themselves and cannot sign transactions to modify their own permissions.
 
+**Solution**: Add all required permissions BEFORE making the PKP self-owned:
+1. Mint PKP (owned by your wallet)
+2. Add Lit Action permission
+3. Add wallet permission (for management)
+4. Transfer ownership to PKP address (make self-owned)
+
+### 3. Lit Action CID Changes Require New PKP or Permissions
+
+**Issue**: Each Lit Action has a unique CID. When you update the code, you get a new CID.
+
+**Solution**: 
+- For non-self-owned PKPs: Add the new CID as a permitted auth method
+- For self-owned PKPs: Must mint a new PKP with the new CID permission
+
+### 4. Message Length for PKP Signing
+
+**Issue**: "Message length to be signed is not 32 bytes" error.
+
+**Solution**: Always hash messages before signing:
+```javascript
+const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(message));
+const messageBytes = ethers.utils.arrayify(messageHash);
+```
+
+### 5. Non-Deterministic Operations Cause Consensus Issues
+
+**Issue**: `Math.random()`, `Date.now()` can cause different results across Lit nodes.
+
+**Solution**: Use deterministic operations:
+```javascript
+// Bad
+const nonce = Date.now(); // Different on each node
+
+// Good
+const nonce = Math.floor(Date.now() / 1000); // Same within 1-second window
+```
+
+### 6. Capacity Credits Delegation
+
+**Issue**: Capacity delegation with empty `delegateeAddresses` only works for the owner wallet.
+
+**Solution**: Create wildcard delegation by omitting the parameter entirely:
+```javascript
+const { capacityDelegationAuthSig } = await litNodeClient.createCapacityDelegationAuthSig({
+  uses: '1000',
+  dAppOwnerWallet: wallet,
+  capacityTokenId: tokenId,
+  // Do NOT include delegateeAddresses for wildcard delegation
+});
+```
+
+### 7. LitContracts SDK Issues
+
+**Issue**: `mintNextAndAddAuthMethods` was failing silently with the contracts SDK.
+
+**Solution**: Use direct ethers.js contract calls:
+```javascript
+const pkpContract = new ethers.Contract(PKP_NFT_ADDRESS, abi, wallet);
+const tx = await pkpContract.mintNext(2, { value: 1, gasLimit: 5000000 });
+```
+
+### 8. Lit Action Response Format
+
+**Issue**: Signature location varies between `result.response` and `result.signatures`.
+
+**Solution**: Check both locations:
+```javascript
+const parsedResponse = JSON.parse(result.response);
+const signature = parsedResponse.signature || result.signatures?.gradeSignature;
+```
+
+### 9. PKP Public Key Format
+
+**Issue**: Inconsistent handling of `0x` prefix.
+
+**Solution**: Always strip `0x` prefix when passing to Lit Actions:
+```javascript
+let pkpPubKey = publicKey;
+if (pkpPubKey.startsWith('0x')) {
+  pkpPubKey = pkpPubKey.slice(2);
+}
+```
+
+### 10. Testing with runOnce Pattern
+
+**Issue**: Distributed consensus issues can be hard to debug.
+
+**Solution**: Use `Lit.Actions.runOnce` for single-node testing:
+```javascript
+const result = await Lit.Actions.runOnce(
+  { waitForResponse: true, name: "operation" },
+  async () => { /* operation */ }
+);
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+1. Node.js 18+
+2. Chronicle Yellowstone (Lit testnet) wallet with LIT tokens
+3. Pinata account for IPFS uploads
+
+### Setup
+
+1. Clone and install:
+```bash
+git clone <repo>
+cd lit-test
+npm install
+```
+
+2. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env and add your Chronicle Yellowstone private key
+# Add your private key and Pinata JWT
 ```
 
-### 3. Upload Lit Action to IPFS
-
+3. Upload Lit Action:
 ```bash
-bun run upload-action
+npx tsx scripts/upload-lit-action.ts lit-actions/voiceGrader.js
+# Update .env with the returned CID
 ```
 
-Add the returned CID to your `.env` file as `LIT_ACTION_CID`.
-
-### 4. Mint Capacity Credits
-
+4. Mint PKP with permissions:
 ```bash
-bun run mint-capacity
+# For self-owned PKP (recommended for production):
+npx tsx scripts/mint-pkp-with-permissions.ts --self-owned
+
+# For non-self-owned PKP (easier for development):
+npx tsx scripts/mint-pkp-with-permissions.ts
 ```
 
-This will:
-- Mint Capacity Credits NFT for rate-limited access
-- Configure 100 requests/minute for 1 day (adjustable in script)
-- Create a delegation auth sig that any address can use
-- Output the NFT ID and delegation to add to `.env`
+5. Update configuration:
+- Copy PKP details from script output to `.env`
+- Update `apps/web/src/constants.ts` with PKP details
 
-### 5. Mint PKP (Dapp Owner Only)
-
+6. Run the app:
 ```bash
-bun run mint-pkp
+cd apps/web
+npm run dev
 ```
 
-This will:
-- Mint a new PKP on Chronicle Yellowstone
-- Add your wallet AND the Lit Action as permitted auth methods
-- Configure both with signing permissions from the start
-- Make the PKP self-owned (secure, immutable)
-- Output the PKP details to add to `.env`
+## 📁 Project Structure
 
-### 6. Test the Setup
-
-```bash
-bun run test-action
+```
+lit-test/
+├── lit-actions/           # Lit Action source files
+│   ├── voiceGrader.js    # Main grading logic
+│   └── voiceGrader-deterministic.js  # Deterministic version
+├── apps/
+│   └── web/              # React frontend
+├── scripts/              # Utility scripts
+│   ├── upload-lit-action.ts
+│   └── mint-pkp-with-permissions.ts
+└── README.md
 ```
 
-This simulates a user:
-- Creating a regular session (with their own wallet)
-- Executing the Lit Action
-- Getting a PKP-signed response
+## 🔄 Development Workflow
 
-## Security Model
+### Updating the Lit Action
 
-1. **Users never get direct PKP access** - They can only trigger signatures through your Lit Action
-2. **Lit Action validates everything** - Session tokens, audio data, credit calculations
-3. **Controlled signing** - PKP only signs the exact message format your contract expects
-4. **No delegation needed** - Users use their own wallets for sessions
-
-## Production Checklist
-
-- [ ] Fund your Chronicle Yellowstone wallet with LIT tokens
-- [ ] Mint PKP and save credentials securely
-- [ ] Upload Lit Action and verify CID
-- [ ] Add permissions for Lit Action
-- [ ] Test with multiple user wallets
-- [ ] Deploy contract with PKP address
-- [ ] Update contract address in Lit Action params
-
-## Files
-
-- `scripts/mint-pkp.ts` - Mints a new PKP with all permissions configured
-- `scripts/mint-capacity-credits.ts` - Mints Capacity Credits NFT for rate-limited access
-- `scripts/upload-action.ts` - Uploads Lit Action to IPFS
-- `scripts/test-action.ts` - Tests the full flow
-- `lit-actions/voiceGrader.js` - The Lit Action code
-
-## Running the Web App
-
-1. Install dependencies:
+1. Edit `lit-actions/voiceGrader.js`
+2. Upload new version:
    ```bash
-   bun install
+   npx tsx scripts/upload-lit-action.ts lit-actions/voiceGrader.js
    ```
+3. For self-owned PKPs: Mint a new PKP with the new CID
+4. For non-self-owned PKPs: Add new CID permission to existing PKP
+5. Update `LIT_ACTION_CID` in `.env` and `constants.ts`
 
-2. Configure the web app:
-   ```bash
-   cd apps/web
-   cp .env.example .env
-   # Edit .env with your RPC URL and capacity delegation
-   ```
+### Key Development Tips
 
-3. Start the development server:
-   ```bash
-   bun run dev:web
-   ```
+1. **Always test locally first**: Use the deterministic version to avoid consensus issues
+2. **Monitor gas usage**: Some operations use significant gas
+3. **Check permissions**: Use the Lit Explorer to verify PKP permissions
+4. **Handle errors gracefully**: Network issues are common on testnets
 
-4. Open http://localhost:3000 in your browser
+## 🛠️ Troubleshooting
 
-## Technical Notes
+### "ERC721: invalid token ID"
+- Verify PKP exists on the correct network (datil)
+- Check PKP has permission for the Lit Action CID
+- Ensure using correct PKP public key format
 
-- **Nonce Generation**: Uses `Math.floor(Date.now() / 1000)` for Unix seconds instead of milliseconds to avoid Lit Action signing failures
-- **PKP Address**: 0xBc2296278633Cf8946321e94E0B71912315792a4
-- **Working Lit Action CID**: QmcGpHHeMxXaQBPzLgFUxWkwgkRKJoX3YY5vLf41EvitLw
-- **Contract**: 0x91B69AC1Ac63C7CB850214d52b2f3d890FED557e on Base Sepolia
-- **Secure Lit Action**: `voiceGrader-secure.js` includes on-chain session verification
+### "NodeAuthSigScopeTooLimited"
+- PKP doesn't have permission for the Lit Action
+- Add permission or mint new PKP with permission
+
+### Transaction failures
+- Check wallet balance
+- Increase gas limit
+- Verify contract addresses for the network
+
+### Consensus issues
+- Remove non-deterministic operations
+- Use `runOnce` pattern for debugging
+- Ensure all nodes can produce identical results
+
+## 📚 Resources
+
+- [Lit Protocol Docs](https://developer.litprotocol.com/)
+- [Lit Explorer](https://explorer.litprotocol.com/)
+- [Chronicle Yellowstone Faucet](https://chronicle-yellowstone-faucet.getlit.dev/)
+
+## 🤝 Contributing
+
+When contributing, please:
+1. Test with both self-owned and non-self-owned PKPs
+2. Document any new Lit Protocol gotchas
+3. Keep the Lit Action deterministic
+4. Update this README with new findings
+
+## 📜 License
+
+MIT
