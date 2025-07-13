@@ -240,6 +240,7 @@ export function useKaraokeMachine() {
   
   useEffect(() => {
     if (endHash) {
+      console.log('✅ End session transaction submitted:', endHash)
       send({ type: 'TRANSACTION_SUBMITTED', hash: endHash })
     }
   }, [endHash, send])
@@ -271,6 +272,7 @@ export function useKaraokeMachine() {
   
   useEffect(() => {
     if (endError) {
+      console.error('❌ End session error:', endError)
       send({ type: 'TRANSACTION_ERROR', error: endError.message })
     }
   }, [endError, send])
@@ -334,6 +336,7 @@ export function useKaraokeMachine() {
   
   useEffect(() => {
     if (isEndSuccess) {
+      console.log('✅ End session transaction successful!')
       send({ type: 'TRANSACTION_SUCCESS' })
       refetchSession()
       refetchCredits()
@@ -446,10 +449,20 @@ export function useKaraokeMachine() {
   }
   
   const handleEndSession = () => {
+    console.log('🔚 handleEndSession called')
+    
     if (!state.context.gradeResult) {
+      console.error('❌ No grade result available')
       send({ type: 'ERROR', error: 'No grade result available' })
       return
     }
+    
+    console.log('📝 Ending session with:', {
+      creditsUsed: state.context.gradeResult.creditsUsed,
+      grade: state.context.gradeResult.grade,
+      nonce: state.context.gradeResult.nonce,
+      signature: state.context.gradeResult.signature
+    })
     
     endSession({
       address: KARAOKE_STORE_V5_ADDRESS,
@@ -462,6 +475,9 @@ export function useKaraokeMachine() {
         state.context.gradeResult.signature as `0x${string}`
       ],
     })
+    
+    // Trigger state transition
+    send({ type: 'END_SESSION' })
   }
   
   return {

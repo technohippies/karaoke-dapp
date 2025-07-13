@@ -81,6 +81,29 @@ export const KARAOKE_STORE_V5_ABI = [
     stateMutability: 'nonpayable'
   },
   {
+    name: 'pkpAddress',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
+    name: 'setPkpAddress',
+    type: 'function',
+    inputs: [
+      { name: '_pkpAddress', type: 'address', internalType: 'address' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'owner',
+    type: 'function',
+    inputs: [],
+    outputs: [{ name: '', type: 'address', internalType: 'address' }],
+    stateMutability: 'view'
+  },
+  {
     name: 'SessionStarted',
     type: 'event',
     inputs: [

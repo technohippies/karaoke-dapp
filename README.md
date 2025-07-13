@@ -142,6 +142,22 @@ for (let attempt = 1; attempt <= 3; attempt++) {
 
 **Note**: This issue is intermittent and appears related to PKP initialization latency on the Lit nodes. Avoid making pre-flight requests as they may interfere with session state.
 
+### 12. Contract PKP Address Configuration
+
+**Issue**: The `endSessionWithSignature` transaction fails silently because the contract expects a different PKP address.
+
+**Solution**: Before using the system, verify the PKP address is correctly set on the contract:
+```bash
+npx tsx scripts/check-pkp-address.ts
+```
+
+If there's a mismatch, the contract owner must update it:
+```bash
+npx tsx scripts/set-pkp-address.ts  # Only works if you're the owner
+```
+
+**Important**: The PKP address on the contract MUST match the PKP that signs the grading results, otherwise signature verification will fail.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
