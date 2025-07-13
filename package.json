@@ -1,0 +1,32 @@
+{
+  "name": "lit-test",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  },
+  "dependencies": {
+    "@lit-protocol/auth-helpers": "latest",
+    "@lit-protocol/constants": "latest",
+    "@lit-protocol/contracts-sdk": "latest",
+    "@lit-protocol/lit-node-client": "latest",
+    "@lit-protocol/pkp-ethers": "latest",
+    "@lit-protocol/types": "latest",
+    "axios": "latest",
+    "bs58": "^6.0.0",
+    "dotenv": "latest",
+    "ethers": "^6.13.4",
+    "form-data": "latest"
+  },
+  "scripts": {
+    "mint-pkp": "bun run scripts/mint-pkp.ts",
+    "mint-capacity": "bun run scripts/mint-capacity-credits.ts",
+    "upload-action": "bun run scripts/upload-action.ts",
+    "test-action": "bun run scripts/test-action.ts",
+    "dev": "vite"
+  }
+}
