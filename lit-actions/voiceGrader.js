@@ -86,7 +86,11 @@ const go = async () => {
     }
     
     const messageBytes = ethers.utils.arrayify(messageHash);
-    const toSignArray = Array.from(messageBytes);
+    
+    // The contract expects an Ethereum signed message hash
+    const ethSignedMessageHash = ethers.utils.hashMessage(messageBytes);
+    const signBytes = ethers.utils.arrayify(ethSignedMessageHash);
+    const toSignArray = Array.from(signBytes);
     
     let hexSignature;
     try {

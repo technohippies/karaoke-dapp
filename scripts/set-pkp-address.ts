@@ -7,12 +7,15 @@ dotenv.config()
 async function setPKPAddress() {
   console.log('🔧 Setting PKP address on contract...\n')
   
-  if (!process.env.PRIVATE_KEY || !process.env.BASE_SEPOLIA_RPC) {
-    throw new Error('Missing required env vars: PRIVATE_KEY, BASE_SEPOLIA_RPC')
+  // Check if using owner key or separate owner key
+  const privateKey = process.env.OWNER_PRIVATE_KEY || process.env.PRIVATE_KEY
+  
+  if (!privateKey || !process.env.BASE_SEPOLIA_RPC) {
+    throw new Error('Missing required env vars: PRIVATE_KEY (or OWNER_PRIVATE_KEY), BASE_SEPOLIA_RPC')
   }
   
   const provider = new ethers.providers.JsonRpcProvider(process.env.BASE_SEPOLIA_RPC)
-  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider)
+  const wallet = new ethers.Wallet(privateKey, provider)
   
   console.log('Wallet address:', wallet.address)
   console.log('Contract address:', KARAOKE_STORE_V5_ADDRESS)

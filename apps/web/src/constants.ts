@@ -155,7 +155,7 @@ export const COMBO_PRICE = 3_000_000n // 3 USDC (6 decimals)
 export const LIT_NETWORK = 'datil'
 export const LIT_RPC_URL = 'https://sepolia.base.org' // Using public Base Sepolia RPC
 
-// PKP Details (newly minted with current Lit Action permission)
-export const PKP_PUBLIC_KEY = '0x042e2a2a872e757014fa06c99cac4c5dd8744cb1040e00efc1a45046714bcb9d2b7ef762577f7ee2714cfc8d89925d524271b754c90916ff6e42eb2046d3de885b'
-export const PKP_ADDRESS = '0x223Dd2dc484187ACa659A571ee7E75f163A8dfa4'
-export const LIT_ACTION_CID = 'QmdwiuVVcY7GV22ez7CBvZpsCj2hhK6PGj2H8PLKeSzLh4' // Current with signAndCombineEcdsa
+// PKP Details (newly minted with updated Lit Action permission - includes Ethereum signed message hash fix)
+export const PKP_PUBLIC_KEY = '0x0414e5069ce781e7d15eee18412228d86b1ce61dcde3584ba3f21a69213d43b15c8f7916caf6db791779e7a1f770435c7fc93f275dc2832a69d6f69b5e1c85e1a9'
+export const PKP_ADDRESS = '0x8376e8bfA3397C3c3177Aec2ad251a12B7Ab7776'
+export const LIT_ACTION_CID = 'QmXrdyum5jDnNSTWAxUV8y5dRnpJsV9wuTUAH3RVGJw7jU' // Fixed with Ethereum signed message hash
