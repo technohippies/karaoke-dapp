@@ -30,6 +30,7 @@
     "mint-capacity": "bun run scripts/mint-capacity-credits.ts",
     "upload-action": "bun run scripts/upload-action.ts",
     "test-action": "bun run scripts/test-action.ts",
+    "verify-pkp": "bun run scripts/verify-pkp.ts",
     "dev:web": "cd apps/web && bun run dev"
   }
 }

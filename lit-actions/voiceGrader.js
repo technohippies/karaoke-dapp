@@ -5,6 +5,8 @@
 const go = async () => {
   try {
     console.log('Voice Grader starting...');
+    console.log('=== PARAMETER DEBUG ===');
+    console.log('publicKey:', publicKey);
     
     // Validate required parameters
     if (!publicKey || !sessionToken || !audioData || !contractAddress || !tokenSignature) {
@@ -82,10 +84,28 @@ const go = async () => {
       pkpPubKey = pkpPubKey.slice(2);
     }
     
+    // Remove the '04' prefix if it's an uncompressed key
+    if (pkpPubKey.startsWith('04') && pkpPubKey.length === 130) {
+      pkpPubKey = pkpPubKey.slice(2);
+    }
+    
+    // Debug: Log the public key format
+    console.log('Public key format check:');
+    console.log('- Original:', publicKey);
+    console.log('- Processed:', pkpPubKey);
+    console.log('- Length:', pkpPubKey.length);
+    
     const messageBytes = ethers.utils.arrayify(messageHash);
     const toSignArray = Array.from(messageBytes);
     
     console.log('Signing with PKP...');
+    
+    // Try signing
+    console.log('Attempting to sign with Lit.Actions.signEcdsa...');
+    console.log('Parameters:');
+    console.log('- toSign length:', toSignArray.length);
+    console.log('- publicKey:', pkpPubKey);
+    console.log('- sigName:', 'gradeSignature');
     
     const sigShares = await Lit.Actions.signEcdsa({
       toSign: toSignArray,
@@ -93,7 +113,7 @@ const go = async () => {
       sigName: 'gradeSignature'
     });
     
-    console.log('Signature generated successfully');
+    console.log('SUCCESS! Signing completed');
     
     // 6. Return result
     const fullPubKey = publicKey.startsWith('0x') ? publicKey : '0x' + publicKey;

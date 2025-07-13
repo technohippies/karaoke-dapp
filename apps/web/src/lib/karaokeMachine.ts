@@ -14,6 +14,7 @@ export interface SessionData {
   sessionHash: string
   escrowAmount: number
   songId: number
+  chainId: number
   issuedAt: number
   expiresAt: number
   userAddress: string
@@ -74,7 +75,7 @@ export type KaraokeEvent =
   | { type: 'USDC_BALANCE_LOADED'; balance: string }
   | { type: 'ALLOWANCE_LOADED'; hasAllowance: boolean }
   | { type: 'UNLOCK_STATUS_LOADED'; songId: number; isUnlocked: boolean }
-  | { type: 'SESSION_LOADED'; hasSession: boolean; amount: number; songId: number; sessionHash?: string }
+  | { type: 'SESSION_LOADED'; hasSession: boolean; amount: number; songId: number; sessionHash?: string; userAddress?: string }
   | { type: 'APPROVE_USDC' }
   | { type: 'BUY_CREDITS' }
   | { type: 'SELECT_SONG'; song: Song }
@@ -215,9 +216,10 @@ export const karaokeMachine = setup({
             sessionHash: event.sessionHash,
             escrowAmount: event.amount,
             songId: event.songId,
+            chainId: 84532, // Base Sepolia
             issuedAt: Math.floor(Date.now() / 1000),
             expiresAt: Math.floor(Date.now() / 1000) + 3600,
-            userAddress: ''
+            userAddress: event.userAddress || ''
           } : null
         }
       }
@@ -227,6 +229,7 @@ export const karaokeMachine = setup({
     selectSong: assign({
       selectedSong: ({ event }) => {
         if (event.type === 'SELECT_SONG') {
+          console.log('📝 Setting selectedSong to:', event.song)
           return event.song
         }
         return null
@@ -236,7 +239,10 @@ export const karaokeMachine = setup({
     setSessionStarted: assign({
       sessionData: ({ event }) => {
         if (event.type === 'SESSION_STARTED') {
-          return event.sessionData
+          return {
+            ...event.sessionData,
+            chainId: event.sessionData.chainId || 84532 // Ensure chainId is always present
+          }
         }
         return null
       },
@@ -326,7 +332,13 @@ export const karaokeMachine = setup({
     
     songIsUnlocked: ({ context, event }) => {
       if (event.type === 'SELECT_SONG') {
-        return context.unlockedSongs[event.song.id] === true
+        const isUnlocked = context.unlockedSongs[event.song.id] === true
+        console.log('🔍 Checking if song is unlocked:', {
+          songId: event.song.id,
+          unlockedSongs: context.unlockedSongs,
+          isUnlocked
+        })
+        return isUnlocked
       }
       if (!context.selectedSong) return false
       return context.unlockedSongs[context.selectedSong.id] === true
@@ -350,7 +362,7 @@ export const karaokeMachine = setup({
     }
   }
 }).createMachine({
-  id: 'karaoke',
+  id: 'karaokeMachine',
   initial: 'disconnected',
   context: {
     // Wallet
@@ -421,24 +433,19 @@ export const karaokeMachine = setup({
     loadingData: {
       on: {
         CREDITS_LOADED: {
-          actions: ['updateCredits'],
-          target: 'loadingData'
+          actions: ['updateCredits']
         },
         USDC_BALANCE_LOADED: {
-          actions: ['updateUsdcBalance'],
-          target: 'loadingData'
+          actions: ['updateUsdcBalance']
         },
         ALLOWANCE_LOADED: {
-          actions: ['updateAllowance'],
-          target: 'loadingData'
+          actions: ['updateAllowance']
         },
         UNLOCK_STATUS_LOADED: {
-          actions: ['updateUnlockStatus'],
-          target: 'loadingData'
+          actions: ['updateUnlockStatus']
         },
         SESSION_LOADED: {
-          actions: ['updateSession'],
-          target: 'loadingData'
+          actions: ['updateSession']
         },
         DISCONNECT_WALLET: {
           target: 'disconnected',
@@ -551,15 +558,18 @@ export const karaokeMachine = setup({
       on: {
         SELECT_SONG: [
           {
-            target: 'karaoke',
             guard: 'songIsUnlocked',
-            actions: 'selectSong'
+            actions: ['selectSong', () => console.log('🚀 Song is unlocked, transitioning to karaoke state')],
+            target: 'karaoke'
           },
           {
-            target: 'unlockingSong',
-            actions: 'selectSong'
+            actions: ['selectSong', () => console.log('🔒 Song is locked, need to unlock first')],
+            target: 'selectSong'
           }
         ],
+        UNLOCK_SONG: {
+          target: 'unlockingSong'
+        },
         CREDITS_LOADED: {
           actions: 'updateCredits'
         },
@@ -593,9 +603,11 @@ export const karaokeMachine = setup({
     },
     
     karaoke: {
+      entry: () => console.log('🎤 Entered karaoke state'),
       initial: 'idle',
       states: {
         idle: {
+          entry: () => console.log('🎤 Entered karaoke.idle state'),
           always: [
             {
               target: 'recording',
@@ -627,6 +639,7 @@ export const karaokeMachine = setup({
         },
         
         recording: {
+          entry: () => console.log('🎙️ Entered karaoke.recording state'),
           on: {
             START_RECORDING: {
               actions: 'setRecordingStarted'
@@ -639,10 +652,13 @@ export const karaokeMachine = setup({
         },
         
         processing: {
-          entry: ({ send }) => {
-            // Automatically submit to Lit when we have audio data
-            send({ type: 'SUBMIT_TO_LIT' })
-          },
+          entry: [
+            () => console.log('📤 Entered processing state, submitting to Lit...'),
+            ({ self }) => {
+              // Automatically submit to Lit when we have audio data
+              self.send({ type: 'SUBMIT_TO_LIT' })
+            }
+          ],
           on: {
             LIT_GRADING_COMPLETE: {
               target: 'graded',
@@ -669,7 +685,7 @@ export const karaokeMachine = setup({
               actions: 'setTransactionHash'
             },
             TRANSACTION_SUCCESS: {
-              target: '#karaoke.selectSong',
+              target: '#karaokeMachine.selectSong',
               actions: ['clearSession', 'clearTransaction']
             },
             TRANSACTION_ERROR: {
@@ -697,6 +713,9 @@ export const karaokeMachine = setup({
           target: 'disconnected',
           actions: 'setWalletDisconnected'
         }
+      },
+      onError: (error) => {
+        console.error('❌ Error in karaoke state:', error)
       }
     }
   }

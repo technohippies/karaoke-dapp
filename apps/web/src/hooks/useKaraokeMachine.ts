@@ -17,6 +17,17 @@ export function useKaraokeMachine() {
   const { address, isConnected } = useAccount()
   const { signTypedDataAsync } = useSignTypedData()
   
+  // Debug state transitions
+  useEffect(() => {
+    console.log('🎭 State changed to:', state.value)
+    if (state.matches('karaoke')) {
+      console.log('✅ We are in karaoke state!')
+    }
+    if (state.matches('selectSong')) {
+      console.log('⚠️ We are back in selectSong state!')
+    }
+  }, [state.value])
+  
   // Check if wallet is already connected on mount
   useEffect(() => {
     if (isConnected && address && state.matches('disconnected')) {
@@ -142,6 +153,7 @@ export function useKaraokeMachine() {
       const voiceCredits = Number(credits[0] || 0)
       const songCredits = Number(credits[1] || 0)
       
+      console.log('💰 Sending CREDITS_LOADED event', { voiceCredits, songCredits })
       send({ 
         type: 'CREDITS_LOADED', 
         voiceCredits,
@@ -168,17 +180,19 @@ export function useKaraokeMachine() {
   
   // Update session info
   useEffect(() => {
-    if (activeSession) {
+    if (activeSession && address) {
       const [hasSession, sessionHash, amount, songId] = activeSession
+      console.log('📄 Sending SESSION_LOADED event', { hasSession, amount, songId, address })
       send({
         type: 'SESSION_LOADED',
         hasSession,
         amount: Number(amount),
         songId: Number(songId),
-        sessionHash
+        sessionHash,
+        userAddress: address
       })
     }
-  }, [activeSession, send])
+  }, [activeSession, send, address])
   
   // Update unlock status
   useEffect(() => {
@@ -353,6 +367,8 @@ export function useKaraokeMachine() {
         ]
       }
       
+      console.log('📝 Signing session data:', state.context.sessionData)
+      
       const tokenSignature = await signTypedDataAsync({
         domain: {
           ...domain,
@@ -360,7 +376,10 @@ export function useKaraokeMachine() {
         },
         types,
         primaryType: 'SessionToken',
-        message: state.context.sessionData
+        message: {
+          ...state.context.sessionData,
+          chainId: 84532 // Ensure chainId is included
+        }
       })
       
       // Grade with Lit Protocol

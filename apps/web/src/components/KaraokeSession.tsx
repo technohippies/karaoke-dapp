@@ -1,5 +1,6 @@
-import { useKaraokeMachine } from '../hooks/useKaraokeMachine'
+import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
+import { useLitSession } from '../hooks/useLitSession'
 import './KaraokeSession.css'
 
 export function KaraokeSession() {
@@ -11,7 +12,7 @@ export function KaraokeSession() {
     handleEndSession,
     isSessionPending,
     isEndPending
-  } = useKaraokeMachine()
+  } = useKaraokeMachineContext()
   
   const { 
     isRecording, 
@@ -19,6 +20,13 @@ export function KaraokeSession() {
     startRecording, 
     stopRecording 
   } = useAudioRecorder()
+  
+  const {
+    hasValidSession,
+    isCreatingSession,
+    createSession,
+    error: sessionError
+  } = useLitSession()
   
   const handleRecord = async () => {
     if (isRecording) {
@@ -66,27 +74,64 @@ export function KaraokeSession() {
       
       {state.matches('karaoke.recording') && (
         <div className="recording-interface">
-          <div className="recording-status">
-            {isRecording && (
-              <div className="recording-indicator">
-                <span className="recording-dot"></span>
-                Recording
+          {!hasValidSession ? (
+            <div className="session-setup">
+              <p>Create a Lit Protocol session to enable voice grading</p>
+              <button 
+                onClick={createSession}
+                disabled={isCreatingSession}
+              >
+                {isCreatingSession ? 'Creating Session...' : 'Create Session'}
+              </button>
+              {sessionError && (
+                <p className="error-message">
+                  {sessionError}
+                  {sessionError.includes('Capacity delegation not configured') && (
+                    <span> - Please refresh the page to ensure Lit Protocol is initialized</span>
+                  )}
+                  {sessionError.includes('402') && (
+                    <>
+                      <br />
+                      <button 
+                        onClick={() => {
+                          localStorage.clear()
+                          sessionStorage.clear()
+                          window.location.reload()
+                        }}
+                        style={{ marginTop: '10px' }}
+                      >
+                        Clear cache and reload
+                      </button>
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="recording-status">
+                {isRecording && (
+                  <div className="recording-indicator">
+                    <span className="recording-dot"></span>
+                    Recording
+                  </div>
+                )}
+                <div className="duration">{formatDuration(duration)}</div>
               </div>
-            )}
-            <div className="duration">{formatDuration(duration)}</div>
-          </div>
-          
-          <button 
-            onClick={handleRecord}
-            className={`record-button ${isRecording ? 'recording' : ''}`}
-          >
-            {isRecording ? 'Stop Recording' : 'Start Recording'}
-          </button>
-          
-          {context.audioData && !isRecording && (
-            <p className="recorded-info">
-              Recording complete! ({formatDuration(context.recordingDuration)})
-            </p>
+              
+              <button 
+                onClick={handleRecord}
+                className={`record-button ${isRecording ? 'recording' : ''}`}
+              >
+                {isRecording ? 'Stop Recording' : 'Start Recording'}
+              </button>
+              
+              {context.audioData && !isRecording && (
+                <p className="recorded-info">
+                  Recording complete! ({formatDuration(context.recordingDuration)})
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

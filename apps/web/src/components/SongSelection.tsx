@@ -1,14 +1,24 @@
-import { useKaraokeMachine } from '../hooks/useKaraokeMachine'
+import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
 import './SongSelection.css'
 
 export function SongSelection() {
-  const { context, send, handleUnlockSong, isUnlockPending } = useKaraokeMachine()
+  const { state, context, send, handleUnlockSong, isUnlockPending } = useKaraokeMachineContext()
   
   const handleSelectSong = (song: typeof context.songs[0]) => {
-    send({ type: 'SELECT_SONG', song })
+    console.log('🎵 Selecting song:', song)
+    console.log('🔓 Song unlock status:', context.unlockedSongs[song.id])
+    console.log('💳 Song credits:', context.songCredits)
+    console.log('📤 Current state before send:', state.value)
     
-    // If song is not unlocked, unlock it
-    if (!context.unlockedSongs[song.id]) {
+    const isUnlocked = context.unlockedSongs[song.id]
+    
+    if (isUnlocked) {
+      console.log('✅ Song is unlocked, selecting it')
+      send({ type: 'SELECT_SONG', song })
+    } else {
+      console.log('🔒 Song is locked, sending unlock event')
+      send({ type: 'UNLOCK_SONG', song })
+      // This will trigger the actual unlock transaction
       handleUnlockSong(song.id)
     }
   }
@@ -44,22 +54,18 @@ export function SongSelection() {
               </div>
               
               <div className="song-action">
-                {isUnlocked ? (
-                  <button 
-                    onClick={() => handleSelectSong(song)}
-                    className="select-button"
-                  >
-                    Select Song
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => handleSelectSong(song)}
-                    disabled={!canUnlock || isUnlockPending}
-                    className="unlock-button"
-                  >
-                    {isUnlockPending ? 'Unlocking...' : `Unlock (${song.price} credit)`}
-                  </button>
-                )}
+                <button 
+                  onClick={() => handleSelectSong(song)}
+                  disabled={(!isUnlocked && !canUnlock) || isUnlockPending}
+                  className={isUnlocked ? "select-button" : "unlock-button"}
+                >
+                  {isUnlocked 
+                    ? 'Select Song' 
+                    : isUnlockPending 
+                      ? 'Unlocking...' 
+                      : `Unlock (${song.price} credit)`
+                  }
+                </button>
               </div>
             </div>
           )

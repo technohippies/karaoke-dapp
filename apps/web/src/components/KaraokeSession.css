@@ -151,3 +151,19 @@
   font-weight: bold;
   color: #6366f1;
 }
+
+.session-setup {
+  text-align: center;
+  padding: 2rem;
+}
+
+.session-setup p {
+  margin-bottom: 1.5rem;
+  color: #9ca3af;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}

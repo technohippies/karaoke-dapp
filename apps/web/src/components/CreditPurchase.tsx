@@ -1,8 +1,8 @@
-import { useKaraokeMachine } from '../hooks/useKaraokeMachine'
+import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
 import './CreditPurchase.css'
 
 export function CreditPurchase() {
-  const { state, context, handleApproveUSDC, handleBuyCredits, isApprovePending, isBuyPending } = useKaraokeMachine()
+  const { state, context, handleApproveUSDC, handleBuyCredits, isApprovePending, isBuyPending } = useKaraokeMachineContext()
   
   const needsApproval = !context.hasUsdcAllowance
   const usdcBalance = parseFloat(context.usdcBalance)

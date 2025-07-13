@@ -129,10 +129,10 @@ export const USDC_ABI = [
 export const COMBO_PRICE = 3_000_000n // 3 USDC (6 decimals)
 
 // Lit Protocol Configuration
-export const LIT_NETWORK = 'yellowstone'
+export const LIT_NETWORK = 'datil'
 export const LIT_RPC_URL = 'https://sepolia.base.org' // Using public Base Sepolia RPC
 
 // PKP Details (from your .env)
-export const PKP_PUBLIC_KEY = '0x04971c244a5698647f90db7053386b76a98b2f36382cb5611a7f16a204c6e4a2059e6f1360b29bbc161ea87b53f1d928bae66a40e80bf269f5e6b543e48268f09f'
-export const PKP_ADDRESS = '0xBc2296278633Cf8946321e94E0B71912315792a4'
-export const LIT_ACTION_CID = 'QmTxKMmM5zRv7xiMbHmWGcXxLXSvGWyGBHfBauhu1UQT84' // Your uploaded CID
+export const PKP_PUBLIC_KEY = '0x04a19b108f783dd8c2ab93ab6c66796710afff5b91b86b92ec724cf7067b239b5ba0e3fa2e9136814c1134f8c19323eeb11e597407ae7785dfa0ed2b11c5ce748d'
+export const PKP_ADDRESS = '0x2E344E7869553B045f01153d19dDD103C13f5DBC'
+export const LIT_ACTION_CID = 'QmeYb1pkTTtfEtMNuByZZSqxPb1tRsmvDdefGLJmvezc71' // Fixed PKP public key format
