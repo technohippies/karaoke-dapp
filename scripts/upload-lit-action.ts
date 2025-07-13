@@ -19,24 +19,19 @@ async function uploadLitAction() {
     console.log(`📖 Read Lit Action from: ${filePath}`);
     console.log(`📏 File size: ${jsCode.length} bytes`);
     
-    // Upload to Pinata
+    // Upload to Pinata as a file
     console.log('\n📤 Uploading to IPFS via Pinata...');
     
-    const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
+    const formData = new FormData();
+    const blob = new Blob([jsCode], { type: 'text/javascript' });
+    formData.append('file', blob, path.basename(filePath));
+    
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.PINATA_JWT}`
       },
-      body: JSON.stringify({
-        pinataContent: {
-          name: path.basename(filePath, '.js'),
-          js: jsCode
-        },
-        pinataOptions: {
-          cidVersion: 0 // Use CIDv0 for compatibility
-        }
-      })
+      body: formData
     });
 
     if (!response.ok) {

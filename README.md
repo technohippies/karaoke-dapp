@@ -158,6 +158,23 @@ npx tsx scripts/set-pkp-address.ts  # Only works if you're the owner
 
 **Important**: The PKP address on the contract MUST match the PKP that signs the grading results, otherwise signature verification will fail.
 
+### 13. Lit Action Upload Format
+
+**Issue**: Lit Actions fail with syntax errors if uploaded as JSON instead of raw JavaScript.
+
+**Solution**: Always upload Lit Actions as raw JavaScript files:
+```javascript
+// Correct: Upload as raw file
+const formData = new FormData();
+formData.append('file', new Blob([jsCode], { type: 'text/javascript' }));
+// Use pinFileToIPFS endpoint
+
+// Wrong: Don't wrap in JSON
+// { name: "action", js: jsCode }
+```
+
+The upload script handles this correctly by using Pinata's `pinFileToIPFS` endpoint.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

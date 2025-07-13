@@ -85,10 +85,15 @@ const go = async () => {
       throw new Error('Invalid public key format - must be 130 hex chars starting with 04');
     }
     
-    const messageBytes = ethers.utils.arrayify(messageHash);
-    
     // The contract expects an Ethereum signed message hash
-    const ethSignedMessageHash = ethers.utils.hashMessage(messageBytes);
+    // We need to add the Ethereum signed message prefix manually
+    const prefix = "\x19Ethereum Signed Message:\n32";
+    const prefixedMessage = ethers.utils.concat([
+      ethers.utils.toUtf8Bytes(prefix),
+      messageHash
+    ]);
+    const ethSignedMessageHash = ethers.utils.keccak256(prefixedMessage);
+    
     const signBytes = ethers.utils.arrayify(ethSignedMessageHash);
     const toSignArray = Array.from(signBytes);
     

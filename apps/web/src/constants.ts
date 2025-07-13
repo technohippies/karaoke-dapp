@@ -155,7 +155,7 @@ export const COMBO_PRICE = 3_000_000n // 3 USDC (6 decimals)
 export const LIT_NETWORK = 'datil'
 export const LIT_RPC_URL = 'https://sepolia.base.org' // Using public Base Sepolia RPC
 
-// PKP Details (newly minted with updated Lit Action permission - includes Ethereum signed message hash fix)
-export const PKP_PUBLIC_KEY = '0x0414e5069ce781e7d15eee18412228d86b1ce61dcde3584ba3f21a69213d43b15c8f7916caf6db791779e7a1f770435c7fc93f275dc2832a69d6f69b5e1c85e1a9'
-export const PKP_ADDRESS = '0x8376e8bfA3397C3c3177Aec2ad251a12B7Ab7776'
-export const LIT_ACTION_CID = 'QmXrdyum5jDnNSTWAxUV8y5dRnpJsV9wuTUAH3RVGJw7jU' // Fixed with Ethereum signed message hash
+// PKP Details (final working version with raw JavaScript upload)
+export const PKP_PUBLIC_KEY = '0x042b303dcbe8d32e655ee2b82834e4a53055e731a6bd7d2be7c1ff8d688a68f93446e1cf88fcff81cf7682171f3d29c74d4911a0d24de9d502dc7dee3f8be9fe41'
+export const PKP_ADDRESS = '0xe7674fe5EAfdDb2590462E58B821DcD17052F76D'
+export const LIT_ACTION_CID = 'QmUzzsqGWftEnJd85mGiiKcH7j2cDeeNpEbcBzjdyhQtKb' // Raw JavaScript with Ethereum signed message prefix
