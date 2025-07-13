@@ -8,12 +8,12 @@ import { SongSelection } from './components/SongSelection'
 import { KaraokeSession } from './components/KaraokeSession'
 import './App.css'
 
-// Capacity delegation auth sig (from your .env or configuration)
+// Capacity delegation auth sig (from mint-capacity-credits output)
 const CAPACITY_DELEGATION_AUTH_SIG = {
-  sig: "YOUR_DELEGATION_SIG",
+  sig: "0x84461c7b284521ee286df54e99c7d9adf603108774051ec9c3c4e0e83cd53434710e4bcfc819b1eb9170d442b283fa80dd71ddfd3008a427e914ee76cdc6ab3a1c",
   derivedVia: "web3.eth.personal.sign",
-  signedMessage: "YOUR_SIGNED_MESSAGE",
-  address: "YOUR_ADDRESS"
+  signedMessage: "localhost wants you to sign in with your Ethereum account:\n0x0C6433789d14050aF47198B2751f6689731Ca79C\n\nThis is a test statement.  You can put anything you want here. I further authorize the stated URI to perform the following actions on my behalf: (1) 'Auth': 'Auth' for 'lit-ratelimitincrease://235258'.\n\nURI: lit:capability:delegation\nVersion: 1\nChain ID: 1\nNonce: 0x3b418e4eecd4f2a748edd3fbac2edc5a0c9d98e7f8703259b67e211a6a4aaa6f\nIssued At: 2025-07-12T17:13:39.744Z\nExpiration Time: 2025-07-19T00:00:00.000Z\nResources:\n- urn:recap:eyJhdHQiOnsibGl0LXJhdGVsaW1pdGluY3JlYXNlOi8vMjM1MjU4Ijp7IkF1dGgvQXV0aCI6W3siZGVsZWdhdGVfdG8iOltdLCJuZnRfaWQiOlsiMjM1MjU4Il0sInVzZXMiOiIxMDAwIn1dfX0sInByZiI6W119",
+  address: "0x0C6433789d14050aF47198B2751f6689731Ca79C"
 }
 
 function App() {
