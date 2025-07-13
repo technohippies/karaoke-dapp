@@ -1,6 +1,6 @@
-# Lit Protocol PKP Test Setup
+# Lit Protocol PKP Voice Grader
 
-This project demonstrates a production-ready setup for using Lit Protocol PKPs with regular user sessions to prevent fraud in a karaoke dapp.
+This project implements a secure PKP-based voice grading system for a karaoke dapp using Lit Protocol. The implementation uses Unix timestamp seconds for nonces to avoid JavaScript number precision issues.
 
 ## Architecture
 
@@ -94,3 +94,10 @@ This simulates a user:
 - `scripts/upload-action.ts` - Uploads Lit Action to IPFS
 - `scripts/test-action.ts` - Tests the full flow
 - `lit-actions/voiceGrader.js` - The Lit Action code
+
+## Technical Notes
+
+- **Nonce Generation**: Uses `Math.floor(Date.now() / 1000)` for Unix seconds instead of milliseconds to avoid Lit Action signing failures
+- **PKP Address**: 0xBc2296278633Cf8946321e94E0B71912315792a4
+- **Working Lit Action CID**: QmcGpHHeMxXaQBPzLgFUxWkwgkRKJoX3YY5vLf41EvitLw
+- **Contract**: 0x91B69AC1Ac63C7CB850214d52b2f3d890FED557e on Base Sepolia

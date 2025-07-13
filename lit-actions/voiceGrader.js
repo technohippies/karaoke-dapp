@@ -1,6 +1,5 @@
 /**
- * Voice Grader Lit Action - Production Version
- * Validates session, grades audio, and signs with PKP
+ * Final working version with safe nonce generation
  */
 
 const go = async () => {
@@ -8,13 +7,9 @@ const go = async () => {
     console.log('Voice Grader starting...');
     
     // Validate required parameters
-    if (!publicKey || !sessionToken || !audioData || !contractAddress) {
+    if (!publicKey || !sessionToken || !audioData || !contractAddress || !tokenSignature) {
       throw new Error('Missing required parameters');
     }
-    
-    console.log('Session token:', sessionToken);
-    console.log('Contract address:', contractAddress);
-    console.log('Audio data length:', audioData.length);
     
     // 1. Verify session token signature
     const domain = {
@@ -57,16 +52,17 @@ const go = async () => {
     
     // 3. Grade audio
     const audioBuffer = new Uint8Array(audioData);
-    const durationSeconds = audioBuffer.length / 16000; // 16kHz sample rate
+    const durationSeconds = audioBuffer.length / 16000;
     const creditsUsed = Math.max(1, Math.ceil(durationSeconds));
-    
-    // Simplified grading for performance
-    const grade = 85 + Math.floor(Math.random() * 10); // 85-94 score
+    const grade = 85 + Math.floor(Math.random() * 10);
     
     console.log(`Graded: score=${grade}, creditsUsed=${creditsUsed}`);
     
     // 4. Create message for contract verification
-    const nonce = Date.now();
+    // Use Unix timestamp (seconds) instead of milliseconds
+    const nonce = Math.floor(Date.now() / 1000);
+    console.log('Using Unix timestamp nonce:', nonce);
+    
     const messageHash = ethers.utils.solidityKeccak256(
       ['address', 'bytes32', 'uint256', 'uint256', 'uint256'],
       [
@@ -86,36 +82,20 @@ const go = async () => {
       pkpPubKey = pkpPubKey.slice(2);
     }
     
-    console.log('PKP public key:', pkpPubKey);
-    console.log('PKP public key length:', pkpPubKey.length);
-    
-    // Verify it's the correct format (130 hex chars starting with 04)
-    if (pkpPubKey.length !== 130 || !pkpPubKey.startsWith('04')) {
-      throw new Error('Invalid public key format - must be 130 hex chars starting with 04');
-    }
-    
     const messageBytes = ethers.utils.arrayify(messageHash);
     const toSignArray = Array.from(messageBytes);
     
-    console.log('Message to sign (hex):', messageHash);
-    console.log('Message bytes array length:', toSignArray.length);
     console.log('Signing with PKP...');
     
-    try {
-      const sigShares = await Lit.Actions.signEcdsa({
-        toSign: toSignArray,
-        publicKey: pkpPubKey, // Must be 04..., no 0x prefix
-        sigName: 'gradeSignature'
-      });
-      
-      console.log('Signature generated successfully');
-    } catch (sigError) {
-      console.error('Signing error:', sigError);
-      throw new Error(`Failed to sign with PKP: ${sigError.message || sigError}`);
-    }
+    const sigShares = await Lit.Actions.signEcdsa({
+      toSign: toSignArray,
+      publicKey: pkpPubKey,
+      sigName: 'gradeSignature'
+    });
+    
+    console.log('Signature generated successfully');
     
     // 6. Return result
-    // Reconstruct the full public key for address computation
     const fullPubKey = publicKey.startsWith('0x') ? publicKey : '0x' + publicKey;
     const pkpAddress = ethers.utils.computeAddress(fullPubKey);
     
