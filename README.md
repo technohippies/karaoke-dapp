@@ -2,6 +2,12 @@
 
 This project implements a secure PKP-based voice grading system for a karaoke dapp using Lit Protocol. The implementation uses Unix timestamp seconds for nonces to avoid JavaScript number precision issues.
 
+## Project Structure
+
+- `/scripts` - Setup and testing scripts for Lit Protocol
+- `/lit-actions` - Lit Action code for voice grading
+- `/apps/web` - React frontend for the karaoke application
+
 ## Architecture
 
 - **Dapp Owner**: Owns the PKP and controls what it can sign
@@ -95,9 +101,31 @@ This simulates a user:
 - `scripts/test-action.ts` - Tests the full flow
 - `lit-actions/voiceGrader.js` - The Lit Action code
 
+## Running the Web App
+
+1. Install dependencies:
+   ```bash
+   bun install
+   ```
+
+2. Configure the web app:
+   ```bash
+   cd apps/web
+   cp .env.example .env
+   # Edit .env with your RPC URL and capacity delegation
+   ```
+
+3. Start the development server:
+   ```bash
+   bun run dev:web
+   ```
+
+4. Open http://localhost:3000 in your browser
+
 ## Technical Notes
 
 - **Nonce Generation**: Uses `Math.floor(Date.now() / 1000)` for Unix seconds instead of milliseconds to avoid Lit Action signing failures
 - **PKP Address**: 0xBc2296278633Cf8946321e94E0B71912315792a4
 - **Working Lit Action CID**: QmcGpHHeMxXaQBPzLgFUxWkwgkRKJoX3YY5vLf41EvitLw
 - **Contract**: 0x91B69AC1Ac63C7CB850214d52b2f3d890FED557e on Base Sepolia
+- **Secure Lit Action**: `voiceGrader-secure.js` includes on-chain session verification
