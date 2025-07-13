@@ -118,6 +118,30 @@ const result = await Lit.Actions.runOnce(
 );
 ```
 
+### 11. Intermittent 502 Timeout Errors
+
+**Issue**: Requests to Lit nodes sometimes fail with 502 Bad Gateway due to 35-second timeouts, particularly on first request with a new session.
+
+**Solution**: Implement retry logic with short delays:
+```javascript
+for (let attempt = 1; attempt <= 3; attempt++) {
+  try {
+    const result = await litNodeClient.executeJs({...})
+    break // Success
+  } catch (error) {
+    if (error.message?.includes('502') || error.message?.includes('timeout')) {
+      if (attempt < 3) {
+        await new Promise(r => setTimeout(r, 500)) // 500ms delay
+        continue
+      }
+    }
+    throw error
+  }
+}
+```
+
+**Note**: This issue is intermittent and appears related to PKP initialization latency on the Lit nodes. Avoid making pre-flight requests as they may interfere with session state.
+
 ## 🚀 Quick Start
 
 ### Prerequisites

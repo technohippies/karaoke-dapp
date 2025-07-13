@@ -1,12 +1,8 @@
 import { LitNodeClient } from '@lit-protocol/lit-node-client'
-import { LitNetwork } from '@lit-protocol/constants'
-import { ethers } from 'ethers'
 import { 
   PKP_PUBLIC_KEY, 
-  PKP_ADDRESS, 
   LIT_ACTION_CID,
-  KARAOKE_STORE_V5_ADDRESS,
-  LIT_RPC_URL
+  KARAOKE_STORE_V5_ADDRESS
 } from '../constants'
 
 interface SessionToken {
@@ -53,8 +49,7 @@ export class LitProtocolService {
   async gradeVoice(
     sessionToken: SessionToken,
     tokenSignature: string,
-    audioData: Uint8Array,
-    userAddress: string
+    audioData: Uint8Array
   ): Promise<{
     grade: number
     creditsUsed: number
@@ -103,7 +98,7 @@ export class LitProtocolService {
       signedMessageLength: firstSig.signedMessage?.length
     })
 
-    // Execute the Lit Action
+    // Execute the Lit Action with retry logic for 502 errors
     console.log('🚀 Executing Lit Action with params:', {
       ipfsId: LIT_ACTION_CID,
       hasSessionSigs: !!this.sessionSigs,
@@ -116,17 +111,53 @@ export class LitProtocolService {
       }
     })
     
-    const response = await this.litNodeClient.executeJs({
-      ipfsId: LIT_ACTION_CID,
-      sessionSigs: this.sessionSigs,
-      jsParams: {
-        publicKey: PKP_PUBLIC_KEY,
-        sessionToken,
-        audioData: audioArray,
-        contractAddress: KARAOKE_STORE_V5_ADDRESS,
-        tokenSignature
+    let response
+    let lastError: Error | null = null
+    const maxRetries = 3
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempt ${attempt}/${maxRetries} to execute Lit Action...`)
+        
+        response = await this.litNodeClient.executeJs({
+          ipfsId: LIT_ACTION_CID,
+          sessionSigs: this.sessionSigs,
+          jsParams: {
+            publicKey: PKP_PUBLIC_KEY,
+            sessionToken,
+            audioData: audioArray,
+            contractAddress: KARAOKE_STORE_V5_ADDRESS,
+            tokenSignature
+          }
+        })
+        
+        // Success - break out of retry loop
+        console.log(`✅ Lit Action executed successfully on attempt ${attempt}`)
+        break
+      } catch (error: any) {
+        lastError = error
+        console.error(`❌ Attempt ${attempt} failed:`, error.message || error)
+        
+        // Check if it's a 502 error or timeout (common with Lit nodes)
+        if (error.message?.includes('502') || error.message?.includes('Bad Gateway') || error.message?.includes('timeout')) {
+          console.log('🔄 502/timeout error detected - this is common on first request')
+          if (attempt < maxRetries) {
+            // Short delay before retry since the issue is node-side
+            const delay = 500 // Fixed 500ms delay
+            console.log(`⏱️ Waiting ${delay}ms before retry...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+            continue
+          }
+        }
+        
+        // For other errors or final attempt, throw
+        throw error
       }
-    })
+    }
+    
+    if (!response) {
+      throw lastError || new Error('Failed to execute Lit Action after retries')
+    }
 
     // Log the raw response for debugging
     console.log('📝 Lit Action raw response:', response)

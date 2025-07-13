@@ -386,8 +386,7 @@ export function useKaraokeMachine() {
       const result = await litProtocolService.gradeVoice(
         state.context.sessionData,
         tokenSignature,
-        state.context.audioData,
-        address
+        state.context.audioData
       )
       
       send({
