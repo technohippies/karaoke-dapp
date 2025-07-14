@@ -33,6 +33,20 @@ export function KaraokeSession() {
     stopRecording 
   } = useAudioRecorder()
   
+  // Auto-start recording for line 2
+  React.useEffect(() => {
+    if (state.matches('karaoke.recording') && 
+        context.currentLineIndex === 1 && 
+        context.lineGrades.length === 1 &&
+        !isRecording && !context.audioData) {
+      console.log('🎵 Auto-starting Line 2 recording')
+      // Small delay to show the UI update
+      setTimeout(() => {
+        startRecording()
+      }, 1000)
+    }
+  }, [state.value, context.currentLineIndex, context.lineGrades.length, isRecording, context.audioData, startRecording])
+  
   const {
     hasValidSession,
     isCreatingSession,
@@ -155,30 +169,54 @@ export function KaraokeSession() {
             </div>
           ) : (
             <>
+              <div className="line-progress">
+                <h3>Line {context.currentLineIndex + 1} of {context.totalLines}</h3>
+                {context.lineGrades.length > 0 && (
+                  <p className="previous-grades">
+                    Previous grades: {context.lineGrades.map(g => `${g.grade}/100`).join(', ')}
+                  </p>
+                )}
+              </div>
+              
               <KaraokeLyrics 
                 songId={context.selectedSong?.id || 1}
                 isPlaying={isRecording}
                 currentTime={duration}
+                lineIndex={context.currentLineIndex}
               />
               
               <div className="recording-controls">
-                <button 
-                  onClick={handleRecord}
-                  className={`record-button ${isRecording ? 'recording' : ''}`}
-                >
-                  {isRecording ? '⏹ Stop Recording' : '🎤 Start Recording'}
-                </button>
+                {context.currentLineIndex === 0 && !context.audioData ? (
+                  // First line - manual start
+                  <button 
+                    onClick={handleRecord}
+                    className={`record-button ${isRecording ? 'recording' : ''}`}
+                  >
+                    {isRecording ? '⏹ Stop Recording Line 1' : '🎤 Start Karaoke Session'}
+                  </button>
+                ) : (
+                  // Subsequent lines - auto or manual
+                  <button 
+                    onClick={handleRecord}
+                    className={`record-button ${isRecording ? 'recording' : ''}`}
+                    disabled={state.matches('karaoke.processing')}
+                  >
+                    {isRecording ? `⏹ Stop Recording Line ${context.currentLineIndex + 1}` : 
+                     state.matches('karaoke.processing') ? 'Processing...' : 
+                     `🎤 Record Line ${context.currentLineIndex + 1}`}
+                  </button>
+                )}
                 
                 {isRecording && (
                   <div className="recording-indicator">
                     <span className="recording-dot"></span>
-                    Recording - {formatDuration(duration)}
+                    Recording Line {context.currentLineIndex + 1} - {formatDuration(duration)}
                   </div>
                 )}
                 
-                {context.audioData && !isRecording && (
+                {context.audioData && !isRecording && !state.matches('karaoke.processing') && (
                   <p className="recorded-info">
-                    Recording complete! ({formatDuration(context.recordingDuration)})
+                    Line {context.currentLineIndex + 1} recording complete! ({formatDuration(context.recordingDuration)})
                   </p>
                 )}
               </div>
@@ -190,22 +228,41 @@ export function KaraokeSession() {
       {state.matches('karaoke.processing') && (
         <div className="processing">
           <div className="loading">
-            <p>Grading your performance with Lit Protocol...</p>
+            <p>Grading Line {context.currentLineIndex + 1} with Lit Protocol...</p>
+            {context.lineGrades.length > 0 && (
+              <p className="previous-grades">
+                Previous grades: {context.lineGrades.map(g => `Line ${g.lineIndex + 1}: ${g.grade}/100`).join(', ')}
+              </p>
+            )}
           </div>
         </div>
       )}
       
-      {state.matches('karaoke.graded') && context.gradeResult && (
+      {state.matches('karaoke.graded') && context.lineGrades.length > 0 && (
         <div className="grade-result">
           <h3>Performance Results</h3>
+          
+          <div className="line-grades">
+            <h4>Line-by-Line Scores:</h4>
+            {context.lineGrades.map((grade, idx) => (
+              <div key={idx} className="line-grade">
+                Line {grade.lineIndex + 1}: {grade.grade}/100
+              </div>
+            ))}
+          </div>
+          
           <div className="grade-display">
             <div className="grade-score">
-              <span className="label">Score</span>
-              <span className="value">{context.gradeResult.grade}/100</span>
+              <span className="label">Average Score</span>
+              <span className="value">
+                {Math.round(context.lineGrades.reduce((sum, g) => sum + g.grade, 0) / context.lineGrades.length)}/100
+              </span>
             </div>
             <div className="credits-used">
-              <span className="label">Credits Used</span>
-              <span className="value">{context.gradeResult.creditsUsed}</span>
+              <span className="label">Total Credits Used</span>
+              <span className="value">
+                {context.lineGrades.reduce((sum, g) => sum + g.creditsUsed, 0)}
+              </span>
             </div>
           </div>
           

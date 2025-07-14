@@ -1,0 +1,20 @@
+{
+  "songs_v3": {
+    "tableName": "karaoke_songs_84532_160",
+    "prefix": "karaoke_songs",
+    "version": "v3",
+    "chainId": 84532,
+    "createdAt": "2025-07-14T10:33:20.132Z",
+    "deployer": "0x0C6433789d14050aF47198B2751f6689731Ca79C",
+    "transactionHash": "0x0d4ffa7206ce6baf48cab8809406fab20bbe02d57c46be27729c481f34ba8b0f"
+  },
+  "user_history_v1": {
+    "tableName": "karaoke_history_84532_161",
+    "prefix": "karaoke_history",
+    "version": "v1",
+    "chainId": 84532,
+    "createdAt": "2025-07-14T10:33:29.740Z",
+    "deployer": "0x0C6433789d14050aF47198B2751f6689731Ca79C",
+    "transactionHash": "0xa34a43aec5b54c6600f560cc4e929f842853b5f71d82021407e84f354525a947"
+  }
+}

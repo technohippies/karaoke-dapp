@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAccount } from 'wagmi'
 import { tablelandService, type Song } from '../services/tableland'
 import { Header } from '../components/Header'
+import { ListItem } from '../components/ListItem'
+import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
 
 export function HomePage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const { isConnected, address } = useAccount()
+  const { context } = useKaraokeMachineContext()
 
   useEffect(() => {
     loadSongs()
@@ -22,25 +27,59 @@ export function HomePage() {
     }
   }
 
+  // Get artwork URL from song - use Genius images constructed from artwork_hash
+  const getArtworkUrl = (song: Song) => {
+    if (song.song_art_image_thumbnail_url) {
+      return song.song_art_image_thumbnail_url
+    }
+    if (song.song_art_image_url) {
+      return song.song_art_image_url
+    }
+    if (song.artwork_hash?.id && song.artwork_hash?.ext && song.artwork_hash?.sizes) {
+      // Use thumbnail format for homepage
+      const size = song.artwork_hash.sizes.t || '300x300x1'
+      return `https://images.genius.com/${song.artwork_hash.id}.${size}.${song.artwork_hash.ext}`
+    }
+    return null
+  }
+
+  const handleLogin = () => {
+    // Handle wallet connection logic
+    console.log('Connect wallet clicked')
+  }
+
+  const handleAccount = () => {
+    // Handle account page navigation
+    console.log('Account clicked')
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
-      <Header />
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-neutral-900">
+      <Header 
+        isLoggedIn={isConnected}
+        address={address}
+        onLogin={handleLogin}
+        onAccount={handleAccount}
+        crownCount={context.voiceCredits || 0}
+        fireCount={context.songCredits || 0}
+      />
+      <div className="w-full max-w-2xl mx-auto px-6 py-8">
+        <h1 className="text-2xl font-bold text-white mb-6">Songs</h1>
         
         {loading ? (
           <div className="text-center text-white">Loading songs...</div>
         ) : songs.length === 0 ? (
-          <div className="text-center text-gray-400">No songs available</div>
+          <div className="text-center text-neutral-400">No songs available</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-3">
             {songs.map((song) => (
-              <Link
-                key={song.id}
-                to={`/s/${song.id}`}
-                className="block bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 hover:bg-gray-700/50 transition-all"
-              >
-                <h2 className="text-xl font-semibold text-white mb-1">{song.title}</h2>
-                <p className="text-gray-400">{song.artist}</p>
+              <Link key={song.id} to={`/s/${song.id}`} className="block">
+                <ListItem showChevron thumbnail={getArtworkUrl(song) || undefined}>
+                  <div>
+                    <div className="font-semibold text-white">{song.title}</div>
+                    <div className="text-neutral-400 text-sm">{song.artist}</div>
+                  </div>
+                </ListItem>
               </Link>
             ))}
           </div>

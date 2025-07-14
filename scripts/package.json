@@ -1,0 +1,23 @@
+{
+  "name": "lit-test-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "prepare-song": "tsx prepare-song.ts",
+    "update-tableland": "tsx update-tableland-v2.ts"
+  },
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^6.2.2",
+    "@lit-protocol/constants": "^6.2.2",
+    "@pinata/sdk": "^2.1.0",
+    "@tableland/sdk": "^7.2.1",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3"
+  }
+}

@@ -7,11 +7,19 @@ dotenv.config();
 async function uploadLitAction() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    console.error('Usage: npx tsx scripts/upload-lit-action.ts <path-to-lit-action.js>');
+    console.error('Usage: npx tsx scripts/upload-lit-action.ts <path-to-lit-action.js> [--name <optional-name>]');
+    console.error('Example: npx tsx scripts/upload-lit-action.ts ./lit-actions/voiceGrader.js --name "Voice Grader V1"');
     process.exit(1);
   }
 
   const filePath = args[0];
+  
+  // Parse optional name argument
+  let customName = '';
+  const nameIndex = args.indexOf('--name');
+  if (nameIndex !== -1 && args[nameIndex + 1]) {
+    customName = args[nameIndex + 1];
+  }
   
   try {
     // Read the Lit Action file
@@ -24,7 +32,19 @@ async function uploadLitAction() {
     
     const formData = new FormData();
     const blob = new Blob([jsCode], { type: 'text/javascript' });
-    formData.append('file', blob, path.basename(filePath));
+    const fileName = customName ? `${customName.replace(/\s+/g, '-')}.js` : path.basename(filePath);
+    formData.append('file', blob, fileName);
+    
+    // Add metadata if custom name provided
+    if (customName) {
+      formData.append('pinataMetadata', JSON.stringify({
+        name: customName,
+        keyvalues: {
+          type: 'lit-action',
+          uploadDate: new Date().toISOString()
+        }
+      }));
+    }
     
     const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
       method: 'POST',
@@ -43,6 +63,10 @@ async function uploadLitAction() {
     console.log('\n✅ Upload successful!');
     console.log('='.repeat(60));
     console.log('IPFS CID:', result.IpfsHash);
+    if (customName) {
+      console.log('Name:', customName);
+    }
+    console.log('File:', fileName);
     console.log('='.repeat(60));
     
     console.log('\n📝 Update your .env file:');
@@ -50,6 +74,31 @@ async function uploadLitAction() {
     
     console.log('\n🔗 View on IPFS:');
     console.log(`https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`);
+    console.log(`https://ipfs.io/ipfs/${result.IpfsHash}`);
+    
+    // Save to a deployments file for tracking
+    const deploymentsFile = path.join(path.dirname(filePath), 'deployments.json');
+    let deployments = {};
+    
+    try {
+      if (fs.existsSync(deploymentsFile)) {
+        deployments = JSON.parse(fs.readFileSync(deploymentsFile, 'utf8'));
+      }
+    } catch (e) {
+      console.log('\n📁 Creating new deployments file...');
+    }
+    
+    // Add new deployment
+    const deploymentKey = customName || path.basename(filePath, '.js');
+    deployments[deploymentKey] = {
+      cid: result.IpfsHash,
+      fileName: fileName,
+      uploadDate: new Date().toISOString(),
+      filePath: filePath
+    };
+    
+    fs.writeFileSync(deploymentsFile, JSON.stringify(deployments, null, 2));
+    console.log(`\n💾 Deployment saved to ${path.relative(process.cwd(), deploymentsFile)}`);
     
   } catch (error) {
     console.error('\n❌ Error:', error);

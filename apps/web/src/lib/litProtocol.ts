@@ -2,7 +2,8 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { 
   PKP_PUBLIC_KEY, 
   LIT_ACTION_CID,
-  KARAOKE_STORE_V5_ADDRESS
+  KARAOKE_STORE_V5_ADDRESS,
+  SIMPLE_V1_LIT_ACTION_CID
 } from '../constants'
 
 interface SessionToken {
@@ -171,6 +172,57 @@ export class LitProtocolService {
       nonce: result.nonce,
       signature: formattedSignature,
       messageHash: result.messageHash
+    }
+  }
+  
+  async gradeSimpleV1(
+    userAddress: string, 
+    attemptNumber: number,
+    audioData: Uint8Array
+  ): Promise<{ grade: number; nonce: number; signature: string }> {
+    if (!this.litNodeClient || !this.sessionSigs) {
+      throw new Error('Lit Protocol not initialized or no session')
+    }
+    
+    const publicKey = PKP_PUBLIC_KEY
+    if (!publicKey) {
+      throw new Error('PKP public key not configured')
+    }
+    
+    console.log('🎤 Grading audio for attempt:', attemptNumber)
+    
+    try {
+      const response = await this.litNodeClient.executeJs({
+        sessionSigs: this.sessionSigs,
+        ipfsId: SIMPLE_V1_LIT_ACTION_CID,
+        jsParams: {
+          publicKey,
+          userAddress,
+          attemptNumber: attemptNumber.toString(),
+          audioData: Array.from(audioData)
+        }
+      })
+      
+      const result = JSON.parse(response.response)
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Grading failed')
+      }
+      
+      console.log('✅ Grading complete:', {
+        grade: result.grade,
+        attemptNumber: result.attemptNumber,
+        duration: result.duration
+      })
+      
+      return {
+        grade: result.grade,
+        nonce: result.nonce,
+        signature: result.signature
+      }
+    } catch (error) {
+      console.error('❌ Lit Action execution failed:', error)
+      throw error
     }
   }
 

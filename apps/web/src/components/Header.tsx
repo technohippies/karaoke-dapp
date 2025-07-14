@@ -1,6 +1,7 @@
 import React from 'react'
-import { Crown, Fire } from '@phosphor-icons/react'
+import { Crown, Fire, CaretLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
+import { IconButton } from './IconButton'
 
 interface HeaderProps {
   isLoggedIn?: boolean
@@ -9,6 +10,9 @@ interface HeaderProps {
   onAccount?: () => void
   crownCount?: number
   fireCount?: number
+  showBack?: boolean
+  onBack?: () => void
+  pageTitle?: string
 }
 
 export function Header({ 
@@ -17,45 +21,63 @@ export function Header({
   onLogin,
   onAccount,
   crownCount = 5,
-  fireCount = 12
+  fireCount = 12,
+  showBack = false,
+  onBack,
+  pageTitle
 }: HeaderProps) {
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-3)}`
   }
 
   return (
-    <header className="w-full bg-neutral-900 border-b border-neutral-700 px-6 py-4 h-16">
-      <div className="flex items-center justify-between h-full">
-        {/* Left side - Crown and Fire icons */}
+    <header className="w-full bg-neutral-900 border-b border-neutral-700 h-16">
+      <div className="w-full max-w-2xl mx-auto px-6 py-4 flex items-center justify-between h-full">
+        {/* Left side - Back button and optional title */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 flex items-center justify-center">
-              <Crown weight="fill" size={24} color="#EAB308" />
-            </div>
-            <span className="text-neutral-300 font-bold text-sm">{crownCount}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 flex items-center justify-center">
-              <Fire weight="fill" size={24} color="#EF4444" />
-            </div>
-            <span className="text-neutral-300 font-bold text-sm">{fireCount}</span>
-          </div>
+          {showBack && (
+            <IconButton variant="ghost" onClick={onBack}>
+              <CaretLeft size={20} weight="regular" />
+            </IconButton>
+          )}
+          {pageTitle && (
+            <h1 className="text-lg font-semibold text-white truncate">
+              {pageTitle}
+            </h1>
+          )}
         </div>
 
-        {/* Right side - Login/Account button */}
-        <div>
-          {isLoggedIn ? (
-            <Button 
-              variant="outline" 
-              onClick={onAccount}
-            >
-              {formatAddress(address)}
-            </Button>
-          ) : (
-            <Button variant="outline" onClick={onLogin}>
-              Connect Wallet
-            </Button>
-          )}
+        {/* Right side - Crown/Fire icons and Login/Account button */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 flex items-center justify-center">
+                <Crown weight="fill" size={24} color="#EAB308" />
+              </div>
+              <span className="text-neutral-300 font-bold text-sm">{crownCount}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 flex items-center justify-center">
+                <Fire weight="fill" size={24} color="#EF4444" />
+              </div>
+              <span className="text-neutral-300 font-bold text-sm">{fireCount}</span>
+            </div>
+          </div>
+          
+          <div>
+            {isLoggedIn ? (
+              <Button 
+                variant="outline" 
+                onClick={onAccount}
+              >
+                {formatAddress(address)}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={onLogin}>
+                Connect Wallet
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </header>

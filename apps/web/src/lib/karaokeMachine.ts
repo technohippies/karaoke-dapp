@@ -47,7 +47,18 @@ export interface KaraokeContext {
   audioData: Uint8Array | null
   recordingDuration: number
   
-  // Grading
+  // Multi-line grading
+  currentLineIndex: number
+  totalLines: number
+  lineGrades: Array<{
+    lineIndex: number
+    grade: number
+    creditsUsed: number
+    nonce: number
+    signature: string
+  }>
+  
+  // Deprecated - kept for compatibility
   gradeResult: {
     grade: number
     creditsUsed: number
@@ -86,6 +97,9 @@ export type KaraokeEvent =
   | { type: 'STOP_RECORDING'; audioData: Uint8Array; duration: number }
   | { type: 'SUBMIT_TO_LIT' }
   | { type: 'LIT_GRADING_COMPLETE'; grade: number; creditsUsed: number; nonce: number; signature: string }
+  | { type: 'LINE_GRADED'; lineIndex: number; grade: number; creditsUsed: number; nonce: number; signature: string }
+  | { type: 'NEXT_LINE' }
+  | { type: 'ALL_LINES_COMPLETE' }
   | { type: 'END_SESSION' }
   | { type: 'TRANSACTION_SUBMITTED'; hash: string }
   | { type: 'TRANSACTION_SUCCESS' }
@@ -290,6 +304,28 @@ export const karaokeMachine = setup({
       }
     }),
     
+    addLineGrade: assign({
+      lineGrades: ({ context, event }) => {
+        if (event.type === 'LINE_GRADED') {
+          return [...context.lineGrades, {
+            lineIndex: event.lineIndex,
+            grade: event.grade,
+            creditsUsed: event.creditsUsed,
+            nonce: event.nonce,
+            signature: event.signature
+          }]
+        }
+        return context.lineGrades
+      },
+      currentLineIndex: ({ context }) => context.currentLineIndex + 1
+    }),
+    
+    resetRecording: assign({
+      audioData: null,
+      recordingDuration: 0,
+      isRecording: false
+    }),
+    
     clearSession: assign({
       hasActiveSession: false,
       sessionData: null,
@@ -297,7 +333,9 @@ export const karaokeMachine = setup({
       sessionSongId: 0,
       audioData: null,
       gradeResult: null,
-      recordingDuration: 0
+      recordingDuration: 0,
+      currentLineIndex: 0,
+      lineGrades: []
     }),
     
     setTransactionHash: assign({
@@ -390,7 +428,12 @@ export const karaokeMachine = setup({
     audioData: null,
     recordingDuration: 0,
     
-    // Grading
+    // Multi-line grading
+    currentLineIndex: 0,
+    totalLines: 2, // Testing with 2 lines
+    lineGrades: [],
+    
+    // Deprecated
     gradeResult: null,
     
     // UI State
@@ -678,10 +721,53 @@ export const karaokeMachine = setup({
             }
           ],
           on: {
-            LIT_GRADING_COMPLETE: {
-              target: 'graded',
-              actions: 'setGradeResult'
-            },
+            LIT_GRADING_COMPLETE: [
+              {
+                // If we have more lines to grade, go back to recording
+                target: 'recording',
+                guard: ({ context }) => context.currentLineIndex < context.totalLines - 1,
+                actions: [
+                  ({ event, context }) => {
+                    console.log(`✅ Line ${context.currentLineIndex + 1} graded: ${event.grade}/100`)
+                  },
+                  ({ self, event, context }) => {
+                    // Store this line's grade
+                    self.send({
+                      type: 'LINE_GRADED',
+                      lineIndex: context.currentLineIndex,
+                      grade: event.grade,
+                      creditsUsed: event.creditsUsed,
+                      nonce: event.nonce,
+                      signature: event.signature
+                    })
+                  },
+                  'addLineGrade',
+                  'resetRecording'
+                ]
+              },
+              {
+                // All lines complete, go to graded state
+                target: 'graded',
+                actions: [
+                  ({ event, context }) => {
+                    console.log(`✅ Final line ${context.currentLineIndex + 1} graded: ${event.grade}/100`)
+                  },
+                  ({ self, event, context }) => {
+                    // Store the final line's grade
+                    self.send({
+                      type: 'LINE_GRADED',
+                      lineIndex: context.currentLineIndex,
+                      grade: event.grade,
+                      creditsUsed: event.creditsUsed,
+                      nonce: event.nonce,
+                      signature: event.signature
+                    })
+                  },
+                  'addLineGrade',
+                  'setGradeResult' // Keep for backward compatibility
+                ]
+              }
+            ],
             ERROR: {
               target: 'recording',
               actions: 'setError'

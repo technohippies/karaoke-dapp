@@ -1,5 +1,5 @@
 // Table name
-export const SONGS_TABLE = 'songs_v7_84532_132';
+export const SONGS_TABLE = 'karaoke_songs_11155420_11155420_181';
 
 // Types
 export interface Song {
@@ -13,12 +13,25 @@ export interface Song {
   language: string;
   genius_id: number;
   lrclib_id: number;
+  genius_slug: string;
+  streaming_links: {
+    soundcloud?: string;
+    spotify?: string;
+    apple_music?: string;
+    youtube?: string;
+    qq_music?: string;
+    netease?: string;
+  };
   artwork_hash: {
     id: string;
     ext: string;
     sizes: Record<string, string>;
   };
+  song_art_image_thumbnail_url?: string;
+  song_art_image_url?: string;
   translations?: Record<string, string>; // { "zh": "CID", "ug": "CID" }
+  words_in_top_1k?: number;
+  words_per_second?: number;
 }
 
 // Tableland Service Class

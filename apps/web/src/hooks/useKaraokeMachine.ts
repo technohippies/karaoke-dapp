@@ -48,7 +48,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   const { data: songCreditsData, refetch: refetchSongCredits } = useReadContract({
@@ -56,7 +56,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   const refetchCredits = () => {
@@ -69,7 +69,7 @@ export function useKaraokeMachine() {
     abi: USDC_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -77,7 +77,7 @@ export function useKaraokeMachine() {
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, KARAOKE_STORE_V5_ADDRESS] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   // First, get the active session ID for the user
@@ -91,7 +91,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'activeUserSession',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   // Then, get the session details if there's an active session
@@ -118,9 +118,9 @@ export function useKaraokeMachine() {
     if (activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
       console.log('🔍 Active session detected:', activeSessionId)
     }
-    if (sessionIdError || sessionError) {
-      console.error('❌ Session query error:', sessionIdError || sessionError)
-    }
+    // if (sessionIdError || sessionError) {
+    //   console.error('❌ Session query error:', sessionIdError || sessionError)
+    // }
   }, [activeSessionId, sessionIdError, sessionError])
   
   // Read unlock status for each song
@@ -129,7 +129,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'hasUnlockedSong',
     args: address ? [address, 1n] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   const { data: song2Unlocked, refetch: refetchSong2 } = useReadContract({
@@ -137,7 +137,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'hasUnlockedSong',
     args: address ? [address, 2n] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   const { data: song3Unlocked, refetch: refetchSong3 } = useReadContract({
@@ -145,7 +145,7 @@ export function useKaraokeMachine() {
     abi: KARAOKE_STORE_V5_ABI,
     functionName: 'hasUnlockedSong',
     args: address ? [address, 3n] : undefined,
-    enabled: !!address,
+    enabled: false, // Temporarily disabled
   })
   
   // Contract writes
@@ -189,7 +189,7 @@ export function useKaraokeMachine() {
   const { isSuccess: isBuySuccess } = useWaitForTransactionReceipt({ hash: buyHash })
   const { isSuccess: isSessionSuccess, data: sessionReceipt } = useWaitForTransactionReceipt({ hash: sessionHash })
   const { isSuccess: isEndSuccess } = useWaitForTransactionReceipt({ hash: endHash })
-  const { isSuccess: isUnlockSuccess } = useWaitForTransactionReceipt({ hash: unlockHash })
+  const { isSuccess: isUnlockSuccess, isError: isUnlockError, error: unlockReceiptError } = useWaitForTransactionReceipt({ hash: unlockHash })
   
   // Update machine when wallet connection changes
   useEffect(() => {
@@ -374,6 +374,14 @@ export function useKaraokeMachine() {
     }
   }, [isUnlockSuccess, unlockHash, send, refetchCredits, refetchSong1, refetchSong2, refetchSong3])
   
+  // Handle unlock transaction failure
+  useEffect(() => {
+    if (isUnlockError && unlockReceiptError) {
+      console.error('❌ Unlock transaction failed:', unlockReceiptError)
+      send({ type: 'TRANSACTION_ERROR', error: 'Transaction failed on chain' })
+    }
+  }, [isUnlockError, unlockReceiptError, send])
+  
   useEffect(() => {
     if (isSessionSuccess && sessionReceipt) {
       console.log('🎯 Session transaction successful!', { 
@@ -466,15 +474,30 @@ export function useKaraokeMachine() {
     }
   }, [isEndSuccess, send, refetchSession, refetchCredits])
   
-  // Handle Lit Protocol grading
-  const handleSubmitToLit = useCallback(async () => {
-    if (!state.context.audioData || !state.context.sessionData || !address) {
-      send({ type: 'ERROR', error: 'Missing audio data or session' })
-      return
+  // Store session token signature to reuse for all lines
+  const sessionTokenSignatureRef = useRef<string | null>(null)
+  
+  // Clear session token signature when session ends
+  useEffect(() => {
+    if (!state.context.hasActiveSession || !state.context.sessionData) {
+      sessionTokenSignatureRef.current = null
+    }
+  }, [state.context.hasActiveSession, state.context.sessionData])
+  
+  // Sign session token ONCE when session starts
+  const signSessionToken = useCallback(async () => {
+    if (!state.context.sessionData || !address) {
+      console.error('Missing session data or address')
+      return null
+    }
+    
+    // If we already have a signature, reuse it
+    if (sessionTokenSignatureRef.current) {
+      console.log('♻️ Reusing existing session token signature')
+      return sessionTokenSignatureRef.current
     }
     
     try {
-      // Sign the session token
       const domain = {
         name: 'KaraokeTurbo',
         version: '1',
@@ -493,9 +516,9 @@ export function useKaraokeMachine() {
         ]
       }
       
-      console.log('📝 Signing session data:', state.context.sessionData)
+      console.log('🔏 Signing session token (one time only)')
       
-      const tokenSignature = await signTypedDataAsync({
+      const signature = await signTypedDataAsync({
         domain: {
           ...domain,
           verifyingContract: KARAOKE_STORE_V5_ADDRESS
@@ -504,15 +527,45 @@ export function useKaraokeMachine() {
         primaryType: 'SessionToken',
         message: {
           ...state.context.sessionData,
-          chainId: 84532 // Ensure chainId is included
+          chainId: 84532
         }
       })
+      
+      sessionTokenSignatureRef.current = signature
+      return signature
+    } catch (error) {
+      console.error('Failed to sign session token:', error)
+      return null
+    }
+  }, [state.context.sessionData, address, signTypedDataAsync])
+  
+  // Handle Lit Protocol grading
+  const handleSubmitToLit = useCallback(async () => {
+    if (!state.context.audioData || !state.context.sessionData || !address) {
+      send({ type: 'ERROR', error: 'Missing audio data or session' })
+      return
+    }
+    
+    try {
+      // Get or reuse the session token signature
+      const tokenSignature = await signSessionToken()
+      if (!tokenSignature) {
+        throw new Error('Failed to get session token signature')
+      }
+      
+      console.log(`🎤 Grading line ${state.context.currentLineIndex + 1} of ${state.context.totalLines}`)
+      
+      // Add line index to the audio data to make each submission unique
+      // In real implementation, this would be different audio for each line
+      const lineAudioData = new Uint8Array(state.context.audioData.length + 1)
+      lineAudioData.set(state.context.audioData)
+      lineAudioData[lineAudioData.length - 1] = state.context.currentLineIndex
       
       // Grade with Lit Protocol
       const result = await litProtocolService.gradeVoice(
         state.context.sessionData,
         tokenSignature,
-        state.context.audioData
+        lineAudioData
       )
       
       send({
@@ -526,7 +579,7 @@ export function useKaraokeMachine() {
       console.error('Lit Protocol error:', error)
       send({ type: 'ERROR', error: error instanceof Error ? error.message : 'Failed to grade audio' })
     }
-  }, [state.context, address, signTypedDataAsync, send])
+  }, [state.context, address, send, signSessionToken])
   
   // Listen for SUBMIT_TO_LIT event
   useEffect(() => {
@@ -578,7 +631,7 @@ export function useKaraokeMachine() {
       address: KARAOKE_STORE_V5_ADDRESS,
       abi: KARAOKE_STORE_V5_ABI,
       functionName: 'unlockSong',
-      args: [BigInt(songId), encryptedContentHash as `0x${string}`],
+      args: [BigInt(songId)],
     })
   }
   
@@ -619,30 +672,56 @@ export function useKaraokeMachine() {
   const handleEndSession = () => {
     console.log('🔚 handleEndSession called')
     
-    if (!state.context.gradeResult) {
-      console.error('❌ No grade result available')
-      send({ type: 'ERROR', error: 'No grade result available' })
+    // Check if we have line grades for batch submission
+    if (state.context.lineGrades.length > 0) {
+      console.log('📝 Ending session with batch signatures:', {
+        lineCount: state.context.lineGrades.length,
+        totalCredits: state.context.lineGrades.reduce((sum, g) => sum + g.creditsUsed, 0)
+      })
+      
+      // Prepare the grades array for the contract
+      const grades = state.context.lineGrades.map(g => ({
+        lineIndex: BigInt(g.lineIndex),
+        accuracy: BigInt(g.grade),
+        creditsUsed: BigInt(g.creditsUsed)
+      }))
+      
+      // Extract signatures
+      const signatures = state.context.lineGrades.map(g => g.signature as `0x${string}`)
+      
+      // Use the session hash from context
+      const sessionId = state.context.sessionData?.sessionHash || '0x0000000000000000000000000000000000000000000000000000000000000000'
+      
+      endSession({
+        address: KARAOKE_STORE_V5_ADDRESS,
+        abi: KARAOKE_STORE_V5_ABI,
+        functionName: 'endSessionWithBatchSignatures',
+        args: [
+          sessionId as `0x${string}`,
+          grades,
+          signatures
+        ],
+      })
+    } else if (state.context.gradeResult) {
+      // Fallback to single signature for backward compatibility
+      console.log('📝 Ending session with single signature')
+      
+      endSession({
+        address: KARAOKE_STORE_V5_ADDRESS,
+        abi: KARAOKE_STORE_V5_ABI,
+        functionName: 'endSessionWithSignature',
+        args: [
+          BigInt(state.context.gradeResult.creditsUsed),
+          BigInt(state.context.gradeResult.grade),
+          BigInt(state.context.gradeResult.nonce),
+          state.context.gradeResult.signature as `0x${string}`
+        ],
+      })
+    } else {
+      console.error('❌ No grade results available')
+      send({ type: 'ERROR', error: 'No grade results available' })
       return
     }
-    
-    console.log('📝 Ending session with:', {
-      creditsUsed: state.context.gradeResult.creditsUsed,
-      grade: state.context.gradeResult.grade,
-      nonce: state.context.gradeResult.nonce,
-      signature: state.context.gradeResult.signature
-    })
-    
-    endSession({
-      address: KARAOKE_STORE_V5_ADDRESS,
-      abi: KARAOKE_STORE_V5_ABI,
-      functionName: 'endSessionWithSignature',
-      args: [
-        BigInt(state.context.gradeResult.creditsUsed),
-        BigInt(state.context.gradeResult.grade),
-        BigInt(state.context.gradeResult.nonce),
-        state.context.gradeResult.signature as `0x${string}`
-      ],
-    })
     
     // Trigger state transition
     send({ type: 'END_SESSION' })

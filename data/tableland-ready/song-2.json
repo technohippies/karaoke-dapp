@@ -1,0 +1,34 @@
+{
+  "id": 2,
+  "isrc": "DEG320707560",
+  "iswc": "T-000.000.001-0",
+  "title": "Dancing Queen",
+  "artist": "ABBA",
+  "duration": 231,
+  "language": "en",
+  "genius_id": 395791,
+  "lrclib_id": 974064,
+  "genius_slug": "Abba-dancing-queen-lyrics",
+  "streaming_links": {
+    "soundcloud": "abba-official/dancing-queen-1",
+    "spotify": "0GjEhVFGZW8afUYGChu3Rr",
+    "apple_music": "1422648513",
+    "youtube": "xFrGuyw1V8s"
+  },
+  "stems": {
+    "piano": "bafkreih52fqtmu2cny7arnw3uwljilpixii6iqefqr4d7k7sm3zksfl5ii"
+  },
+  "artwork_hash": {
+    "id": "ca44cb452ad50cf3e47a1c3ad30ebb15",
+    "ext": "jpg",
+    "sizes": {
+      "t": "300x300x1",
+      "f": "600x600x1"
+    }
+  },
+  "translations": {
+    "zh": "bafkreihcts6upz7uobtwgb5ec5ego2hkkxj5qiwlt4nixfaezyzst7speq",
+    "ug": "bafkreiamii3xsvobyblc2nyk4rlujg72odd656rjra265w6hyieocbmkta",
+    "bo": "bafkreignt447xiip64yvv4dx3qn2fnjqrwlyxpm62iqb4hqr62xlran3ue"
+  }
+}

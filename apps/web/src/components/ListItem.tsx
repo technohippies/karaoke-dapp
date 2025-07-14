@@ -16,7 +16,7 @@ export function ListItem({
   onClick,
   className = ""
 }: ListItemProps) {
-  const baseClasses = "w-full flex items-center gap-3 p-4 rounded-md transition-colors bg-neutral-200 hover:bg-neutral-300 cursor-pointer"
+  const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg transition-colors bg-neutral-800 hover:bg-neutral-700 cursor-pointer"
   
   return (
     <div 
@@ -28,7 +28,7 @@ export function ListItem({
           <img 
             src={thumbnail} 
             alt="" 
-            className="w-12 h-12 object-cover rounded-md bg-neutral-200"
+            className="w-12 h-12 object-cover rounded-md bg-neutral-800"
           />
         </div>
       )}

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
+import { PricingPage } from './pages/PricingPage'
 
 // Wildcard capacity delegation auth sig - works for ANY wallet address
 const CAPACITY_DELEGATION_AUTH_SIG = {
@@ -36,6 +37,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/pricing" element={<PricingPage />} />
         <Route path="/s/:songId" element={<SongPage />} />
       </Routes>
     </Router>

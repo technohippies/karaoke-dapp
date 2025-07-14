@@ -30,7 +30,7 @@ export function BottomSheet({
       <SheetTrigger asChild>
         {trigger}
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-lg">
+      <SheetContent side="bottom" className="h-[80vh] rounded-t-lg max-w-2xl left-1/2 transform -translate-x-1/2">
         {(title || description) && (
           <SheetHeader className="text-left">
             {title && <SheetTitle className="text-white text-left">{title}</SheetTitle>}
