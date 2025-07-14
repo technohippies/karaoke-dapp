@@ -1,6 +1,6 @@
 import { useMachine } from '@xstate/react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSignTypedData } from 'wagmi'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { karaokeMachine } from '../lib/karaokeMachine'
 import { litProtocolService } from '../lib/litProtocol'
 import { 
@@ -17,14 +17,21 @@ export function useKaraokeMachine() {
   const { address, isConnected } = useAccount()
   const { signTypedDataAsync } = useSignTypedData()
   
-  // Debug state transitions
+  // Debug state transitions - only log significant changes
+  const prevStateRef = useRef(state.value)
   useEffect(() => {
-    console.log('🎭 State changed to:', state.value)
-    if (state.matches('karaoke')) {
-      console.log('✅ We are in karaoke state!')
-    }
-    if (state.matches('selectSong')) {
-      console.log('⚠️ We are back in selectSong state!')
+    const prevState = prevStateRef.current
+    const currentState = state.value
+    
+    // Only log if state actually changed
+    if (JSON.stringify(prevState) !== JSON.stringify(currentState)) {
+      console.log('🎭 State transition:', prevState, '→', currentState)
+      prevStateRef.current = currentState
+      
+      // Log significant state entries
+      if (state.matches('karaoke.recording') && !JSON.stringify(prevState).includes('recording')) {
+        console.log('✅ Entered recording state with active session')
+      }
     }
   }, [state.value])
   
@@ -106,18 +113,15 @@ export function useKaraokeMachine() {
     refetchSessionDetails()
   }
   
-  // Log active session data
+  // Log active session data - only when relevant
   useEffect(() => {
-    console.log('🔍 Active session query:', {
-      sessionId: activeSessionId,
-      sessionDetails,
-      sessionIdError,
-      sessionError,
-      loading: sessionIdLoading || sessionLoading,
-      address,
-      contractAddress: KARAOKE_STORE_V5_ADDRESS
-    })
-  }, [activeSessionId, sessionDetails, sessionIdError, sessionError, sessionIdLoading, sessionLoading, address])
+    if (activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      console.log('🔍 Active session detected:', activeSessionId)
+    }
+    if (sessionIdError || sessionError) {
+      console.error('❌ Session query error:', sessionIdError || sessionError)
+    }
+  }, [activeSessionId, sessionIdError, sessionError])
   
   // Read unlock status for each song
   const { data: song1Unlocked, refetch: refetchSong1 } = useReadContract({
@@ -200,14 +204,13 @@ export function useKaraokeMachine() {
   
   // Update credits when loaded
   useEffect(() => {
-    console.log('💰 Credits check:', { voiceCreditsData, songCreditsData, address })
     if (voiceCreditsData !== undefined && songCreditsData !== undefined && address) {
       const voiceCredits = Number(voiceCreditsData || 0)
       const songCredits = Number(songCreditsData || 0)
       
-      // Always send if we're in loadingData state, or if credits changed
-      if (state.matches('loadingData') || state.context.voiceCredits !== voiceCredits || state.context.songCredits !== songCredits) {
-        console.log('💰 Sending credits:', { voice: voiceCredits, song: songCredits, inLoadingData: state.matches('loadingData') })
+      // Only log when credits actually change
+      if (state.context.voiceCredits !== voiceCredits || state.context.songCredits !== songCredits) {
+        console.log('💰 Credits updated:', { voice: voiceCredits, song: songCredits })
         send({ 
           type: 'CREDITS_LOADED', 
           voiceCredits,
@@ -215,7 +218,7 @@ export function useKaraokeMachine() {
         })
       }
     }
-  }, [voiceCreditsData, songCreditsData, send, address, state.context.voiceCredits, state.context.songCredits, state])
+  }, [voiceCreditsData, songCreditsData, send, address, state.context.voiceCredits, state.context.songCredits])
   
   // Update USDC balance
   useEffect(() => {
@@ -235,22 +238,14 @@ export function useKaraokeMachine() {
   
   // Update session info
   useEffect(() => {
-    console.log('🔎 Session check:', { activeSessionId, sessionDetails, address })
-    
     if (activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000' && sessionDetails && address) {
-      console.log('📄 Active session found!', { 
-        sessionId: activeSessionId,
-        sessionDetails,
-        address 
-      })
-      
       // Extract session data from the struct
-      // Session struct has: user, songId, escrowAmount, creditsUsed, linesProcessed, startTime, finalized
-      const hasSession = !sessionDetails.finalized // If not finalized, session is active
+      const hasSession = !sessionDetails.finalized
       const amount = Number(sessionDetails.escrowAmount || 0)
       const songId = Number(sessionDetails.songId || 0)
       
       if (hasSession) {
+        console.log('📄 Active session loaded:', { songId, amount, sessionId: activeSessionId.slice(0, 10) + '...' })
         send({
           type: 'SESSION_LOADED',
           hasSession: true,
@@ -259,11 +254,7 @@ export function useKaraokeMachine() {
           sessionHash: activeSessionId,
           userAddress: address
         })
-      } else {
-        console.log('📄 Session exists but is finalized')
       }
-    } else if (activeSessionId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
-      console.log('📄 No active session (zero session ID)')
     }
   }, [activeSessionId, sessionDetails, send, address])
   

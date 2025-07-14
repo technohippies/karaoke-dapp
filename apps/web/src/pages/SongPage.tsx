@@ -14,8 +14,7 @@ export function SongPage() {
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   
-  // Debug logging
-  console.log('🎵 SongPage state:', state.value, 'matches karaoke?', state.matches('karaoke'))
+  // Debug logging - removed to reduce noise
 
   useEffect(() => {
     if (!songId) {

@@ -328,7 +328,6 @@ export const karaokeMachine = setup({
     },
     
     hasActiveSession: ({ context }) => {
-      console.log('🔍 Checking hasActiveSession:', context.hasActiveSession)
       return context.hasActiveSession
     },
     
@@ -338,13 +337,7 @@ export const karaokeMachine = setup({
     
     songIsUnlocked: ({ context, event }) => {
       if (event.type === 'SELECT_SONG') {
-        const isUnlocked = context.unlockedSongs[event.song.id] === true
-        console.log('🔍 Checking if song is unlocked:', {
-          songId: event.song.id,
-          unlockedSongs: context.unlockedSongs,
-          isUnlocked
-        })
-        return isUnlocked
+        return context.unlockedSongs[event.song.id] === true
       }
       if (!context.selectedSong) return false
       return context.unlockedSongs[context.selectedSong.id] === true
@@ -574,12 +567,11 @@ export const karaokeMachine = setup({
     },
     
     selectSong: {
-      entry: () => console.log('🎵 Entered selectSong state'),
       always: [
         {
           target: 'karaoke',
           guard: 'hasActiveSession',
-          actions: () => console.log('🎯 Active session detected, going directly to karaoke')
+          actions: () => console.log('🎯 Active session detected, transitioning to karaoke')
         }
       ],
       on: {
@@ -634,7 +626,6 @@ export const karaokeMachine = setup({
       initial: 'idle',
       states: {
         idle: {
-          entry: () => console.log('🎤 Entered karaoke.idle state'),
           always: [
             {
               target: 'recording',
@@ -643,24 +634,14 @@ export const karaokeMachine = setup({
             }
           ],
           on: {
-            START_SESSION: [
-              {
-                target: 'startingSession',
-                guard: ({ context }) => {
-                  console.log('🎯 START_SESSION event received, checking guard:', { hasActiveSession: context.hasActiveSession })
-                  return !context.hasActiveSession
-                },
-                actions: () => console.log('✅ Transitioning to startingSession')
-              },
-              {
-                actions: () => console.log('❌ START_SESSION blocked by guard (hasActiveSession is true)')
-              }
-            ]
+            START_SESSION: {
+              target: 'startingSession',
+              guard: ({ context }) => !context.hasActiveSession
+            }
           }
         },
         
         startingSession: {
-          entry: () => console.log('🚀 Entered karaoke.startingSession state'),
           on: {
             TRANSACTION_SUBMITTED: {
               actions: 'setTransactionHash'
@@ -677,7 +658,6 @@ export const karaokeMachine = setup({
         },
         
         recording: {
-          entry: () => console.log('🎙️ Entered karaoke.recording state'),
           on: {
             START_RECORDING: {
               actions: 'setRecordingStarted'
