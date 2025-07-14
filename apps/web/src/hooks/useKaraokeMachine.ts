@@ -35,14 +35,27 @@ export function useKaraokeMachine() {
     }
   }, [])
   
-  // Contract reads
-  const { data: credits, refetch: refetchCredits } = useReadContract({
+  // Contract reads - V0.6.0 has separate functions
+  const { data: voiceCreditsData, refetch: refetchVoiceCredits } = useReadContract({
     address: KARAOKE_STORE_V5_ADDRESS,
     abi: KARAOKE_STORE_V5_ABI,
-    functionName: 'getUserCredits',
+    functionName: 'voiceCredits',
     args: address ? [address] : undefined,
     enabled: !!address,
   })
+  
+  const { data: songCreditsData, refetch: refetchSongCredits } = useReadContract({
+    address: KARAOKE_STORE_V5_ADDRESS,
+    abi: KARAOKE_STORE_V5_ABI,
+    functionName: 'songCredits',
+    args: address ? [address] : undefined,
+    enabled: !!address,
+  })
+  
+  const refetchCredits = () => {
+    refetchVoiceCredits()
+    refetchSongCredits()
+  }
   
   const { data: usdcBalance, refetch: refetchUsdcBalance } = useReadContract({
     address: USDC_ADDRESS,
@@ -60,13 +73,51 @@ export function useKaraokeMachine() {
     enabled: !!address,
   })
   
-  const { data: activeSession, refetch: refetchSession } = useReadContract({
+  // First, get the active session ID for the user
+  const { 
+    data: activeSessionId, 
+    error: sessionIdError,
+    isLoading: sessionIdLoading,
+    refetch: refetchSessionId 
+  } = useReadContract({
     address: KARAOKE_STORE_V5_ADDRESS,
     abi: KARAOKE_STORE_V5_ABI,
-    functionName: 'getActiveSession',
+    functionName: 'activeUserSession',
     args: address ? [address] : undefined,
     enabled: !!address,
   })
+  
+  // Then, get the session details if there's an active session
+  const { 
+    data: sessionDetails, 
+    error: sessionError,
+    isLoading: sessionLoading,
+    refetch: refetchSessionDetails 
+  } = useReadContract({
+    address: KARAOKE_STORE_V5_ADDRESS,
+    abi: KARAOKE_STORE_V5_ABI,
+    functionName: 'sessions',
+    args: activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000' ? [activeSessionId] : undefined,
+    enabled: !!activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000',
+  })
+  
+  const refetchSession = () => {
+    refetchSessionId()
+    refetchSessionDetails()
+  }
+  
+  // Log active session data
+  useEffect(() => {
+    console.log('🔍 Active session query:', {
+      sessionId: activeSessionId,
+      sessionDetails,
+      sessionIdError,
+      sessionError,
+      loading: sessionIdLoading || sessionLoading,
+      address,
+      contractAddress: KARAOKE_STORE_V5_ADDRESS
+    })
+  }, [activeSessionId, sessionDetails, sessionIdError, sessionError, sessionIdLoading, sessionLoading, address])
   
   // Read unlock status for each song
   const { data: song1Unlocked, refetch: refetchSong1 } = useReadContract({
@@ -112,7 +163,7 @@ export function useKaraokeMachine() {
     writeContract: startSession, 
     data: sessionHash,
     isPending: isSessionPending,
-    error: sessionError
+    error: sessionWriteError
   } = useWriteContract()
   
   const { 
@@ -149,18 +200,22 @@ export function useKaraokeMachine() {
   
   // Update credits when loaded
   useEffect(() => {
-    if (credits !== undefined && address) {
-      const voiceCredits = Number(credits[0] || 0)
-      const songCredits = Number(credits[1] || 0)
+    console.log('💰 Credits check:', { voiceCreditsData, songCreditsData, address })
+    if (voiceCreditsData !== undefined && songCreditsData !== undefined && address) {
+      const voiceCredits = Number(voiceCreditsData || 0)
+      const songCredits = Number(songCreditsData || 0)
       
-      console.log('💰 Sending CREDITS_LOADED event', { voiceCredits, songCredits })
-      send({ 
-        type: 'CREDITS_LOADED', 
-        voiceCredits,
-        songCredits
-      })
+      // Always send if we're in loadingData state, or if credits changed
+      if (state.matches('loadingData') || state.context.voiceCredits !== voiceCredits || state.context.songCredits !== songCredits) {
+        console.log('💰 Sending credits:', { voice: voiceCredits, song: songCredits, inLoadingData: state.matches('loadingData') })
+        send({ 
+          type: 'CREDITS_LOADED', 
+          voiceCredits,
+          songCredits
+        })
+      }
     }
-  }, [credits, send, address])
+  }, [voiceCreditsData, songCreditsData, send, address, state.context.voiceCredits, state.context.songCredits, state])
   
   // Update USDC balance
   useEffect(() => {
@@ -180,19 +235,37 @@ export function useKaraokeMachine() {
   
   // Update session info
   useEffect(() => {
-    if (activeSession && address) {
-      const [hasSession, sessionHash, amount, songId] = activeSession
-      console.log('📄 Sending SESSION_LOADED event', { hasSession, amount, songId, address })
-      send({
-        type: 'SESSION_LOADED',
-        hasSession,
-        amount: Number(amount),
-        songId: Number(songId),
-        sessionHash,
-        userAddress: address
+    console.log('🔎 Session check:', { activeSessionId, sessionDetails, address })
+    
+    if (activeSessionId && activeSessionId !== '0x0000000000000000000000000000000000000000000000000000000000000000' && sessionDetails && address) {
+      console.log('📄 Active session found!', { 
+        sessionId: activeSessionId,
+        sessionDetails,
+        address 
       })
+      
+      // Extract session data from the struct
+      // Session struct has: user, songId, escrowAmount, creditsUsed, linesProcessed, startTime, finalized
+      const hasSession = !sessionDetails.finalized // If not finalized, session is active
+      const amount = Number(sessionDetails.escrowAmount || 0)
+      const songId = Number(sessionDetails.songId || 0)
+      
+      if (hasSession) {
+        send({
+          type: 'SESSION_LOADED',
+          hasSession: true,
+          amount,
+          songId,
+          sessionHash: activeSessionId,
+          userAddress: address
+        })
+      } else {
+        console.log('📄 Session exists but is finalized')
+      }
+    } else if (activeSessionId === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      console.log('📄 No active session (zero session ID)')
     }
-  }, [activeSession, send, address])
+  }, [activeSessionId, sessionDetails, send, address])
   
   // Update unlock status
   useEffect(() => {
@@ -228,12 +301,14 @@ export function useKaraokeMachine() {
   
   useEffect(() => {
     if (unlockHash) {
+      console.log('🔓 Unlock transaction submitted:', unlockHash)
       send({ type: 'TRANSACTION_SUBMITTED', hash: unlockHash })
     }
   }, [unlockHash, send])
   
   useEffect(() => {
     if (sessionHash) {
+      console.log('🎬 Session transaction submitted:', sessionHash)
       send({ type: 'TRANSACTION_SUBMITTED', hash: sessionHash })
     }
   }, [sessionHash, send])
@@ -260,15 +335,17 @@ export function useKaraokeMachine() {
   
   useEffect(() => {
     if (unlockError) {
+      console.error('❌ Unlock error:', unlockError)
       send({ type: 'TRANSACTION_ERROR', error: unlockError.message })
     }
   }, [unlockError, send])
   
   useEffect(() => {
-    if (sessionError) {
-      send({ type: 'TRANSACTION_ERROR', error: sessionError.message })
+    if (sessionWriteError) {
+      console.error('❌ Session error:', sessionWriteError)
+      send({ type: 'TRANSACTION_ERROR', error: sessionWriteError.message })
     }
-  }, [sessionError, send])
+  }, [sessionWriteError, send])
   
   useEffect(() => {
     if (endError) {
@@ -294,17 +371,49 @@ export function useKaraokeMachine() {
   }, [isBuySuccess, send, refetchCredits, refetchUsdcBalance])
   
   useEffect(() => {
-    if (isUnlockSuccess) {
+    if (isUnlockSuccess && unlockHash) {
+      console.log('✅ Unlock transaction successful!')
+      console.log('📋 TX Hash:', unlockHash)
+      console.log('🔗 View on Base Sepolia:', `https://sepolia.basescan.org/tx/${unlockHash}`)
       send({ type: 'TRANSACTION_SUCCESS' })
       refetchCredits()
       refetchSong1()
       refetchSong2()
       refetchSong3()
     }
-  }, [isUnlockSuccess, send, refetchCredits, refetchSong1, refetchSong2, refetchSong3])
+  }, [isUnlockSuccess, unlockHash, send, refetchCredits, refetchSong1, refetchSong2, refetchSong3])
   
   useEffect(() => {
     if (isSessionSuccess && sessionReceipt) {
+      console.log('🎯 Session transaction successful!', { 
+        hash: sessionHash,
+        receipt: sessionReceipt,
+        currentState: state.value 
+      })
+      
+      // Log all events in the receipt
+      console.log('📜 All logs in receipt:', sessionReceipt.logs)
+      if (sessionReceipt.logs.length > 0) {
+        sessionReceipt.logs.forEach((log, index) => {
+          console.log(`📝 Log ${index}:`, {
+            address: log.address,
+            topics: log.topics,
+            data: log.data
+          })
+        })
+      }
+      
+      // Try parsing without specifying event name to see all events
+      try {
+        const allEvents = parseEventLogs({
+          abi: KARAOKE_STORE_V5_ABI,
+          logs: sessionReceipt.logs
+        })
+        console.log('🔍 All parsed events:', allEvents)
+      } catch (e) {
+        console.error('Error parsing all events:', e)
+      }
+      
       // Parse SessionStarted event to get session hash
       const logs = parseEventLogs({
         abi: KARAOKE_STORE_V5_ABI,
@@ -312,14 +421,18 @@ export function useKaraokeMachine() {
         eventName: 'SessionStarted'
       })
       
+      console.log('📋 Parsed SessionStarted logs:', logs)
+      
       if (logs.length > 0) {
         const sessionStartedEvent = logs[0]
-        const sessionHash = sessionStartedEvent.args.sessionHash
+        const eventSessionHash = sessionStartedEvent.args.sessionHash
+        
+        console.log('🔑 Session hash from event:', eventSessionHash)
         
         // Create session data and sign it
         const sessionData = {
           userAddress: address!,
-          sessionHash,
+          sessionHash: eventSessionHash,
           escrowAmount: state.context.selectedSong ? 5 : 0,
           songId: state.context.selectedSong?.id || 0,
           chainId: 84532, // Base Sepolia
@@ -327,12 +440,31 @@ export function useKaraokeMachine() {
           expiresAt: Math.floor(Date.now() / 1000) + 3600
         }
         
+        console.log('📤 Sending SESSION_STARTED event with data:', sessionData)
+        send({ type: 'SESSION_STARTED', sessionData })
+        send({ type: 'TRANSACTION_SUCCESS' })
+        refetchSession()
+      } else {
+        console.warn('⚠️ No SessionStarted event found, but transaction succeeded. Creating session data from tx hash.')
+        
+        // Create session data using transaction hash as session hash
+        const sessionData = {
+          userAddress: address!,
+          sessionHash: sessionHash as string,
+          escrowAmount: state.context.selectedSong ? 5 : 0,
+          songId: state.context.selectedSong?.id || 0,
+          chainId: 84532, // Base Sepolia
+          issuedAt: Math.floor(Date.now() / 1000),
+          expiresAt: Math.floor(Date.now() / 1000) + 3600
+        }
+        
+        console.log('📤 Sending SESSION_STARTED event with tx-based data:', sessionData)
         send({ type: 'SESSION_STARTED', sessionData })
         send({ type: 'TRANSACTION_SUCCESS' })
         refetchSession()
       }
     }
-  }, [isSessionSuccess, sessionReceipt, send, refetchSession, address, state.context.selectedSong])
+  }, [isSessionSuccess, sessionReceipt, send, refetchSession, address, state.context.selectedSong, sessionHash])
   
   useEffect(() => {
     if (isEndSuccess) {
@@ -414,6 +546,7 @@ export function useKaraokeMachine() {
   
   // Contract interaction functions
   const handleApproveUSDC = () => {
+    console.log('🔐 Approving USDC...', KARAOKE_STORE_V5_ADDRESS, COMBO_PRICE)
     approveUSDC({
       address: USDC_ADDRESS,
       abi: USDC_ABI,
@@ -423,30 +556,74 @@ export function useKaraokeMachine() {
   }
   
   const handleBuyCredits = () => {
+    console.log('💳 Buying combo pack...')
     buyCombo({
       address: KARAOKE_STORE_V5_ADDRESS,
       abi: KARAOKE_STORE_V5_ABI,
-      functionName: 'buyCombo',
+      functionName: 'buyCombopack',
     })
   }
   
   const handleUnlockSong = async (songId: number) => {
+    console.log('🔓 Calling unlockSong for song:', songId)
+    
+    // Get the encrypted content hash from the selected song
+    const selectedSong = state.context.selectedSong
+    let encryptedContentHash = '0x0000000000000000000000000000000000000000000000000000000000000000' // default
+    
+    if (selectedSong && selectedSong.stems && selectedSong.stems.midi) {
+      // Convert the MIDI CID/hash to bytes32
+      // For now, we'll use a placeholder approach - in production this would be the actual encrypted content identifier
+      const encoder = new TextEncoder()
+      const data = encoder.encode(selectedSong.stems.midi)
+      const hashArray = new Uint8Array(32)
+      hashArray.set(data.slice(0, 32))
+      encryptedContentHash = '0x' + Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('')
+    }
+    
+    console.log('🔓 Using encrypted content hash:', encryptedContentHash)
+    
     unlockSong({
       address: KARAOKE_STORE_V5_ADDRESS,
       abi: KARAOKE_STORE_V5_ABI,
       functionName: 'unlockSong',
-      args: [BigInt(songId)],
+      args: [BigInt(songId), encryptedContentHash as `0x${string}`],
     })
   }
   
-  const handleStartSession = (songId: number, creditAmount: number = 5) => {
+  const handleStartSession = useCallback((songId: number, creditAmount: number = 5) => {
+    console.log('🎬 Starting session:', { songId, creditAmount, state: state.value })
+    
+    // Generate a random session key for this session
+    const sessionKey = `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}` as `0x${string}`
+    const delegationDuration = 3600 // 1 hour in seconds
+    
+    console.log('🔑 Using session key:', sessionKey)
+    
     startSession({
       address: KARAOKE_STORE_V5_ADDRESS,
       abi: KARAOKE_STORE_V5_ABI,
-      functionName: 'startSession',
-      args: [BigInt(songId), BigInt(creditAmount)],
+      functionName: 'initializeSessionWithDelegation',
+      args: [BigInt(songId), sessionKey, BigInt(creditAmount), BigInt(delegationDuration)],
+      value: 0n // payable function but we're not sending ETH
     })
-  }
+  }, [startSession, state.value])
+  
+  // Handle automatic unlock when entering unlockingSong state
+  useEffect(() => {
+    if (state.matches('unlockingSong') && state.context.selectedSong && !isUnlockPending && !unlockHash) {
+      console.log('🔓 Auto-triggering unlock for song:', state.context.selectedSong.id)
+      handleUnlockSong(state.context.selectedSong.id)
+    }
+  }, [state.matches('unlockingSong'), state.context.selectedSong?.id, isUnlockPending, unlockHash, handleUnlockSong])
+  
+  // Handle automatic session start when entering startingSession state
+  useEffect(() => {
+    if (state.matches('karaoke.startingSession') && state.context.selectedSong && !isSessionPending && !sessionHash) {
+      console.log('🎬 Auto-triggering session start for song:', state.context.selectedSong.id)
+      handleStartSession(state.context.selectedSong.id, 5)
+    }
+  }, [state, state.context.selectedSong, isSessionPending, sessionHash, handleStartSession])
   
   const handleEndSession = () => {
     console.log('🔚 handleEndSession called')

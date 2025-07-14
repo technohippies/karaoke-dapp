@@ -208,6 +208,11 @@ export const karaokeMachine = setup({
     
     updateSession: assign(({ event }) => {
       if (event.type === 'SESSION_LOADED') {
+        console.log('💾 Updating session in context:', {
+          hasSession: event.hasSession,
+          amount: event.amount,
+          songId: event.songId
+        })
         return {
           hasActiveSession: event.hasSession,
           sessionAmount: event.amount,
@@ -323,6 +328,7 @@ export const karaokeMachine = setup({
     },
     
     hasActiveSession: ({ context }) => {
+      console.log('🔍 Checking hasActiveSession:', context.hasActiveSession)
       return context.hasActiveSession
     },
     
@@ -345,6 +351,7 @@ export const karaokeMachine = setup({
     },
     
     needsUsdcApproval: ({ context }) => {
+      console.log('🎯 Checking USDC approval:', { hasUsdcAllowance: context.hasUsdcAllowance })
       return !context.hasUsdcAllowance
     },
     
@@ -432,9 +439,22 @@ export const karaokeMachine = setup({
     
     loadingData: {
       on: {
-        CREDITS_LOADED: {
-          actions: ['updateCredits']
-        },
+        CREDITS_LOADED: [
+          {
+            target: 'signup',
+            guard: ({ event }) => event.voiceCredits === 0 && event.songCredits === 0,
+            actions: ['updateCredits']
+          },
+          {
+            target: 'buyCredits',
+            guard: ({ event }) => event.voiceCredits < 5,
+            actions: ['updateCredits']
+          },
+          {
+            target: 'selectSong',
+            actions: ['updateCredits']
+          }
+        ],
         USDC_BALANCE_LOADED: {
           actions: ['updateUsdcBalance']
         },
@@ -452,7 +472,6 @@ export const karaokeMachine = setup({
           actions: 'setWalletDisconnected'
         }
       },
-      
       always: [
         {
           target: 'signup',
@@ -464,7 +483,7 @@ export const karaokeMachine = setup({
         },
         {
           target: 'selectSong',
-          guard: ({ context }) => context.dataLoaded && (context.voiceCredits >= 5 || context.hasActiveSession)
+          guard: ({ context }) => context.dataLoaded
         }
       ]
     },
@@ -555,6 +574,14 @@ export const karaokeMachine = setup({
     },
     
     selectSong: {
+      entry: () => console.log('🎵 Entered selectSong state'),
+      always: [
+        {
+          target: 'karaoke',
+          guard: 'hasActiveSession',
+          actions: () => console.log('🎯 Active session detected, going directly to karaoke')
+        }
+      ],
       on: {
         SELECT_SONG: [
           {
@@ -611,18 +638,29 @@ export const karaokeMachine = setup({
           always: [
             {
               target: 'recording',
-              guard: 'hasActiveSession'
+              guard: 'hasActiveSession',
+              actions: () => console.log('🚀 Auto-transitioning to recording (active session detected)')
             }
           ],
           on: {
-            START_SESSION: {
-              target: 'startingSession',
-              guard: { type: 'hasActiveSession', params: {}, negate: true }
-            }
+            START_SESSION: [
+              {
+                target: 'startingSession',
+                guard: ({ context }) => {
+                  console.log('🎯 START_SESSION event received, checking guard:', { hasActiveSession: context.hasActiveSession })
+                  return !context.hasActiveSession
+                },
+                actions: () => console.log('✅ Transitioning to startingSession')
+              },
+              {
+                actions: () => console.log('❌ START_SESSION blocked by guard (hasActiveSession is true)')
+              }
+            ]
           }
         },
         
         startingSession: {
+          entry: () => console.log('🚀 Entered karaoke.startingSession state'),
           on: {
             TRANSACTION_SUBMITTED: {
               actions: 'setTransactionHash'

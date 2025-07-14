@@ -1,0 +1,13 @@
+# Foundry
+cache/
+out/
+broadcast/
+
+# Deployment artifacts
+deployment-*.json
+
+# Environment files
+.env
+
+# Dependencies
+lib/

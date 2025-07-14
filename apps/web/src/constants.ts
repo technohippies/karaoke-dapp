@@ -1,25 +1,35 @@
-// Contract addresses - Using V5 only
-export const KARAOKE_STORE_V5_ADDRESS = '0x91B69AC1Ac63C7CB850214d52b2f3d890FED557e' as const
+// Contract addresses - Using V6 with batch grade support
+export const KARAOKE_STORE_V5_ADDRESS = '0xF801A7F254386EC15225860C9b454461da0F8713' as const // V0.6.0 deployed 2025-07-13
 export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const // Base Sepolia USDC
 
 // Contract ABI - Inline the essential parts
 export const KARAOKE_STORE_V5_ABI = [
   {
-    name: 'buyCombo',
+    name: 'buyCombopack',
     type: 'function',
     inputs: [],
     outputs: [],
     stateMutability: 'nonpayable'
   },
   {
-    name: 'getUserCredits',
+    name: 'voiceCredits',
     type: 'function',
     inputs: [
-      { name: 'user', type: 'address', internalType: 'address' }
+      { name: '', type: 'address', internalType: 'address' }
     ],
     outputs: [
-      { name: 'voice', type: 'uint256', internalType: 'uint256' },
-      { name: 'song', type: 'uint256', internalType: 'uint256' }
+      { name: '', type: 'uint256', internalType: 'uint256' }
+    ],
+    stateMutability: 'view'
+  },
+  {
+    name: 'songCredits',
+    type: 'function',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' }
+    ],
+    outputs: [
+      { name: '', type: 'uint256', internalType: 'uint256' }
     ],
     stateMutability: 'view'
   },
@@ -53,20 +63,23 @@ export const KARAOKE_STORE_V5_ABI = [
     name: 'unlockSong',
     type: 'function',
     inputs: [
-      { name: 'songId', type: 'uint256', internalType: 'uint256' }
+      { name: 'songId', type: 'uint256', internalType: 'uint256' },
+      { name: 'encryptedContentHash', type: 'bytes32', internalType: 'bytes32' }
     ],
     outputs: [],
     stateMutability: 'nonpayable'
   },
   {
-    name: 'startSession',
+    name: 'initializeSessionWithDelegation',
     type: 'function',
     inputs: [
       { name: 'songId', type: 'uint256', internalType: 'uint256' },
-      { name: 'amount', type: 'uint256', internalType: 'uint256' }
+      { name: 'sessionKey', type: 'address', internalType: 'address' },
+      { name: 'maxCredits', type: 'uint256', internalType: 'uint256' },
+      { name: 'delegationDuration', type: 'uint256', internalType: 'uint256' }
     ],
     outputs: [],
-    stateMutability: 'nonpayable'
+    stateMutability: 'payable'
   },
   {
     name: 'endSessionWithSignature',
@@ -76,6 +89,23 @@ export const KARAOKE_STORE_V5_ABI = [
       { name: 'score', type: 'uint256', internalType: 'uint256' },
       { name: 'nonce', type: 'uint256', internalType: 'uint256' },
       { name: 'pkpSignature', type: 'bytes', internalType: 'bytes' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable'
+  },
+  {
+    name: 'endSessionWithBatchSignatures',
+    type: 'function',
+    inputs: [
+      { name: 'sessionId', type: 'bytes32', internalType: 'bytes32' },
+      { name: 'grades', type: 'tuple[]', internalType: 'struct LineGrade[]',
+        components: [
+          { name: 'lineIndex', type: 'uint256', internalType: 'uint256' },
+          { name: 'accuracy', type: 'uint256', internalType: 'uint256' },
+          { name: 'creditsUsed', type: 'uint256', internalType: 'uint256' }
+        ]
+      },
+      { name: 'signatures', type: 'bytes[]', internalType: 'bytes[]' }
     ],
     outputs: [],
     stateMutability: 'nonpayable'
@@ -112,6 +142,34 @@ export const KARAOKE_STORE_V5_ABI = [
       { name: 'amount', type: 'uint256', indexed: false, internalType: 'uint256' },
       { name: 'sessionHash', type: 'bytes32', indexed: false, internalType: 'bytes32' }
     ]
+  },
+  {
+    name: 'activeUserSession',
+    type: 'function',
+    inputs: [
+      { name: '', type: 'address', internalType: 'address' }
+    ],
+    outputs: [
+      { name: '', type: 'bytes32', internalType: 'bytes32' }
+    ],
+    stateMutability: 'view'
+  },
+  {
+    name: 'sessions',
+    type: 'function',
+    inputs: [
+      { name: '', type: 'bytes32', internalType: 'bytes32' }
+    ],
+    outputs: [
+      { name: 'user', type: 'address', internalType: 'address' },
+      { name: 'songId', type: 'uint256', internalType: 'uint256' },
+      { name: 'escrowAmount', type: 'uint256', internalType: 'uint256' },
+      { name: 'creditsUsed', type: 'uint256', internalType: 'uint256' },
+      { name: 'linesProcessed', type: 'uint256', internalType: 'uint256' },
+      { name: 'startTime', type: 'uint256', internalType: 'uint256' },
+      { name: 'finalized', type: 'bool', internalType: 'bool' }
+    ],
+    stateMutability: 'view'
   }
 ] as const
 

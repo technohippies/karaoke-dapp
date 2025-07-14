@@ -1,6 +1,8 @@
 import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
 import { useAudioRecorder } from '../hooks/useAudioRecorder'
 import { useLitSession } from '../hooks/useLitSession'
+import { KaraokeLyrics } from './KaraokeLyrics'
+import React from 'react'
 import './KaraokeSession.css'
 
 export function KaraokeSession() {
@@ -11,8 +13,18 @@ export function KaraokeSession() {
     handleStartSession, 
     handleEndSession,
     isSessionPending,
-    isEndPending
+    isEndPending,
+    refetchAll
   } = useKaraokeMachineContext()
+  
+  const [isStarting, setIsStarting] = React.useState(false)
+  
+  // Reset isStarting when state changes
+  React.useEffect(() => {
+    if (state.matches('karaoke.startingSession') || state.matches('karaoke.recording')) {
+      setIsStarting(false)
+    }
+  }, [state.value])
   
   const { 
     isRecording, 
@@ -58,11 +70,45 @@ export function KaraokeSession() {
           <p>Ready to start your karaoke session?</p>
           <p className="credit-info">This will escrow 5 voice credits</p>
           <button 
-            onClick={() => handleStartSession(context.selectedSong!.id, 5)}
-            disabled={isSessionPending}
+            onClick={() => {
+              if (!isStarting && !isSessionPending && !state.matches('karaoke.startingSession')) {
+                console.log('🎮 Sending START_SESSION event for song:', context.selectedSong!.id)
+                console.log('📍 Current state:', state.value)
+                console.log('📊 Context:', { hasActiveSession: context.hasActiveSession })
+                setIsStarting(true)
+                send({ type: 'START_SESSION' })
+                // Reset after a timeout in case something goes wrong
+                setTimeout(() => setIsStarting(false), 5000)
+              }
+            }}
+            disabled={isStarting || isSessionPending || state.matches('karaoke.startingSession')}
           >
-            {isSessionPending ? 'Starting Session...' : 'Start Session'}
+            {isStarting || isSessionPending || state.matches('karaoke.startingSession') ? 'Starting Session...' : 'Start Session'}
           </button>
+          
+          {/* Debug button */}
+          <button 
+            onClick={() => {
+              console.log('🔍 Manually checking session...')
+              refetchAll()
+            }}
+            style={{ marginTop: '10px', fontSize: '12px' }}
+          >
+            Debug: Check Session
+          </button>
+        </div>
+      )}
+      
+      {state.matches('karaoke.idle') && context.hasActiveSession && (
+        <div className="session-info">
+          <p>You have an active session!</p>
+          <p>Session amount: {context.sessionAmount} credits</p>
+          {console.log('🎯 Active session detected in UI:', {
+            state: state.value,
+            hasActiveSession: context.hasActiveSession,
+            sessionData: context.sessionData,
+            shouldTransition: 'This should auto-transition to recording!'
+          })}
         </div>
       )}
       
@@ -76,12 +122,12 @@ export function KaraokeSession() {
         <div className="recording-interface">
           {!hasValidSession ? (
             <div className="session-setup">
-              <p>Create a Lit Protocol session to enable voice grading</p>
+              <p>Ready to start singing?</p>
               <button 
                 onClick={createSession}
                 disabled={isCreatingSession}
               >
-                {isCreatingSession ? 'Creating Session...' : 'Create Session'}
+                {isCreatingSession ? 'Starting Karaoke...' : 'Start Karaoke'}
               </button>
               {sessionError && (
                 <p className="error-message">
@@ -109,28 +155,33 @@ export function KaraokeSession() {
             </div>
           ) : (
             <>
-              <div className="recording-status">
+              <KaraokeLyrics 
+                songId={context.selectedSong?.id || 1}
+                isPlaying={isRecording}
+                currentTime={duration}
+              />
+              
+              <div className="recording-controls">
+                <button 
+                  onClick={handleRecord}
+                  className={`record-button ${isRecording ? 'recording' : ''}`}
+                >
+                  {isRecording ? '⏹ Stop Recording' : '🎤 Start Recording'}
+                </button>
+                
                 {isRecording && (
                   <div className="recording-indicator">
                     <span className="recording-dot"></span>
-                    Recording
+                    Recording - {formatDuration(duration)}
                   </div>
                 )}
-                <div className="duration">{formatDuration(duration)}</div>
+                
+                {context.audioData && !isRecording && (
+                  <p className="recorded-info">
+                    Recording complete! ({formatDuration(context.recordingDuration)})
+                  </p>
+                )}
               </div>
-              
-              <button 
-                onClick={handleRecord}
-                className={`record-button ${isRecording ? 'recording' : ''}`}
-              >
-                {isRecording ? 'Stop Recording' : 'Start Recording'}
-              </button>
-              
-              {context.audioData && !isRecording && (
-                <p className="recorded-info">
-                  Recording complete! ({formatDuration(context.recordingDuration)})
-                </p>
-              )}
             </>
           )}
         </div>
