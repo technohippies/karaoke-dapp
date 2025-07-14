@@ -1,59 +1,62 @@
-import { useAccount } from 'wagmi'
-import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
-import { ConnectWallet } from './ConnectWallet'
+import React from 'react'
+import { Crown, Fire } from '@phosphor-icons/react'
+import { Button } from './ui/button'
 
-export function Header() {
-  const { isConnected, address } = useAccount()
-  const { context } = useKaraokeMachineContext()
+interface HeaderProps {
+  isLoggedIn?: boolean
+  address?: string
+  onLogin?: () => void
+  onAccount?: () => void
+  crownCount?: number
+  fireCount?: number
+}
+
+export function Header({ 
+  isLoggedIn = false, 
+  address = '0x742d35Cc6634C0532925a3b8D',
+  onLogin,
+  onAccount,
+  crownCount = 5,
+  fireCount = 12
+}: HeaderProps) {
+  const formatAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-3)}`
+  }
 
   return (
-    <header style={{ 
-      background: 'rgba(17, 24, 39, 0.5)', 
-      borderBottom: '1px solid rgba(75, 85, 99, 0.3)',
-      padding: '1rem 0'
-    }}>
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        padding: '0 1rem',
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-      }}>
-        <h1 style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 'bold', 
-          color: '#e879f9',
-          margin: 0
-        }}>
-          Karaoke Turbo
-        </h1>
-        
-        {!isConnected ? (
-          <ConnectWallet />
-        ) : (
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '1.5rem' 
-          }}>
-            <div style={{ fontSize: '0.875rem' }}>
-              <span style={{ color: '#9ca3af' }}>Voice:</span>
-              <span style={{ color: 'white', marginLeft: '0.25rem' }}>{context.voiceCredits}</span>
+    <header className="w-full bg-neutral-900 border-b border-neutral-700 px-6 py-4 h-16">
+      <div className="flex items-center justify-between h-full">
+        {/* Left side - Crown and Fire icons */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 flex items-center justify-center">
+              <Crown weight="fill" size={24} color="#EAB308" />
             </div>
-            <div style={{ fontSize: '0.875rem' }}>
-              <span style={{ color: '#9ca3af' }}>Songs:</span>
-              <span style={{ color: 'white', marginLeft: '0.25rem' }}>{context.songCredits}</span>
-            </div>
-            <div style={{ fontSize: '0.875rem' }}>
-              <span style={{ color: '#9ca3af' }}>USDC:</span>
-              <span style={{ color: 'white', marginLeft: '0.25rem' }}>${context.usdcBalance}</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-              {address?.slice(0, 6)}...{address?.slice(-4)}
-            </div>
+            <span className="text-neutral-300 font-bold text-sm">{crownCount}</span>
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 flex items-center justify-center">
+              <Fire weight="fill" size={24} color="#EF4444" />
+            </div>
+            <span className="text-neutral-300 font-bold text-sm">{fireCount}</span>
+          </div>
+        </div>
+
+        {/* Right side - Login/Account button */}
+        <div>
+          {isLoggedIn ? (
+            <Button 
+              variant="outline" 
+              onClick={onAccount}
+            >
+              {formatAddress(address)}
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={onLogin}>
+              Connect Wallet
+            </Button>
+          )}
+        </div>
       </div>
     </header>
   )
