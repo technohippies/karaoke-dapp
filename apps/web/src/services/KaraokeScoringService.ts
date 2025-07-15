@@ -55,8 +55,8 @@ const encryptedKeysData = {
   ]
 }
 
-// Deployed Lit Action CID - V19 with debug logging
-const LIT_ACTION_CID = 'QmSm5XeBymfBNPaNP5qH897zSS8Eg4jayc1Y2j41Pp2aiq'
+// Deployed Lit Action CID - V21 with markdown stripping
+const LIT_ACTION_CID = 'QmZTR9pbSAQ3MzCCiWzVRhaBQCuCUT9AMtRiwhL4S9dCzC'
 
 interface LineScore {
   line: number

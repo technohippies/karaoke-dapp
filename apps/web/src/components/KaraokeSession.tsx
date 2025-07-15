@@ -41,8 +41,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
     isWalletLoading
   })
   
-  // Use first 5 lines for testing
-  const testLyrics = lyrics.slice(0, 5)
+  // Use first 3 lines for testing
+  const testLyrics = lyrics.slice(0, 3)
   
   // Memoize the onComplete callback to prevent recreation
   const handleKaraokeComplete = useCallback(async (mp3Blob: Blob, expectedLyrics: string) => {

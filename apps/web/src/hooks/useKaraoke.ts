@@ -57,13 +57,13 @@ export function useKaraoke({ lyrics, midiData, onComplete }: UseKaraokeProps) {
         }
       })
       
-      // Calculate duration for 5 lines  
+      // Calculate duration for 3 lines  
       // If we have timing, use it; otherwise estimate
-      const endTime = lyrics[4] ? (lyrics[4].time + 4) : 20 // Add 4 seconds after fifth line starts
+      const endTime = lyrics[2] ? (lyrics[2].time + 4) : 12 // Add 4 seconds after third line starts
       
       console.log('🎵 Karaoke duration:', endTime, 'seconds')
       
-      // Auto-stop after 5 lines
+      // Auto-stop after 3 lines
       setTimeout(() => {
         stopKaraoke()
       }, endTime * 1000)
@@ -125,8 +125,8 @@ export function useKaraoke({ lyrics, midiData, onComplete }: UseKaraokeProps) {
     // Convert PCM to MP3
     const mp3Blob = await convertPCMToMP3()
     
-    // Get expected lyrics text (first 5 lines, separated by newlines)
-    const expectedLyrics = lyrics.slice(0, 5).map(l => l.text).join('\n')
+    // Get expected lyrics text (first 3 lines, separated by newlines)
+    const expectedLyrics = lyrics.slice(0, 3).map(l => l.text).join('\n')
     
     // Call onComplete with MP3 and expected text
     onComplete(mp3Blob, expectedLyrics)

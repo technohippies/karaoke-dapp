@@ -179,9 +179,12 @@ Return ONLY valid JSON:
     }
     
     const llmData = await llmResponse.json();
-    const llmContent = llmData.choices?.[0]?.message?.content || '';
+    let llmContent = llmData.choices?.[0]?.message?.content || '';
     
     console.log('🤖 LLM Response:', llmContent);
+    
+    // Strip markdown code blocks if present
+    llmContent = llmContent.replace(/^```json\s*\n?/i, '').replace(/\n?```\s*$/i, '');
     
     // Parse the JSON response
     let scoringResult;
@@ -202,7 +205,7 @@ Return ONLY valid JSON:
         overall_score: score,
         lines: [],
         pronunciation_patterns: [],
-        encouragement: "Score calculated but detailed feedback unavailable"
+        encouragement: `Score calculated but detailed feedback unavailable. Raw LLM response: ${llmContent.substring(0, 200)}...`
       };
     }
     
@@ -218,6 +221,7 @@ Return ONLY valid JSON:
         transcript: transcript,
         expectedLyrics: expectedLyrics,
         scoringDetails: scoringResult,  // Include full line-by-line details
+        llmRawResponse: llmContent.substring(0, 500), // Include first 500 chars for debugging
         timestamp: Date.now()
       })
     });
