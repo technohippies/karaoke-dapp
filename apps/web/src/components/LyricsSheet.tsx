@@ -29,17 +29,6 @@ export function LyricsSheet({
       onOpenChange={onOpenChange}
     >
       <div className="space-y-12 pt-6">
-        {/* Translation Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Translate weight="duotone" size={28} color="#9CA3AF" />
-            <h3 className="text-lg font-semibold text-white">翻译</h3>
-          </div>
-          <p className="text-neutral-300 leading-relaxed">
-            {translation}
-          </p>
-        </div>
-
         {/* Meaning Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-4">
@@ -47,7 +36,7 @@ export function LyricsSheet({
             <h3 className="text-lg font-semibold text-white">含义</h3>
           </div>
           <p className="text-neutral-300 leading-relaxed">
-            {meaning}
+            {meaning || <span className="text-neutral-400 italic">即将推出</span>}
           </p>
         </div>
 
@@ -58,7 +47,7 @@ export function LyricsSheet({
             <h3 className="text-lg font-semibold text-white">语法</h3>
           </div>
           <p className="text-neutral-300 leading-relaxed">
-            {grammar}
+            {grammar || <span className="text-neutral-400 italic">即将推出</span>}
           </p>
         </div>
       </div>

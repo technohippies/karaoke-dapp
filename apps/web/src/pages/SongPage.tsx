@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAccount, useReadContract } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/tableland'
-import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
+import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
+import { combineLyricsWithTranslation } from '../utils/parseLyrics'
 import { 
-  KARAOKE_STORE_V5_ADDRESS, 
-  KARAOKE_STORE_V5_ABI
+  KARAOKE_CONTRACT_ADDRESS, 
+  KARAOKE_ABI
 } from '../constants'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
@@ -16,40 +17,50 @@ import { StreamingSheet } from '../components/StreamingSheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Leaderboard } from '../components/Leaderboard'
 import { ConnectWallet } from '../components/ConnectWallet'
-import { CreditPurchase } from '../components/CreditPurchase'
-import { KaraokeSession } from '../components/KaraokeSession'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
   const { isConnected, address } = useAccount()
-  const { state, context, send } = useKaraokeMachineContext()
+  const { loadContent, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   
   // Simple contract reads for this song
   const { data: isSongUnlocked } = useReadContract({
-    address: KARAOKE_STORE_V5_ADDRESS,
-    abi: KARAOKE_STORE_V5_ABI,
+    address: KARAOKE_CONTRACT_ADDRESS,
+    abi: KARAOKE_ABI,
     functionName: 'hasUnlockedSong',
     args: address && songId ? [address, BigInt(songId)] : undefined,
     enabled: !!address && !!songId,
   })
   
   const { data: voiceCredits } = useReadContract({
-    address: KARAOKE_STORE_V5_ADDRESS,
-    abi: KARAOKE_STORE_V5_ABI,
+    address: KARAOKE_CONTRACT_ADDRESS,
+    abi: KARAOKE_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
     enabled: !!address,
   })
   
   const { data: songCredits } = useReadContract({
-    address: KARAOKE_STORE_V5_ADDRESS,
-    abi: KARAOKE_STORE_V5_ABI,
+    address: KARAOKE_CONTRACT_ADDRESS,
+    abi: KARAOKE_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
     enabled: !!address,
+  })
+
+  // Unlock song functionality
+  const { 
+    writeContract: unlockSong, 
+    data: unlockHash,
+    isPending: isUnlockPending,
+    error: unlockError
+  } = useWriteContract()
+
+  const { isSuccess: isUnlockSuccess } = useWaitForTransactionReceipt({ 
+    hash: unlockHash 
   })
   
   // Simple state logic
@@ -58,7 +69,7 @@ export function SongPage() {
   const songIsUnlocked = Boolean(isSongUnlocked)
   
   // Check if unlock is in progress
-  const isUnlocking = state.matches('unlockingSong')
+  const isUnlocking = isUnlockPending
   
   // Debug logging - removed to reduce noise
 
@@ -70,13 +81,44 @@ export function SongPage() {
     loadSong(parseInt(songId))
   }, [songId, navigate])
 
-  // Auto-select song when loaded and in selectSong state (only if no active session)
+  // Load content after successful unlock
   useEffect(() => {
-    if (song && state.matches('selectSong') && !context.hasActiveSession) {
-      console.log('🎵 Auto-selecting song:', song.title, 'Current state:', state.value)
-      send({ type: 'SELECT_SONG', song })
+    if (isUnlockSuccess && address && song) {
+      console.log('✅ Unlock successful, loading content...')
+      loadContent(song, address)
     }
-  }, [song, state.value, send, context.hasActiveSession])
+  }, [isUnlockSuccess, address, song, loadContent])
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Song unlock status:', {
+      songId: songId,
+      userAddress: address,
+      isUnlocked: songIsUnlocked,
+      contract: KARAOKE_CONTRACT_ADDRESS
+    })
+  }, [songId, address, songIsUnlocked])
+
+  // Load content if song is already unlocked
+  // TODO: Only load content when user explicitly wants to access lyrics/midi
+  // useEffect(() => {
+  //   if (songIsUnlocked && address && song && !content) {
+  //     console.log('📖 Song already unlocked, loading content...')
+  //     loadContent(song, address)
+  //   }
+  // }, [songIsUnlocked, address, song, content, loadContent])
+
+  const handleUnlockSong = () => {
+    if (!song) return
+    
+    console.log('🔓 Unlocking song:', song.id)
+    unlockSong({
+      address: KARAOKE_CONTRACT_ADDRESS,
+      abi: KARAOKE_ABI,
+      functionName: 'unlockSong',
+      args: [BigInt(song.id)]
+    })
+  }
 
   const loadSong = async (id: number) => {
     try {
@@ -102,8 +144,23 @@ export function SongPage() {
     console.log('Account clicked')
   }
 
-  // Sample lyrics data - in production this would come from the song's translations
-  const sampleLyrics = [
+  // Parse loaded lyrics with translations
+  console.log('🎵 Content for parsing:', {
+    hasLyrics: !!content?.lyrics,
+    hasTranslation: !!content?.translation,
+    lyricsLength: content?.lyrics?.length,
+    translationSample: content?.translation?.substring(0, 100),
+    language: content?.language
+  })
+  
+  const parsedLyrics = combineLyricsWithTranslation(
+    content?.lyrics || null,
+    content?.translation || null,
+    content?.language || 'zh'
+  )
+  
+  // Use parsed lyrics if available, otherwise show sample
+  const displayLyrics = parsedLyrics.length > 0 ? parsedLyrics : [
     {
       english: "I've never seen a diamond in the flesh",
       translation: "我从未见过真正的钻石",
@@ -242,8 +299,8 @@ export function SongPage() {
           address={address}
           onLogin={handleLogin}
           onAccount={handleAccount}
-          crownCount={context.voiceCredits || 0}
-          fireCount={context.songCredits || 0}
+          crownCount={Number(voiceCredits || 0)}
+          fireCount={Number(songCredits || 0)}
           showBack={true}
           onBack={() => navigate('/')}
         />
@@ -298,23 +355,26 @@ export function SongPage() {
                   <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
                 </TabsList>
                 <TabsContent value="lyrics">
-                  {/* Check if THIS specific song is unlocked */}
-                  {!songIsUnlocked ? (
-                    /* Locked state - song not unlocked */
+                  {/* Check if content is loaded - show lock if not */}
+                  {!content ? (
+                    /* Content not loaded - show lock */
                     <div className="mt-8 text-center py-16">
                       <div className="flex justify-center mb-6">
                         <div className="w-24 h-24 bg-neutral-800 rounded-full flex items-center justify-center">
                           <Lock size={40} className="text-neutral-400" />
                         </div>
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-4">Unlock this song</h3>
+                      <h3 className="text-2xl font-bold text-white mb-4">
+                        {songIsUnlocked ? 'Load content to view lyrics' : 'Unlock this song'}
+                      </h3>
                       <p className="text-lg text-neutral-300 mb-2">Karaoke, language learning exercises,</p>
                       <p className="text-lg text-neutral-300 mb-8">and lyrics with translations, meaning, and grammar.</p>
                     </div>
                   ) : (
-                    /* Unlocked state - show lyrics */
+                    /* Content loaded - show actual lyrics */
                     <div className="space-y-3 mt-4">
-                      {sampleLyrics.map((lyric, index) => (
+                      {displayLyrics.length > 0 ? (
+                        displayLyrics.map((lyric, index) => (
                         <LyricsSheet
                           key={index}
                           trigger={
@@ -334,7 +394,13 @@ export function SongPage() {
                           meaning={lyric.meaning}
                           grammar={lyric.grammar}
                         />
-                      ))}
+                      ))
+                      ) : (
+                        <div className="text-center py-8 text-neutral-400">
+                          <p>No lyrics available yet.</p>
+                          <p className="text-sm mt-2">Click "Load Lyrics & Translations" below to get started.</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </TabsContent>
@@ -384,10 +450,7 @@ export function SongPage() {
             {/* Has song credits but song not unlocked - show Unlock Song */}
             {hasSongCredits && !songIsUnlocked && (
               <button
-                onClick={() => {
-                  send({ type: 'SELECT_SONG', song })
-                  send({ type: 'UNLOCK_SONG', songId: parseInt(songId!) })
-                }}
+                onClick={handleUnlockSong}
                 disabled={isUnlocking}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
@@ -412,17 +475,42 @@ export function SongPage() {
               </button>
             )}
             
-            {/* Song unlocked AND has voice credits - show Start Karaoke */}
+            {/* Song unlocked AND has voice credits - content is accessible */}
             {songIsUnlocked && hasVoiceCredits && (
-              <button
-                onClick={() => {
-                  send({ type: 'SELECT_SONG', song })
-                  send({ type: 'START_SESSION', songId: parseInt(songId!) })
-                }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
-              >
-                Start Karaoke
-              </button>
+              <div className="w-full text-center py-3">
+                {!content ? (
+                  <>
+                    <button
+                      onClick={() => song && address && loadContent(song, address)}
+                      disabled={isContentLoading || !song || !address}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 
+                               text-white font-semibold rounded-lg transition-colors flex items-center 
+                               justify-center gap-2"
+                    >
+                      {isContentLoading ? (
+                        <>
+                          <CircleNotch size={20} className="animate-spin" />
+                          Loading Content...
+                        </>
+                      ) : (
+                        'Load Lyrics & Translations'
+                      )}
+                    </button>
+                    {contentError && (
+                      <p className="text-red-400 text-sm mt-2">{contentError}</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-green-400 font-semibold">
+                      ✅ Content loaded! Study the lyrics and translations above
+                    </p>
+                    <p className="text-neutral-400 text-sm mt-1">
+                      Karaoke mode coming soon...
+                    </p>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
