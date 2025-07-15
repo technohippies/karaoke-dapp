@@ -4,7 +4,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/tableland'
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
-import { combineLyricsWithTranslation } from '../utils/parseLyrics'
+import { combineLyricsWithTranslation, parseLrcLyrics } from '../utils/parseLyrics'
 import { 
   KARAOKE_CONTRACT_ADDRESS, 
   KARAOKE_ABI
@@ -16,7 +16,7 @@ import { IconButton } from '../components/IconButton'
 import { StreamingSheet } from '../components/StreamingSheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Leaderboard } from '../components/Leaderboard'
-import { ConnectWallet } from '../components/ConnectWallet'
+import { KaraokeSession } from '../components/KaraokeSession'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
@@ -25,14 +25,18 @@ export function SongPage() {
   const { loadContent, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showKaraoke, setShowKaraoke] = useState(false)
+  
+  // Validate songId
+  const validSongId = songId && !isNaN(parseInt(songId)) ? songId : null
   
   // Simple contract reads for this song
   const { data: isSongUnlocked } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
     abi: KARAOKE_ABI,
     functionName: 'hasUnlockedSong',
-    args: address && songId ? [address, BigInt(songId)] : undefined,
-    enabled: !!address && !!songId,
+    args: address && validSongId ? [address, BigInt(validSongId)] : undefined,
+    enabled: !!address && !!validSongId,
   })
   
   const { data: voiceCredits } = useReadContract({
@@ -62,6 +66,8 @@ export function SongPage() {
   const { isSuccess: isUnlockSuccess } = useWaitForTransactionReceipt({ 
     hash: unlockHash 
   })
+
+  // Removed unused start karaoke contract calls - now handled in component
   
   // Simple state logic
   const hasVoiceCredits = Number(voiceCredits || 0) > 0
@@ -71,15 +77,15 @@ export function SongPage() {
   // Check if unlock is in progress
   const isUnlocking = isUnlockPending
   
-  // Debug logging - removed to reduce noise
+  // Removed unused debug logging for karaoke state
 
   useEffect(() => {
-    if (!songId) {
+    if (!validSongId) {
       navigate('/')
       return
     }
-    loadSong(parseInt(songId))
-  }, [songId, navigate])
+    loadSong(parseInt(validSongId))
+  }, [validSongId, navigate])
 
   // Load content after successful unlock
   useEffect(() => {
@@ -88,25 +94,26 @@ export function SongPage() {
       loadContent(song, address)
     }
   }, [isUnlockSuccess, address, song, loadContent])
+
+  // Removed unused effects for karaoke start success/error
   
   // Debug logging
   useEffect(() => {
     console.log('🔍 Song unlock status:', {
-      songId: songId,
+      songId: validSongId,
       userAddress: address,
       isUnlocked: songIsUnlocked,
       contract: KARAOKE_CONTRACT_ADDRESS
     })
-  }, [songId, address, songIsUnlocked])
+  }, [validSongId, address, songIsUnlocked])
 
   // Load content if song is already unlocked
-  // TODO: Only load content when user explicitly wants to access lyrics/midi
-  // useEffect(() => {
-  //   if (songIsUnlocked && address && song && !content) {
-  //     console.log('📖 Song already unlocked, loading content...')
-  //     loadContent(song, address)
-  //   }
-  // }, [songIsUnlocked, address, song, content, loadContent])
+  useEffect(() => {
+    if (songIsUnlocked && address && song && !content && !isContentLoading) {
+      console.log('📖 Song already unlocked, loading content...')
+      loadContent(song, address)
+    }
+  }, [songIsUnlocked, address, song, content, isContentLoading, loadContent])
 
   const handleUnlockSong = () => {
     if (!song) return
@@ -118,6 +125,40 @@ export function SongPage() {
       functionName: 'unlockSong',
       args: [BigInt(song.id)]
     })
+  }
+
+  const handleStartKaraoke = async () => {
+    if (!song || !content?.midiData) return
+    
+    console.log('🎤 Starting karaoke for song:', song.id)
+    
+    // Check voice credits
+    if (!hasVoiceCredits) {
+      console.error('No voice credits available')
+      alert('You need voice credits to start karaoke')
+      return
+    }
+    
+    // Request microphone permission first
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 48000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+        } 
+      })
+      
+      // Stop the stream immediately - we just needed permission
+      stream.getTracks().forEach(track => track.stop())
+      
+      console.log('✅ Microphone permission granted')
+      setShowKaraoke(true)
+    } catch (error) {
+      console.error('❌ Microphone permission denied:', error)
+      alert('Microphone access is required for karaoke. Please allow microphone access and try again.')
+    }
   }
 
   const loadSong = async (id: number) => {
@@ -288,6 +329,28 @@ export function SongPage() {
   }
 
   const artworkUrl = getArtworkUrl(song)
+
+  // Show karaoke session if active
+  if (showKaraoke && content?.midiData && parsedLyrics.length > 0) {
+    // Get lyrics with proper timing
+    const lyricsWithTiming = parseLrcLyrics(content.lyrics || '')
+    
+    // Merge timing with translations
+    const karaokeData = lyricsWithTiming.map((lyric, index) => ({
+      time: lyric.time,
+      text: lyric.text,
+      translation: parsedLyrics[index]?.translation || ''
+    }))
+    
+    return (
+      <KaraokeSession
+        songId={song.id}
+        lyrics={karaokeData}
+        midiData={content.midiData}
+        onClose={() => setShowKaraoke(false)}
+      />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-neutral-900 relative overflow-hidden">
@@ -502,12 +565,14 @@ export function SongPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-green-400 font-semibold">
-                      ✅ Content loaded! Study the lyrics and translations above
-                    </p>
-                    <p className="text-neutral-400 text-sm mt-1">
-                      Karaoke mode coming soon...
-                    </p>
+                    <button
+                      onClick={handleStartKaraoke}
+                      className="w-full py-3 bg-green-600 hover:bg-green-700 
+                               text-white font-semibold rounded-lg transition-colors flex items-center 
+                               justify-center gap-2"
+                    >
+                      Start Karaoke (2 lines test)
+                    </button>
                   </>
                 )}
               </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
-import { KARAOKE_STORE_V5_ADDRESS, KARAOKE_STORE_V5_ABI, USDC_ADDRESS, USDC_ABI, COMBO_PRICE } from '../constants'
+import { KARAOKE_CONTRACT_ADDRESS, KARAOKE_ABI, USDC_ADDRESS, USDC_ABI, COMBO_PRICE } from '../constants'
 
 export function usePurchase() {
   const { address, isConnected } = useAccount()
@@ -19,19 +19,19 @@ export function usePurchase() {
     address: USDC_ADDRESS,
     abi: USDC_ABI,
     functionName: 'allowance',
-    args: address ? [address, KARAOKE_STORE_V5_ADDRESS] : undefined,
+    args: address ? [address, KARAOKE_CONTRACT_ADDRESS] : undefined,
   })
 
   const { data: voiceCredits, refetch: refetchVoiceCredits } = useReadContract({
-    address: KARAOKE_STORE_V5_ADDRESS,
-    abi: KARAOKE_STORE_V5_ABI,
+    address: KARAOKE_CONTRACT_ADDRESS,
+    abi: KARAOKE_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
   })
 
   const { data: songCredits, refetch: refetchSongCredits } = useReadContract({
-    address: KARAOKE_STORE_V5_ADDRESS,
-    abi: KARAOKE_STORE_V5_ABI,
+    address: KARAOKE_CONTRACT_ADDRESS,
+    abi: KARAOKE_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
   })
@@ -67,6 +67,10 @@ export function usePurchase() {
       console.log('✅ Approval successful!')
       setIsApproving(false)
       refetchAllowance()
+      // Auto-trigger purchase after approval
+      setTimeout(() => {
+        handlePurchaseCombo()
+      }, 1000)
     }
   }, [isApproveSuccess, refetchAllowance])
 
@@ -90,7 +94,7 @@ export function usePurchase() {
       address: USDC_ADDRESS,
       abi: USDC_ABI,
       functionName: 'approve',
-      args: [KARAOKE_STORE_V5_ADDRESS, COMBO_PRICE],
+      args: [KARAOKE_CONTRACT_ADDRESS, COMBO_PRICE],
     })
   }
 

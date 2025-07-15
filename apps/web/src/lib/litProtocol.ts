@@ -2,7 +2,7 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { 
   PKP_PUBLIC_KEY, 
   LIT_ACTION_CID,
-  KARAOKE_STORE_V5_ADDRESS,
+  KARAOKE_CONTRACT_ADDRESS,
   SIMPLE_V1_LIT_ACTION_CID
 } from '../constants'
 
@@ -23,7 +23,7 @@ export class LitProtocolService {
 
   constructor() {
     this.litNodeClient = new LitNodeClient({
-      litNetwork: 'datil',
+      litNetwork: 'datil-dev',
       debug: true
     })
   }
@@ -33,6 +33,13 @@ export class LitProtocolService {
       throw new Error('LitNodeClient not initialized')
     }
     await this.litNodeClient.connect()
+  }
+
+  getClient(): LitNodeClient {
+    if (!this.litNodeClient) {
+      throw new Error('LitNodeClient not initialized')
+    }
+    return this.litNodeClient
   }
 
   setCapacityDelegation(authSig: any) {
@@ -75,11 +82,11 @@ export class LitProtocolService {
 
     // Check if capabilities are included in the session
     const firstSession = this.sessionSigs[Object.keys(this.sessionSigs)[0]]
-    let hasCapabilities = false
+    // let hasCapabilities = false
     if (firstSession?.signedMessage) {
       try {
-        const parsed = JSON.parse(firstSession.signedMessage)
-        hasCapabilities = !!parsed.capabilities && parsed.capabilities.length > 0
+        // const parsed = JSON.parse(firstSession.signedMessage)
+        // hasCapabilities = !!parsed.capabilities && parsed.capabilities.length > 0
       } catch (e) {
         console.log('Could not parse signed message')
       }
@@ -104,7 +111,7 @@ export class LitProtocolService {
             publicKey: PKP_PUBLIC_KEY,
             sessionToken,
             audioData: audioArray,
-            contractAddress: KARAOKE_STORE_V5_ADDRESS,
+            contractAddress: KARAOKE_CONTRACT_ADDRESS,
             tokenSignature
           }
         })

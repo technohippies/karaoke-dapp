@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 
 interface KaraokeLyricsProps {
-  songId: number
   isPlaying: boolean
   currentTime: number
 }
 
-export function KaraokeLyrics({ songId, isPlaying, currentTime }: KaraokeLyricsProps) {
+export function KaraokeLyrics({ isPlaying, currentTime }: KaraokeLyricsProps) {
   // Placeholder lyrics for now
   const placeholderLyrics = [
     { time: 0, text: "I've never seen a diamond in the flesh" },

@@ -15,8 +15,8 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const PREPARED_SONGS = join(__dirname, '..', 'data', 'encrypted-v2', 'prepared-songs.json')
-const SONGS_CONFIG = join(__dirname, '..', 'data', 'songs-metadata.json')
+const PREPARED_SONGS = join(__dirname, '..', 'data', 'encrypted', 'prepared-songs.json')
+const SONGS_CONFIG = join(__dirname, '..', 'data', 'metadata.json')
 
 // Configure your table name here
 const TABLE_NAME = process.env.SONGS_TABLE_NAME || 'songs_84532_xxx'
@@ -45,9 +45,11 @@ async function updateTableland() {
       piano: prepared.encryptedMidi.cid
     }
 
-    // Prepare translations JSON with encrypted lyrics CID  
+    // All translations are encrypted together in one file
     const translations = {
-      en: prepared.encryptedLyrics.cid
+      zh: prepared.encryptedLyrics.cid,
+      ug: prepared.encryptedLyrics.cid,
+      bo: prepared.encryptedLyrics.cid
     }
 
     const sql = `

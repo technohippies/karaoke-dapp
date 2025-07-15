@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from '@phosphor-icons/react'
 import { IconButton } from './IconButton'
 
@@ -47,39 +47,29 @@ export function KaraokeDisplay({
   useEffect(() => {
     if (!isStarted || currentLineIndex < 0) return
 
+    // Don't schedule if we're past the last line
+    if (currentLineIndex >= lyrics.length) return
+
     const timer = setTimeout(() => {
       setCurrentLineIndex((prev) => {
         if (prev < lyrics.length - 1) {
           return prev + 1
+        } else {
+          // Move to completion state
+          return prev + 1
         }
-        return prev
       })
     }, lyrics[currentLineIndex]?.duration || lineDelay)
 
     return () => clearTimeout(timer)
   }, [currentLineIndex, isStarted, lyrics, lineDelay])
 
-  const handleManualStart = () => {
-    setIsStarted(true)
-    setCurrentLineIndex(0)
-  }
-
-  const handlePrevious = () => {
-    if (currentLineIndex > 0) {
-      setCurrentLineIndex(currentLineIndex - 1)
-    }
-  }
-
-  const handleNext = () => {
-    if (currentLineIndex < lyrics.length - 1) {
-      setCurrentLineIndex(currentLineIndex + 1)
-    }
-  }
+  // Removed unused manual control functions
 
   return (
-    <div className="min-h-screen bg-neutral-900 flex flex-col">
+    <div className="h-screen bg-neutral-900 flex flex-col overflow-hidden">
       {/* Header with close button */}
-      <header className="w-full bg-neutral-900 border-b border-neutral-700 h-16">
+      <header className="w-full bg-neutral-900 border-b border-neutral-700 h-16 flex-shrink-0">
         <div className="w-full max-w-2xl mx-auto px-6 py-4 flex items-center h-full">
           <IconButton variant="ghost" onClick={onClose}>
             <X size={20} weight="regular" />
@@ -88,8 +78,8 @@ export function KaraokeDisplay({
       </header>
 
       {/* Main karaoke display */}
-      <div className="flex-1 flex items-center justify-center px-6 pt-16">
-        <div className="w-full max-w-2xl text-center">
+      <div className="flex-1 flex items-center justify-center overflow-hidden">
+        <div className="w-full mx-auto px-6 text-center">
           <div className="space-y-6">
             {/* Countdown above first line */}
             {!isStarted && countdown > 0 && (
@@ -102,7 +92,6 @@ export function KaraokeDisplay({
             {lyrics.map((lyric, index) => {
               const isCurrent = index === currentLineIndex
               const isPast = index < currentLineIndex
-              const isFuture = index > currentLineIndex
               
               return (
                 <div
@@ -121,20 +110,7 @@ export function KaraokeDisplay({
             })}
           </div>
 
-          {/* Completion message */}
-          {isStarted && currentLineIndex >= lyrics.length - 1 && (
-            <div className="mt-12">
-              <div className="text-2xl font-semibold text-white mb-4">
-                Great job! 🎤
-              </div>
-              <button
-                onClick={onClose}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Finish
-              </button>
-            </div>
-          )}
+          {/* No completion message here - KaraokeSession handles completion */}
         </div>
       </div>
     </div>

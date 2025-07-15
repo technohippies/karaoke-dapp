@@ -132,7 +132,7 @@ async function updateSongData(options: UpdateOptions) {
 }
 
 // CLI usage
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2)
   
   if (args.length < 2) {

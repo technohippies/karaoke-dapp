@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import React from 'react'
 import { LyricsSheet } from './LyricsSheet'
 import { Button } from './ui/button'
 import { ListItem } from './ListItem'
@@ -92,7 +91,7 @@ export const AsListItem: Story = {
 
 export const Interactive: Story = {
   render: () => {
-    const [currentLyric, setCurrentLyric] = React.useState<string | null>(null)
+    // const [currentLyric] = React.useState<string | null>(null)
 
     const lyrics = [
       {

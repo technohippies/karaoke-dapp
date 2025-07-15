@@ -4,13 +4,12 @@ import { useAccount } from 'wagmi'
 import { tablelandService, type Song } from '../services/tableland'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
-import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
+import { StudyStats } from '../components/StudyStats'
 
 export function HomePage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const { isConnected, address } = useAccount()
-  const { context } = useKaraokeMachineContext()
 
   useEffect(() => {
     loadSongs()
@@ -60,11 +59,18 @@ export function HomePage() {
         address={address}
         onLogin={handleLogin}
         onAccount={handleAccount}
-        crownCount={context.voiceCredits || 0}
-        fireCount={context.songCredits || 0}
+        crownCount={0}
+        fireCount={0}
       />
       <div className="w-full max-w-2xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold text-white mb-6">Songs</h1>
+        <StudyStats
+          newCount={15}
+          learningCount={8}
+          dueCount={23}
+          onStudy={() => console.log('Study clicked')}
+        />
+        
+        <h1 className="text-2xl font-bold text-white mb-6 mt-8">Songs</h1>
         
         {loading ? (
           <div className="text-center text-white">Loading songs...</div>

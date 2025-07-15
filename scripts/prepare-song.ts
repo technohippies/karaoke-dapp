@@ -19,6 +19,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { LitNetwork } from '@lit-protocol/constants'
+import { encryptString, encryptFile } from '@lit-protocol/encryption'
 import axios from 'axios'
 // Remove pinata SDK import - using fetch instead
 import dotenv from 'dotenv'
@@ -33,8 +34,11 @@ const ENCRYPTED_DIR = join(PROJECT_ROOT, 'data', 'encrypted')
 const OUTPUT_DIR = join(PROJECT_ROOT, 'data', 'encrypted')
 const SONGS_CONFIG = join(PROJECT_ROOT, 'data', 'metadata.json')
 
-// Contract address will be set after deployment
-const CONTRACT_ADDRESS = process.env.KARAOKE_V2_CONTRACT || '0x0000000000000000000000000000000000000000'
+// Contract address - MUST match the deployed contract used in the web app
+const CONTRACT_ADDRESS = process.env.KARAOKE_CONTRACT
+if (!CONTRACT_ADDRESS) {
+  throw new Error('KARAOKE_CONTRACT environment variable is required')
+}
 const CHAIN_ID = 84532 // Base Sepolia
 
 interface Song {
@@ -84,36 +88,65 @@ async function encryptWithLit(
   songId: number
 ): Promise<any> {
   // Access control: user must have unlocked this specific song
-  const accessControlConditions = [
+  // Using evmContractConditions for custom contract method
+  const evmContractConditions = [
     {
       contractAddress: CONTRACT_ADDRESS,
-      standardContractType: '',
+      functionName: 'hasUnlockedSong',
+      functionParams: [':userAddress', songId.toString()],
+      functionAbi: {
+        type: 'function',
+        name: 'hasUnlockedSong',
+        inputs: [
+          { name: '', type: 'address', internalType: 'address' },
+          { name: '', type: 'uint256', internalType: 'uint256' }
+        ],
+        outputs: [
+          { name: '', type: 'bool', internalType: 'bool' }
+        ],
+        stateMutability: 'view'
+      },
       chain: 'baseSepolia',
-      method: 'hasUnlockedSong',
-      parameters: [':userAddress', songId.toString()],
       returnValueTest: {
+        key: '',  // Empty key for direct boolean return
         comparator: '=',
         value: 'true'
       }
     }
   ]
 
-  // Convert content to Uint8Array if it's a string
-  const dataToEncrypt = typeof content === 'string' 
-    ? new TextEncoder().encode(content)
-    : content
+  let ciphertext: string
+  let dataToEncryptHash: string
 
-  const { ciphertext, dataToEncryptHash } = await litClient.encrypt({
-    accessControlConditions,
-    dataToEncrypt,
-  })
+  if (typeof content === 'string') {
+    // Use encryptString for string content
+    const result = await encryptString(
+      {
+        evmContractConditions,
+        dataToEncrypt: content,
+      },
+      litClient
+    )
+    ciphertext = result.ciphertext
+    dataToEncryptHash = result.dataToEncryptHash
+  } else {
+    // Use encryptFile for binary content (MIDI)
+    const file = new File([content], 'data.bin', { type: 'application/octet-stream' })
+    const result = await encryptFile(
+      {
+        evmContractConditions,
+        file,
+      },
+      litClient
+    )
+    ciphertext = result.ciphertext
+    dataToEncryptHash = result.dataToEncryptHash
+  }
 
   return {
-    encryptedData: {
-      ciphertext: Buffer.from(ciphertext).toString('base64'),
-      dataToEncryptHash
-    },
-    accessControlConditions
+    ciphertext,
+    dataToEncryptHash,
+    evmContractConditions
   }
 }
 
@@ -183,7 +216,7 @@ async function prepareSong(songId: number): Promise<EncryptedSong> {
   // 3. Initialize Lit Protocol
   console.log(`🔐 Initializing Lit Protocol...`)
   const litClient = new LitNodeClient({
-    litNetwork: LitNetwork.DatilDev,
+    litNetwork: 'datil-dev' as any,
     debug: false
   })
   await litClient.connect()
@@ -246,10 +279,7 @@ async function main() {
     process.exit(1)
   }
 
-  if (CONTRACT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-    console.warn('⚠️  No V2 contract address set. Using placeholder address.')
-    console.warn('   Set KARAOKE_V2_CONTRACT in .env after deployment')
-  }
+  console.log(`📝 Using contract address: ${CONTRACT_ADDRESS}`)
 
   // Ensure output directory exists
   if (!existsSync(OUTPUT_DIR)) {

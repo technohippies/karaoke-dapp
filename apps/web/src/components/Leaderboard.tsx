@@ -1,4 +1,3 @@
-import React from 'react'
 
 interface LeaderboardEntry {
   rank: number
@@ -18,7 +17,7 @@ export function Leaderboard({ entries, className = "" }: LeaderboardProps) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg bg-neutral-800"
+  // const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg bg-neutral-800"
 
   return (
     <div className={`space-y-3 ${className}`}>

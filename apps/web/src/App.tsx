@@ -1,9 +1,15 @@
 import { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
 import { PricingPage } from './pages/PricingPage'
+
+// Helper component to redirect from old song URLs
+function SongRedirect() {
+  const { songId } = useParams()
+  return <Navigate to={`/s/${songId}`} replace />
+}
 
 // Wildcard capacity delegation auth sig - works for ANY wallet address
 const CAPACITY_DELEGATION_AUTH_SIG = {
@@ -18,7 +24,8 @@ function App() {
   useEffect(() => {
     const initLit = async () => {
       try {
-        litProtocolService.setCapacityDelegation(CAPACITY_DELEGATION_AUTH_SIG)
+        // Don't use capacity delegation with datil-dev
+        // litProtocolService.setCapacityDelegation(CAPACITY_DELEGATION_AUTH_SIG)
         await litProtocolService.connect()
         console.log('Lit Protocol connected')
       } catch (error) {
@@ -39,6 +46,10 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/s/:songId" element={<SongPage />} />
+        {/* Redirect old song URLs to new format */}
+        <Route path="/song/:songId" element={<SongRedirect />} />
+        {/* Catch all - redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )

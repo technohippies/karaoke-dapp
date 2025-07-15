@@ -1,12 +1,10 @@
 import { useState, useCallback } from 'react'
 import { useAccount, useSignMessage } from 'wagmi'
 import { litProtocolService } from '../lib/litProtocol'
-import { LIT_ACTION_CID } from '../constants'
 import { 
   createSiweMessageWithRecaps,
   generateAuthSig,
-  LitActionResource,
-  LitRLIResource
+  LitActionResource
 } from '@lit-protocol/auth-helpers'
 import { LIT_ABILITY } from '@lit-protocol/constants'
 

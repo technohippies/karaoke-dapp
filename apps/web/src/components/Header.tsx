@@ -1,4 +1,3 @@
-import React from 'react'
 import { Crown, Fire, CaretLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'

@@ -109,7 +109,7 @@ export const ChinesePlatforms: Story = {
 
 export const Interactive: Story = {
   render: () => {
-    const [selectedSong, setSelectedSong] = React.useState<string | null>(null)
+    const [selectedSong] = React.useState<string | null>(null)
 
     const songs = [
       {

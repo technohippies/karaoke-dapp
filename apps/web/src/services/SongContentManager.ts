@@ -1,5 +1,5 @@
 import { IContentEncryptionService, SongAccessConditions, EncryptionResult } from './encryption/ContentEncryptionService'
-import { IStorageService, StorageUploadOptions, StorageUploadResult } from './StorageService'
+import { IStorageService, StorageUploadResult } from './StorageService'
 
 export interface SongContent {
   /** Song ID */

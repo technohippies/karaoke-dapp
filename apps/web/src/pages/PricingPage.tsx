@@ -1,6 +1,6 @@
 import { usePurchase } from '../hooks/usePurchase'
 import { Header } from '../components/Header'
-import { useKaraokeMachineContext } from '../contexts/KaraokeMachineContext'
+import { Spinner } from '../components/ui/spinner'
 import { useNavigate } from 'react-router-dom'
 
 export function PricingPage() {
@@ -21,7 +21,6 @@ export function PricingPage() {
     handlePurchaseSong,
   } = usePurchase()
 
-  const { context } = useKaraokeMachineContext()
 
   const handlePurchase = () => {
     if (!hasAllowance) {
@@ -48,8 +47,8 @@ export function PricingPage() {
           address={address}
           onLogin={handleLogin}
           onAccount={handleAccount}
-          crownCount={context.voiceCredits || voiceCredits}
-          fireCount={context.songCredits || songCredits}
+          crownCount={voiceCredits}
+          fireCount={songCredits}
           showBack={true}
           onBack={() => navigate('/')}
         />
@@ -77,9 +76,21 @@ export function PricingPage() {
               <button 
                 onClick={handlePurchase}
                 disabled={isApproving || isPurchasing}
-                className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
               >
-                {isApproving ? 'Approving...' : isPurchasing ? 'Purchasing...' : hasAllowance ? 'Buy' : 'Approve & Buy'}
+                {isApproving ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Approving...</span>
+                  </>
+                ) : isPurchasing ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span>Purchasing...</span>
+                  </>
+                ) : (
+                  'Buy'
+                )}
               </button>
             )}
           </div>
@@ -99,9 +110,21 @@ export function PricingPage() {
             <button 
               onClick={handlePurchaseVoice}
               disabled={isApproving || isPurchasing || !isConnected}
-              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
             >
-              {isApproving ? 'Approving...' : isPurchasing ? 'Purchasing...' : 'Buy'}
+              {isApproving ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Approving...</span>
+                </>
+              ) : isPurchasing ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Purchasing...</span>
+                </>
+              ) : (
+                'Buy'
+              )}
             </button>
           </div>
 
@@ -116,9 +139,21 @@ export function PricingPage() {
             <button 
               onClick={handlePurchaseSong}
               disabled={isApproving || isPurchasing || !isConnected}
-              className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
             >
-              {isApproving ? 'Approving...' : isPurchasing ? 'Purchasing...' : 'Buy'}
+              {isApproving ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Approving...</span>
+                </>
+              ) : isPurchasing ? (
+                <>
+                  <Spinner size="sm" />
+                  <span>Purchasing...</span>
+                </>
+              ) : (
+                'Buy'
+              )}
             </button>
           </div>
         </div>

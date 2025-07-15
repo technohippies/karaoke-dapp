@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { Button } from './button'
-import { ChevronRight, Download, Plus, Trash2 } from 'lucide-react'
+import { Spinner } from './spinner'
+import { ChevronRight, Download, Plus } from 'lucide-react'
 
 const meta: Meta<typeof Button> = {
   title: 'UI/Atoms/Button',
@@ -123,10 +124,24 @@ export const Disabled: Story = {
 }
 
 export const Loading: Story = {
-  args: {
-    disabled: true,
-    children: 'Loading...',
-  },
+  render: () => (
+    <div className="space-y-4">
+      <Button disabled className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2">
+        <Spinner size="sm" />
+        <span>Approving...</span>
+      </Button>
+      
+      <Button disabled className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2">
+        <Spinner size="sm" />
+        <span>Purchasing...</span>
+      </Button>
+      
+      <Button disabled className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2">
+        <Spinner size="sm" />
+        <span>Loading...</span>
+      </Button>
+    </div>
+  ),
 }
 
 export const AllVariants: Story = {

@@ -1,4 +1,3 @@
-import React from 'react'
 import { BottomSheet } from './BottomSheet'
 import { ListItem } from './ListItem'
 import { 
@@ -11,8 +10,6 @@ import {
 
 interface StreamingSheetProps {
   trigger: React.ReactNode
-  title: string
-  artist: string
   streamingLinks: {
     soundcloud?: string
     spotify?: string
@@ -27,8 +24,6 @@ interface StreamingSheetProps {
 
 export function StreamingSheet({
   trigger,
-  title,
-  artist,
   streamingLinks,
   open,
   onOpenChange,

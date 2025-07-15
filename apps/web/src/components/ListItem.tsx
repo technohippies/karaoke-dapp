@@ -9,17 +9,18 @@ interface ListItemProps {
   className?: string
 }
 
-export function ListItem({ 
+export const ListItem = React.forwardRef<HTMLDivElement, ListItemProps>(({
   children, 
   thumbnail, 
   showChevron = false, 
   onClick,
   className = ""
-}: ListItemProps) {
+}, ref) => {
   const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg transition-colors bg-neutral-800 hover:bg-neutral-700 cursor-pointer"
   
   return (
     <div 
+      ref={ref}
       className={`${baseClasses} ${className}`}
       onClick={onClick}
     >
@@ -44,4 +45,6 @@ export function ListItem({
       )}
     </div>
   )
-}
+})
+
+ListItem.displayName = 'ListItem'
