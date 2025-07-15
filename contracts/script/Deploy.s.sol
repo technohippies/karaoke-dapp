@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import {SimpleKaraoke} from "../src/SimpleKaraoke.sol";
+import {KaraokeSchool} from "../src/KaraokeSchool.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -14,11 +14,11 @@ contract DeployScript is Script {
         
         vm.startBroadcast(deployerPrivateKey);
         
-        SimpleKaraoke karaoke = new SimpleKaraoke(usdcAddress, pkpAddress);
+        KaraokeSchool karaoke = new KaraokeSchool(usdcAddress, pkpAddress);
         
         vm.stopBroadcast();
         
-        console.log("SimpleKaraoke deployed to:", address(karaoke));
+        console.log("KaraokeSchool deployed to:", address(karaoke));
         console.log("Owner:", karaoke.owner());
         console.log("USDC Token:", address(karaoke.usdcToken()));
         console.log("PKP Address:", karaoke.pkpAddress());

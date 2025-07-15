@@ -1,0 +1,50 @@
+{
+  "deepgram": {
+    "ciphertext": "mMcFcjoPtboMnqG+7nCs3VhaWagv/98DsVz0fV+eIeQcnIG/A6+X5o87HMH8M7mAYIYshxzygA7Au/3S5WyGEyC7qXYgZ256CQmQxNq8Lvcpbszsp73dn3n9636cEPy7gc56KpBGHhmjwIgUbxs3U5CukfkCQETUFJUC",
+    "dataToEncryptHash": "991f82ee2a7055854de5d0ff7e35bc2b205aaebf72105620de2fdb112969d292"
+  },
+  "openrouter": {
+    "ciphertext": "hNcg6LhwJJfetly6hT54Iw1W7+fpPfXHgiwqmZ5uDSYrpli5iu37oWMm0TH+X8NCj9gk9UfnmW8x1O/eZk4QOei9CZKhpFLKhApHNQn6NRlKqyMg9T+QfytJ6k17IpWe6UlUR+JzvrEyNS6guN3ETDYz5D0HcfKfU+BDZ9R11rFxCaTYkhdAaVrh/R8Vf/UOpib3p4JGD1W+NLEC",
+    "dataToEncryptHash": "938d660ab40a343df60ad16e264e6efae012a21b23a2bb19d901cb96d296f747"
+  },
+  "evmContractConditions": [
+    {
+      "contractAddress": "0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d",
+      "functionName": "hasUnlockedSong",
+      "functionParams": [
+        ":userAddress",
+        "1"
+      ],
+      "functionAbi": {
+        "type": "function",
+        "name": "hasUnlockedSong",
+        "inputs": [
+          {
+            "name": "",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ],
+        "stateMutability": "view"
+      },
+      "chain": "baseSepolia",
+      "returnValueTest": {
+        "key": "",
+        "comparator": "=",
+        "value": "true"
+      }
+    }
+  ]
+}

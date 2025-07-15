@@ -1,6 +1,7 @@
 import { usePurchase } from '../hooks/usePurchase'
 import { Header } from '../components/Header'
 import { Spinner } from '../components/ui/spinner'
+import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 
 export function PricingPage() {
@@ -13,22 +14,11 @@ export function PricingPage() {
     balance,
     voiceCredits,
     songCredits,
-    hasAllowance,
     isFirstPurchase,
-    handleApprove,
-    handlePurchaseCombo,
-    handlePurchaseVoice,
-    handlePurchaseSong,
+    handleBuyCombo,
+    handleBuyVoice,
+    handleBuySong,
   } = usePurchase()
-
-
-  const handlePurchase = () => {
-    if (!hasAllowance) {
-      handleApprove()
-    } else {
-      handlePurchaseCombo()
-    }
-  }
 
   const handleLogin = () => {
     console.log('Connect wallet clicked')
@@ -69,14 +59,14 @@ export function PricingPage() {
             </ul>
             
             {!isConnected ? (
-              <button className="w-full bg-white text-black py-3 px-6 rounded-lg font-semibold">
+              <Button className="w-full bg-white text-black py-3 px-6" disabled>
                 Connect Wallet to Purchase
-              </button>
+              </Button>
             ) : (
-              <button 
-                onClick={handlePurchase}
+              <Button 
+                onClick={handleBuyCombo}
                 disabled={isApproving || isPurchasing}
-                className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-500 hover:bg-blue-600 py-3 px-6 flex items-center justify-center gap-2"
               >
                 {isApproving ? (
                   <>
@@ -91,7 +81,7 @@ export function PricingPage() {
                 ) : (
                   'Buy'
                 )}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -107,10 +97,10 @@ export function PricingPage() {
               <li>50 Voice Credits</li>
             </ul>
             
-            <button 
-              onClick={handlePurchaseVoice}
+            <Button 
+              onClick={handleBuyVoice}
               disabled={isApproving || isPurchasing || !isConnected}
-              className="w-full bg-green-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-green-500 hover:bg-green-600 py-3 px-6 flex items-center justify-center gap-2"
             >
               {isApproving ? (
                 <>
@@ -125,7 +115,7 @@ export function PricingPage() {
               ) : (
                 'Buy'
               )}
-            </button>
+            </Button>
           </div>
 
           {/* Song Pack */}
@@ -136,10 +126,10 @@ export function PricingPage() {
               <li>5 Song Credits</li>
             </ul>
             
-            <button 
-              onClick={handlePurchaseSong}
+            <Button 
+              onClick={handleBuySong}
               disabled={isApproving || isPurchasing || !isConnected}
-              className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-purple-500 hover:bg-purple-600 py-3 px-6 flex items-center justify-center gap-2"
             >
               {isApproving ? (
                 <>
@@ -154,7 +144,7 @@ export function PricingPage() {
               ) : (
                 'Buy'
               )}
-            </button>
+            </Button>
           </div>
         </div>
       )}

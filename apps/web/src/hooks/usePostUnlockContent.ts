@@ -22,6 +22,11 @@ export function usePostUnlockContent() {
 
     try {
       const content = await loaderRef.current.loadContent(song, userAddress)
+      console.log('📦 Content loaded by hook:', {
+        hasContent: !!content,
+        hasMidiData: !!content?.midiData,
+        cached: content?.cached
+      })
       setState({ isLoading: false, content, error: null })
       return content
     } catch (error) {
@@ -31,6 +36,16 @@ export function usePostUnlockContent() {
     }
   }, [])
 
+  const checkCacheOnly = useCallback(async (song: Song, userAddress: string) => {
+    const content = await loaderRef.current.checkCacheOnly(song, userAddress)
+    if (content) {
+      console.log('📦 Cache-only check found content, updating state')
+      setState({ isLoading: false, content, error: null })
+      return content
+    }
+    return null
+  }, [])
+
   const clearCache = useCallback(() => {
     loaderRef.current.clearCache()
   }, [])
@@ -38,6 +53,7 @@ export function usePostUnlockContent() {
   return {
     ...state,
     loadContent,
+    checkCacheOnly,
     clearCache
   }
 }

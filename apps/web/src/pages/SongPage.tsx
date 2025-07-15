@@ -6,9 +6,9 @@ import { tablelandService, type Song } from '../services/tableland'
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
 import { combineLyricsWithTranslation, parseLrcLyrics } from '../utils/parseLyrics'
 import { 
-  KARAOKE_CONTRACT_ADDRESS, 
-  KARAOKE_ABI
+  KARAOKE_CONTRACT_ADDRESS
 } from '../constants'
+import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
 import { LyricsSheet } from '../components/LyricsSheet'
@@ -17,23 +17,26 @@ import { StreamingSheet } from '../components/StreamingSheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Leaderboard } from '../components/Leaderboard'
 import { KaraokeSession } from '../components/KaraokeSession'
+import { Button } from '../components/ui/button'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
   const { isConnected, address } = useAccount()
-  const { loadContent, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
+  const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [showKaraoke, setShowKaraoke] = useState(false)
+  const [isStartingKaraoke, setIsStartingKaraoke] = useState(false)
+  const [karaokeStartStep, setKaraokeStartStep] = useState<'idle' | 'checking-mic' | 'requesting-permission' | 'calling-contract' | 'starting'>('idle')
   
   // Validate songId
   const validSongId = songId && !isNaN(parseInt(songId)) ? songId : null
   
   // Simple contract reads for this song
-  const { data: isSongUnlocked } = useReadContract({
+  const { data: isSongUnlocked, refetch: refetchSongUnlocked } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_ABI,
+    abi: KARAOKE_SCHOOL_ABI,
     functionName: 'hasUnlockedSong',
     args: address && validSongId ? [address, BigInt(validSongId)] : undefined,
     enabled: !!address && !!validSongId,
@@ -41,7 +44,7 @@ export function SongPage() {
   
   const { data: voiceCredits } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_ABI,
+    abi: KARAOKE_SCHOOL_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
     enabled: !!address,
@@ -49,7 +52,7 @@ export function SongPage() {
   
   const { data: songCredits } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_ABI,
+    abi: KARAOKE_SCHOOL_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
     enabled: !!address,
@@ -62,6 +65,19 @@ export function SongPage() {
     isPending: isUnlockPending,
     error: unlockError
   } = useWriteContract()
+  
+  // Start karaoke transaction
+  const { 
+    writeContract: startKaraokeWrite, 
+    data: startKaraokeHash,
+    isPending: isStartKaraokePending,
+    error: startKaraokeError
+  } = useWriteContract()
+  
+  // Wait for start karaoke transaction
+  const { isLoading: isStartKaraokeLoading, isSuccess: isStartKaraokeSuccess } = useWaitForTransactionReceipt({
+    hash: startKaraokeHash,
+  })
 
   const { isSuccess: isUnlockSuccess } = useWaitForTransactionReceipt({ 
     hash: unlockHash 
@@ -74,8 +90,12 @@ export function SongPage() {
   const hasSongCredits = Number(songCredits || 0) > 0
   const songIsUnlocked = Boolean(isSongUnlocked)
   
+  
   // Check if unlock is in progress
   const isUnlocking = isUnlockPending
+  
+  // Combined karaoke start loading state
+  const isKaraokeStartLoading = isStartingKaraoke || isStartKaraokePending || isStartKaraokeLoading
   
   // Removed unused debug logging for karaoke state
 
@@ -91,29 +111,21 @@ export function SongPage() {
   useEffect(() => {
     if (isUnlockSuccess && address && song) {
       console.log('✅ Unlock successful, loading content...')
+      refetchSongUnlocked() // Refetch unlock status
       loadContent(song, address)
     }
-  }, [isUnlockSuccess, address, song, loadContent])
+  }, [isUnlockSuccess, address, song, loadContent, refetchSongUnlocked])
 
   // Removed unused effects for karaoke start success/error
   
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 Song unlock status:', {
-      songId: validSongId,
-      userAddress: address,
-      isUnlocked: songIsUnlocked,
-      contract: KARAOKE_CONTRACT_ADDRESS
-    })
-  }, [validSongId, address, songIsUnlocked])
 
-  // Load content if song is already unlocked
+  // Check cache on page load (no signatures)
   useEffect(() => {
-    if (songIsUnlocked && address && song && !content && !isContentLoading) {
-      console.log('📖 Song already unlocked, loading content...')
-      loadContent(song, address)
+    if (songIsUnlocked && address && song && !content) {
+      console.log('📦 Checking cache for existing content...')
+      checkCacheOnly(song, address)
     }
-  }, [songIsUnlocked, address, song, content, isContentLoading, loadContent])
+  }, [songIsUnlocked, address, song, content, checkCacheOnly])
 
   const handleUnlockSong = () => {
     if (!song) return
@@ -121,26 +133,38 @@ export function SongPage() {
     console.log('🔓 Unlocking song:', song.id)
     unlockSong({
       address: KARAOKE_CONTRACT_ADDRESS,
-      abi: KARAOKE_ABI,
+      abi: KARAOKE_SCHOOL_ABI,
       functionName: 'unlockSong',
       args: [BigInt(song.id)]
     })
   }
 
   const handleStartKaraoke = async () => {
-    if (!song || !content?.midiData) return
-    
-    console.log('🎤 Starting karaoke for song:', song.id)
+    if (!song || !content?.midiData) {
+      return
+    }
     
     // Check voice credits
     if (!hasVoiceCredits) {
-      console.error('No voice credits available')
       alert('You need voice credits to start karaoke')
       return
     }
     
-    // Request microphone permission first
+    setIsStartingKaraoke(true)
+    
     try {
+      // Step 1: Check microphone permission
+      setKaraokeStartStep('checking-mic')
+      
+      // Check if we already have permission
+      const permissionStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName })
+      
+      if (permissionStatus.state === 'denied') {
+        throw new Error('Microphone permission was denied. Please enable microphone access in your browser settings.')
+      }
+      
+      // Step 2: Request microphone access
+      setKaraokeStartStep('requesting-permission')
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 48000,
@@ -153,13 +177,39 @@ export function SongPage() {
       // Stop the stream immediately - we just needed permission
       stream.getTracks().forEach(track => track.stop())
       
-      console.log('✅ Microphone permission granted')
-      setShowKaraoke(true)
+      // Step 3: Call contract to deduct voice credit
+      setKaraokeStartStep('calling-contract')
+      
+      await startKaraokeWrite({
+        address: KARAOKE_CONTRACT_ADDRESS,
+        abi: KARAOKE_SCHOOL_ABI,
+        functionName: 'startKaraoke',
+        args: [BigInt(song.id)]
+      })
+      
     } catch (error) {
-      console.error('❌ Microphone permission denied:', error)
-      alert('Microphone access is required for karaoke. Please allow microphone access and try again.')
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      
+      if (errorMessage.includes('microphone') || errorMessage.includes('getUserMedia') || errorMessage.includes('permission')) {
+        alert('Microphone access is required for karaoke. Please allow microphone access and try again.')
+      } else {
+        alert('Failed to start karaoke. Please try again.')
+      }
+      
+      setIsStartingKaraoke(false)
+      setKaraokeStartStep('idle')
     }
   }
+  
+  // Effect to start karaoke when transaction succeeds
+  useEffect(() => {
+    if (isStartKaraokeSuccess) {
+      setKaraokeStartStep('starting')
+      setShowKaraoke(true)
+      setIsStartingKaraoke(false)
+      setKaraokeStartStep('idle')
+    }
+  }, [isStartKaraokeSuccess])
 
   const loadSong = async (id: number) => {
     try {
@@ -170,7 +220,6 @@ export function SongPage() {
       }
       setSong(songData)
     } catch (error) {
-      console.error('Failed to load song:', error)
       navigate('/')
     } finally {
       setLoading(false)
@@ -178,21 +227,14 @@ export function SongPage() {
   }
 
   const handleLogin = () => {
-    console.log('Connect wallet clicked')
+    // Wallet connection handled by wagmi
   }
 
   const handleAccount = () => {
-    console.log('Account clicked')
+    // Account management handled by wagmi
   }
 
   // Parse loaded lyrics with translations
-  console.log('🎵 Content for parsing:', {
-    hasLyrics: !!content?.lyrics,
-    hasTranslation: !!content?.translation,
-    lyricsLength: content?.lyrics?.length,
-    translationSample: content?.translation?.substring(0, 100),
-    language: content?.language
-  })
   
   const parsedLyrics = combineLyricsWithTranslation(
     content?.lyrics || null,
@@ -502,20 +544,20 @@ export function SongPage() {
           <div className="w-full max-w-2xl mx-auto px-6 py-4">
             {/* No credits at all - show Buy Credits */}
             {!hasVoiceCredits && !hasSongCredits && (
-              <button
+              <Button
                 onClick={() => navigate('/pricing')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+                className="w-full px-6 py-3"
               >
                 Buy Credits
-              </button>
+              </Button>
             )}
             
             {/* Has song credits but song not unlocked - show Unlock Song */}
             {hasSongCredits && !songIsUnlocked && (
-              <button
+              <Button
                 onClick={handleUnlockSong}
                 disabled={isUnlocking}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer flex items-center justify-center gap-2"
+                className="w-full px-6 py-3 flex items-center justify-center gap-2"
               >
                 {isUnlocking ? (
                   <>
@@ -525,30 +567,32 @@ export function SongPage() {
                 ) : (
                   'Unlock'
                 )}
-              </button>
+              </Button>
             )}
             
             {/* Song unlocked but no voice credits - show Buy Voice Credits */}
             {songIsUnlocked && !hasVoiceCredits && (
-              <button
+              <Button
                 onClick={() => navigate('/pricing')}
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+                className="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700"
               >
                 Buy Voice Credits for Karaoke
-              </button>
+              </Button>
             )}
             
             {/* Song unlocked AND has voice credits - content is accessible */}
             {songIsUnlocked && hasVoiceCredits && (
               <div className="w-full text-center py-3">
-                {!content ? (
+                {console.log('🎵 SongPage button logic:', { hasContent: !!content, hasMidiData: !!content?.midiData, showDownloadButton: !content || !content.midiData }) || (!content || !content.midiData) ? (
                   <>
-                    <button
-                      onClick={() => song && address && loadContent(song, address)}
+                    <Button
+                      onClick={() => {
+                        if (song && address) {
+                          loadContent(song, address)
+                        }
+                      }}
                       disabled={isContentLoading || !song || !address}
-                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-neutral-700 
-                               text-white font-semibold rounded-lg transition-colors flex items-center 
-                               justify-center gap-2"
+                      className="w-full py-3 flex items-center justify-center gap-2"
                     >
                       {isContentLoading ? (
                         <>
@@ -556,23 +600,33 @@ export function SongPage() {
                           Loading Content...
                         </>
                       ) : (
-                        'Load Lyrics & Translations'
+                        'Download & Decrypt Content'
                       )}
-                    </button>
+                    </Button>
                     {contentError && (
                       <p className="text-red-400 text-sm mt-2">{contentError}</p>
                     )}
                   </>
                 ) : (
                   <>
-                    <button
+                    <Button
                       onClick={handleStartKaraoke}
-                      className="w-full py-3 bg-green-600 hover:bg-green-700 
-                               text-white font-semibold rounded-lg transition-colors flex items-center 
-                               justify-center gap-2"
+                      disabled={isKaraokeStartLoading}
+                      className="w-full py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
                     >
-                      Start Karaoke (2 lines test)
-                    </button>
+                      {isKaraokeStartLoading ? (
+                        <>
+                          <CircleNotch className="animate-spin" size={20} />
+                          {karaokeStartStep === 'checking-mic' && 'Checking Microphone...'}
+                          {karaokeStartStep === 'requesting-permission' && 'Requesting Microphone...'}
+                          {karaokeStartStep === 'calling-contract' && 'Deducting Voice Credit...'}
+                          {karaokeStartStep === 'starting' && 'Starting Karaoke...'}
+                          {karaokeStartStep === 'idle' && 'Starting...'}
+                        </>
+                      ) : (
+                        'Start Karaoke (1 voice credit)'
+                      )}
+                    </Button>
                   </>
                 )}
               </div>

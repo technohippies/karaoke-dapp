@@ -5,7 +5,7 @@ echo "🔄 Re-encrypting songs with correct contract address..."
 echo "📝 Contract: ${KARAOKE_CONTRACT}"
 
 # Re-encrypt all songs
-npx tsx scripts/prepare-song.ts --all
+npx tsx prepare-song.ts --all
 
 echo "✅ Re-encryption complete!"
 echo ""

@@ -17,13 +17,41 @@ export interface LoadedContent {
 export class PostUnlockContentLoader {
   private ipfsGateway = 'https://gateway.pinata.cloud'
 
+  async checkCacheOnly(song: Song, userAddress: string): Promise<LoadedContent | null> {
+    const userLanguage = getDetectedLanguage()
+    
+    // Only check cache, don't load fresh content
+    const cachedContent = await contentCacheService.getContent(song.id, userAddress, userLanguage)
+    if (cachedContent && cachedContent.midiData) {
+      console.log('📦 Found complete cached content (cache-only check)')
+      return { ...cachedContent, cached: true }
+    }
+    
+    console.log('📦 No complete cached content found (cache-only check)')
+    return null
+  }
+
   async loadContent(song: Song, userAddress: string): Promise<LoadedContent> {
     const userLanguage = getDetectedLanguage()
     
     // Check IndexedDB cache first
     const cachedContent = await contentCacheService.getContent(song.id, userAddress, userLanguage)
     if (cachedContent) {
-      return { ...cachedContent, cached: true }
+      console.log('🔍 Cache check:', {
+        hasContent: !!cachedContent,
+        hasMidiData: !!cachedContent.midiData,
+        midiDataType: typeof cachedContent.midiData,
+        midiDataLength: cachedContent.midiData?.length || 0
+      })
+      
+      // Only use cached content if it has MIDI data (complete)
+      if (cachedContent.midiData) {
+        console.log('✅ Using complete cached content')
+        return { ...cachedContent, cached: true }
+      } else {
+        console.log('⚠️ Cached content missing MIDI data, will reload from fresh')
+        // Don't clear cache here - let it get overwritten with complete data
+      }
     }
 
     console.log('🔄 Loading content for song:', song.title)
@@ -54,9 +82,17 @@ export class PostUnlockContentLoader {
       }
 
       // Load MIDI data
+      console.log('🎹 Checking for MIDI data:', {
+        hasStems: !!song.stems,
+        hasPiano: !!song.stems?.piano,
+        stemsData: song.stems
+      })
+      
       if (song.stems?.piano) {
         console.log('🎹 Loading MIDI data...')
         result.midiData = await this.decryptMidi(song.stems.piano, userAddress)
+      } else {
+        console.log('❌ No MIDI data found - song.stems.piano is missing')
       }
 
       // Cache the result in IndexedDB

@@ -7,7 +7,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract SimpleKaraoke {
+contract KaraokeSchool {
     IERC20 public immutable usdcToken;
     address public owner;
     address public pkpAddress;
@@ -22,9 +22,11 @@ contract SimpleKaraoke {
     
     event CreditsPurchased(address indexed user, uint256 voiceAmount, uint256 songAmount);
     event SongUnlocked(address indexed user, uint256 indexed songId);
+    event KaraokeStarted(address indexed user, uint256 indexed songId);
     
     error InsufficientCredits();
     error AlreadyUnlocked();
+    error SongNotUnlocked();
     error Unauthorized();
     
     modifier onlyOwner() {
@@ -64,6 +66,14 @@ contract SimpleKaraoke {
         songCredits[msg.sender]--;
         hasUnlockedSong[msg.sender][songId] = true;
         emit SongUnlocked(msg.sender, songId);
+    }
+    
+    function startKaraoke(uint256 songId) external {
+        if (!hasUnlockedSong[msg.sender][songId]) revert SongNotUnlocked();
+        if (voiceCredits[msg.sender] == 0) revert InsufficientCredits();
+        
+        voiceCredits[msg.sender]--;
+        emit KaraokeStarted(msg.sender, songId);
     }
     
     function setPkpAddress(address _pkpAddress) external onlyOwner {

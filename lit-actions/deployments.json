@@ -4,5 +4,143 @@
     "fileName": "Simple-Voice-Grader-V1.js",
     "uploadDate": "2025-07-14T08:28:32.326Z",
     "filePath": "lit-actions/simpleVoiceGraderV1.js"
+  },
+  "Karaoke Scorer V1": {
+    "cid": "QmcEzzBEbcbeXWBNyPaUohaVx66Agovf2Fou5JgSrDYGQY",
+    "fileName": "Karaoke-Scorer-V1.js",
+    "uploadDate": "2025-07-15T12:25:46.806Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V2": {
+    "cid": "QmRThLYSJT15n1CwyQdyVU7qxW6w8XvTzYeJWBgMHmwCET",
+    "fileName": "Karaoke-Scorer-V2.js",
+    "uploadDate": "2025-07-15T12:27:05.591Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V3": {
+    "cid": "QmVq5bJaWQ1qgVWL4vqgVptq164RVm3SwZcG4ghoBYMRV1",
+    "fileName": "Karaoke-Scorer-V3.js",
+    "uploadDate": "2025-07-15T12:49:16.223Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V4": {
+    "cid": "Qma2boHoGVMsxro6SLT5m1CQtH9gCNa37Z8EAR9oW8MZY4",
+    "fileName": "Karaoke-Scorer-V4.js",
+    "uploadDate": "2025-07-15T12:52:00.677Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V5": {
+    "cid": "QmVW6yxXpJumd77w8to4qxSmhdP5L5WuG6zHCvCFp1CaYJ",
+    "fileName": "Karaoke-Scorer-V5.js",
+    "uploadDate": "2025-07-15T13:36:57.456Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V6": {
+    "cid": "QmSbxUqH6Py9GSUVZqPCEeHDkuxsay6URZQykFevDinVcv",
+    "fileName": "Karaoke-Scorer-V6.js",
+    "uploadDate": "2025-07-15T13:43:27.160Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V7": {
+    "cid": "QmaTkv7kY7dUK77uHgFsRG4W15Bsa6JfLVY6EzAK5ZCqyu",
+    "fileName": "Karaoke-Scorer-V7.js",
+    "uploadDate": "2025-07-15T13:54:18.111Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V8": {
+    "cid": "QmZruS9vEUgggeYsjNHejMDGYRC1yhej9MFczekR6z2oPg",
+    "fileName": "Karaoke-Scorer-V8.js",
+    "uploadDate": "2025-07-15T14:05:10.689Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V9": {
+    "cid": "QmcYLyAmaq2JsQSFSmzvc9ZSZ3xbAFL14y13VippmbWw7L",
+    "fileName": "Karaoke-Scorer-V9.js",
+    "uploadDate": "2025-07-15T14:11:42.196Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V10": {
+    "cid": "QmQskiQVfD5G9jrd3kdC16jWx6vTTjsJps5QXxTtLJjZtC",
+    "fileName": "Karaoke-Scorer-V10.js",
+    "uploadDate": "2025-07-15T14:14:45.860Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V11": {
+    "cid": "QmYrzcDie6wCRGzGxU5xj9kc66515EznUy1E5fthfyPEJo",
+    "fileName": "Karaoke-Scorer-V11.js",
+    "uploadDate": "2025-07-15T14:17:19.471Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V12": {
+    "cid": "QmSRXoZoFkjPFReYabsR1XN2uvVbJbryXszRM77EtU1DYj",
+    "fileName": "Karaoke-Scorer-V12.js",
+    "uploadDate": "2025-07-15T14:20:27.672Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Test Minimal": {
+    "cid": "QmefsGt15czFsBpZ3nXK8z3ah9vetPM2gF7AiJ8Da6fsFR",
+    "fileName": "Test-Minimal.js",
+    "uploadDate": "2025-07-15T14:29:17.087Z",
+    "filePath": "lit-actions/testMinimal.js"
+  },
+  "Test Minimal V2": {
+    "cid": "QmNzSpRCGm6YLponkckCQZqbNMerm8qPQXFLeBgz9VjJfN",
+    "fileName": "Test-Minimal-V2.js",
+    "uploadDate": "2025-07-15T14:32:33.478Z",
+    "filePath": "lit-actions/testMinimal.js"
+  },
+  "Karaoke Scorer V13": {
+    "cid": "QmaScyqtttJ6nV6AcVdh2q6rHjYG8KZ1XjeGRnxBXRAShe",
+    "fileName": "Karaoke-Scorer-V13.js",
+    "uploadDate": "2025-07-15T14:34:25.331Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "Test Incremental V1": {
+    "cid": "QmWUbpRcyRAgouV7PA22MXDJZrAGZFRErCWKLeMSk14Pxv",
+    "fileName": "Test-Incremental-V1.js",
+    "uploadDate": "2025-07-15T14:37:34.348Z",
+    "filePath": "./lit-actions/testIncremental.js"
+  },
+  "Test Incremental V2": {
+    "cid": "QmQzf41qRZiFBHdC3W8DbZfJhJfqcc4x63AE9G93jHevcv",
+    "fileName": "Test-Incremental-V2.js",
+    "uploadDate": "2025-07-15T14:47:49.675Z",
+    "filePath": "./lit-actions/testIncremental2.js"
+  },
+  "Test Incremental V3": {
+    "cid": "QmUqCck9ujG3DsWZJbXNjnyLu7Ubhy5eYjuekT6S78gom1",
+    "fileName": "Test-Incremental-V3.js",
+    "uploadDate": "2025-07-15T14:52:39.815Z",
+    "filePath": "./lit-actions/testIncremental3.js"
+  },
+  "Karaoke Scorer V14": {
+    "cid": "QmUScfFZR8hwZD37TSrEWwxgYAZUw9kxTpoGGXRJb9MskC",
+    "fileName": "Karaoke-Scorer-V14.js",
+    "uploadDate": "2025-07-15T14:55:16.654Z",
+    "filePath": "./lit-actions/karaokeScorerV14.js"
+  },
+  "Karaoke Scorer V15": {
+    "cid": "QmXCGkFrZikqS4eBKDEqieoxLvScUEUdWw2tXwVUsz3Lqc",
+    "fileName": "Karaoke-Scorer-V15.js",
+    "uploadDate": "2025-07-15T14:59:50.342Z",
+    "filePath": "./lit-actions/karaokeScorerV15.js"
+  },
+  "Karaoke Scorer V16": {
+    "cid": "Qmapf86NChG52a3CTtEyCaaphaZkf3V6XCteWGXsaRqfVU",
+    "fileName": "Karaoke-Scorer-V16.js",
+    "uploadDate": "2025-07-15T15:02:13.741Z",
+    "filePath": "./lit-actions/karaokeScorerV16.js"
+  },
+  "Karaoke Scorer V16-Fixed": {
+    "cid": "Qmbspo8D1VLVaqrwDbyud88k511DCh4edjdDfh42RukNd1",
+    "fileName": "Karaoke-Scorer-V16-Fixed.js",
+    "uploadDate": "2025-07-15T15:03:49.776Z",
+    "filePath": "./lit-actions/karaokeScorerV16.js"
+  },
+  "Karaoke Scorer V17": {
+    "cid": "QmRNQtmQeUiRa5RvgusLFSfoCDj5vBktkLb3Hejr3TUPDe",
+    "fileName": "Karaoke-Scorer-V17.js",
+    "uploadDate": "2025-07-15T15:07:25.558Z",
+    "filePath": "./lit-actions/karaokeScorerV16.js"
   }
 }

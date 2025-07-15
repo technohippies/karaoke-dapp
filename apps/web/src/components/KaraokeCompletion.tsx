@@ -1,18 +1,23 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { CloseHeader } from '../components/CloseHeader'
-import { Spinner } from '../components/ui/spinner'
+import { CloseHeader } from './CloseHeader'
+import { Spinner } from './ui/spinner'
 import coachImage from '../assets/scarlett-right-128x128.png'
 
-export interface KaraokeCompletionPageProps {
+export interface KaraokeCompletionProps {
   initialProgressState?: 'idle' | 'saving' | 'saved'
   hasTable?: boolean
   score?: number
+  songId?: string
+  onClose: () => void
 }
 
-export function KaraokeCompletionPage({ initialProgressState = 'idle', hasTable = false, score = 85 }: KaraokeCompletionPageProps) {
-  const navigate = useNavigate()
-  const { songId } = useParams<{ songId: string }>()
+export function KaraokeCompletion({ 
+  initialProgressState = 'idle', 
+  hasTable = false, 
+  score = 85,
+  songId,
+  onClose
+}: KaraokeCompletionProps) {
   const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved'>(initialProgressState)
 
   const getScoreMessage = () => {
@@ -39,7 +44,8 @@ export function KaraokeCompletionPage({ initialProgressState = 'idle', hasTable 
   }
 
   const handlePractice = () => {
-    navigate('/exercises')
+    // TODO: Navigate to exercises or call parent handler
+    console.log('Navigate to exercises')
   }
 
   const getProgressContent = () => {
@@ -78,7 +84,7 @@ export function KaraokeCompletionPage({ initialProgressState = 'idle', hasTable 
   return (
     <div className="min-h-screen bg-neutral-900 relative overflow-hidden">
       <div className="relative z-10 h-screen flex flex-col">
-        <CloseHeader onClose={() => navigate(songId ? `/song/${songId}` : '/')} />
+        <CloseHeader onClose={onClose} />
         
         <div className="flex-1 overflow-y-auto">
           <div className="w-full max-w-2xl mx-auto px-6 pt-8 pb-24 flex items-center justify-center min-h-full">

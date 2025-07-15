@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { MemoryRouter } from 'react-router-dom'
-import { KaraokeCompletionPage } from './KaraokeCompletionPage'
+import { KaraokeCompletion } from './KaraokeCompletion'
 
-const meta: Meta<typeof KaraokeCompletionPage> = {
-  title: 'Pages/KaraokeCompletionPage',
-  component: KaraokeCompletionPage,
+const meta: Meta<typeof KaraokeCompletion> = {
+  title: 'Components/KaraokeCompletion',
+  component: KaraokeCompletion,
   parameters: {
     layout: 'fullscreen',
     backgrounds: {
@@ -14,17 +13,14 @@ const meta: Meta<typeof KaraokeCompletionPage> = {
       ],
     },
   },
-  decorators: [
-    (Story) => (
-      <MemoryRouter initialEntries={['/karaoke/1/complete']}>
-        <Story />
-      </MemoryRouter>
-    ),
-  ],
+  args: {
+    onClose: () => console.log('Close clicked'),
+    songId: '1',
+  },
 }
 
 export default meta
-type Story = StoryObj<typeof KaraokeCompletionPage>
+type Story = StoryObj<typeof KaraokeCompletion>
 
 export const Default: Story = {}
 
