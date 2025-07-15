@@ -142,5 +142,17 @@
     "fileName": "Karaoke-Scorer-V17.js",
     "uploadDate": "2025-07-15T15:07:25.558Z",
     "filePath": "./lit-actions/karaokeScorerV16.js"
+  },
+  "Karaoke Scorer V18": {
+    "cid": "QmXEwc9edXxiaxaww2atuFLmG2sD8KqMtKjy9t52S4yGJ3",
+    "fileName": "Karaoke-Scorer-V18.js",
+    "uploadDate": "2025-07-15T15:26:10.801Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V19": {
+    "cid": "QmSm5XeBymfBNPaNP5qH897zSS8Eg4jayc1Y2j41Pp2aiq",
+    "fileName": "Karaoke-Scorer-V19.js",
+    "uploadDate": "2025-07-15T15:31:10.742Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
   }
 }

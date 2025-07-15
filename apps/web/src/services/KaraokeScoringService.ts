@@ -55,8 +55,23 @@ const encryptedKeysData = {
   ]
 }
 
-// Deployed Lit Action CID - V17 with correct model and STT-aware prompt
-const LIT_ACTION_CID = 'QmRNQtmQeUiRa5RvgusLFSfoCDj5vBktkLb3Hejr3TUPDe'
+// Deployed Lit Action CID - V19 with debug logging
+const LIT_ACTION_CID = 'QmSm5XeBymfBNPaNP5qH897zSS8Eg4jayc1Y2j41Pp2aiq'
+
+interface LineScore {
+  line: number
+  expected: string
+  heard: string
+  score: number
+  issues: string[]
+}
+
+interface ScoringDetails {
+  lines: LineScore[]
+  overall_score: number
+  pronunciation_patterns: string[]
+  encouragement: string
+}
 
 interface KaraokeScoringResult {
   success: boolean
@@ -64,6 +79,7 @@ interface KaraokeScoringResult {
   feedback?: string
   transcript?: string
   expectedLyrics?: string
+  scoringDetails?: ScoringDetails
   error?: string
   timestamp: number
 }

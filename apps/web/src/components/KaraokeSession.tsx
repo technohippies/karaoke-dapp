@@ -6,6 +6,7 @@ import { KaraokeDisplay } from './KaraokeDisplay'
 import { KaraokeCompletion } from './KaraokeCompletion'
 import { useKaraoke } from '../hooks/useKaraoke'
 import { karaokeScoringService } from '../services/KaraokeScoringService'
+import { Spinner } from './ui/spinner'
 
 interface KaraokeSessionProps {
   songId: number
@@ -19,6 +20,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
   const { data: walletClient, isLoading: isWalletLoading } = useWalletClient()
   const [showCompletion, setShowCompletion] = useState(false)
   const [karaokeScore, setKaraokeScore] = useState(85) // Default score
+  const [scoringDetails, setScoringDetails] = useState<any>(null)
+  const [transcript, setTranscript] = useState<string>('')
   const [isScoring, setIsScoring] = useState(false)
   const hasProcessedRef = useRef(false)
   
@@ -38,8 +41,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
     isWalletLoading
   })
   
-  // Use only first 2 lines for testing
-  const testLyrics = lyrics.slice(0, 2)
+  // Use first 5 lines for testing
+  const testLyrics = lyrics.slice(0, 5)
   
   // Memoize the onComplete callback to prevent recreation
   const handleKaraokeComplete = useCallback(async (mp3Blob: Blob, expectedLyrics: string) => {
@@ -85,6 +88,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
         if (result.success) {
           console.log('✅ Scoring successful:', result)
           setKaraokeScore(result.score || 85)
+          setScoringDetails(result.scoringDetails)
+          setTranscript(result.transcript || '')
         } else {
           console.error('❌ Scoring failed:', result.error)
           setKaraokeScore(85) // Fallback score
@@ -115,11 +120,25 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
     startKaraoke()
   }, [])
   
+  // Show loading state during scoring
+  if (isScoring) {
+    return (
+      <div className="h-screen bg-neutral-900 flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" className="mb-4" />
+          <p className="text-xl text-neutral-300">Grading Karaoke...</p>
+        </div>
+      </div>
+    )
+  }
+  
   // Show completion page when done
   if (showCompletion) {
     return (
       <KaraokeCompletion
         score={karaokeScore}
+        scoringDetails={scoringDetails}
+        transcript={transcript}
         initialProgressState="idle"
         hasTable={false}
         songId={songId.toString()}

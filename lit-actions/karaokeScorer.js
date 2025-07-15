@@ -113,20 +113,44 @@ const go = async () => {
     
     // Step 4: Score the transcript using OpenRouter LLM
     console.log('🤖 Calling OpenRouter for scoring...');
-    const scoringPrompt = `You are a karaoke scoring system analyzing speech-to-text output. The transcript may contain recognition errors.
+    
+    // Split lyrics into numbered lines
+    const lyricLines = expectedLyrics.split('\n').filter(line => line.trim());
+    const numberedLyrics = lyricLines.map((line, i) => `${i + 1}. ${line}`).join('\n');
+    
+    const scoringPrompt = `You are a karaoke scoring system analyzing speech-to-text output. The STT may have made errors that don't reflect actual singing quality.
 
-Expected lyrics: "${expectedLyrics}"
-STT transcript: "${transcript}"
+USER CONTEXT: The singer is a native Mandarin speaker learning English. Common pronunciation patterns include:
+- th→s/z (teeth→tees, with→wis)
+- Final consonants dropped (cut→cu, flesh→fle)
+- r/l confusion (ring→ling)
+- v/w confusion (movies→mowies)
+- Consonant clusters simplified (rings→ring)
 
-Scoring rules:
-- This is speech-to-text output, so expect phonetic errors (e.g., "their/there", "to/too")
-- Ignore filler words: "um", "uh", "ah", repeated words
-- Be lenient with similar-sounding words and pronunciation variations
-- Consider word order and completeness
-- Missing words reduce score more than wrong words
-- Empty transcript = 0, perfect match = 100
+These are normal L2 patterns, not "errors" - score generously considering the learning journey.
 
-Respond with ONLY a number between 0-100. Nothing else.`;
+ORIGINAL LYRICS:
+${numberedLyrics}
+
+STT TRANSCRIPT:
+${transcript}
+
+Scoring guidelines:
+- 90-100: Understandable with L1 accent features (this is success!)
+- 70-89: Clear effort, some pronunciation challenges
+- 50-69: Partially understood, needs practice
+- 0-49: Major comprehension issues
+
+Return ONLY valid JSON:
+{
+  "lines": [
+    {"line": 1, "expected": "...", "heard": "...", "score": 85, "issues": ["..."]},
+    ...
+  ],
+  "overall_score": 85,
+  "pronunciation_patterns": ["th sounds", "final consonants"],
+  "encouragement": "Great job! Your pronunciation is clear and improving."
+}`;
     
     const llmResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -145,7 +169,7 @@ Respond with ONLY a number between 0-100. Nothing else.`;
           }
         ],
         temperature: 0.3,
-        max_tokens: 10  // Just need a number
+        max_tokens: 1000  // Need detailed JSON response
       })
     });
     
@@ -157,16 +181,29 @@ Respond with ONLY a number between 0-100. Nothing else.`;
     const llmData = await llmResponse.json();
     const llmContent = llmData.choices?.[0]?.message?.content || '';
     
-    // Parse the score from the response (should just be a number)
+    console.log('🤖 LLM Response:', llmContent);
+    
+    // Parse the JSON response
+    let scoringResult;
     let score = 50; // default
     try {
-      // Try to extract the number from the response
-      const scoreMatch = llmContent.match(/\d+/);
-      if (scoreMatch) {
-        score = parseInt(scoreMatch[0], 10);
-      }
+      scoringResult = JSON.parse(llmContent);
+      score = scoringResult.overall_score || 50;
+      console.log('📊 Parsed scoring result:', scoringResult);
     } catch (parseError) {
-      console.error('Could not parse score:', llmContent);
+      console.error('Could not parse JSON response:', parseError.message);
+      console.error('Raw LLM content:', llmContent);
+      // Fallback to simple score extraction
+      const scoreMatch = llmContent.match(/overall_score["\s:]+(\d+)/);
+      if (scoreMatch) {
+        score = parseInt(scoreMatch[1], 10);
+      }
+      scoringResult = {
+        overall_score: score,
+        lines: [],
+        pronunciation_patterns: [],
+        encouragement: "Score calculated but detailed feedback unavailable"
+      };
     }
     
     // Ensure score is within bounds
@@ -177,9 +214,10 @@ Respond with ONLY a number between 0-100. Nothing else.`;
       response: JSON.stringify({
         success: true,
         score: score,
-        feedback: `Score: ${score}/100`,  // Simple feedback for now
+        feedback: scoringResult.encouragement || `Score: ${score}/100`,
         transcript: transcript,
         expectedLyrics: expectedLyrics,
+        scoringDetails: scoringResult,  // Include full line-by-line details
         timestamp: Date.now()
       })
     });
