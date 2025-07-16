@@ -129,10 +129,9 @@ export class TablelandWriteService {
     const userPrefix = userAddress.slice(2, 8).toLowerCase()
     console.log('Creating SRS tables for user:', userAddress, 'with prefix:', userPrefix)
 
-    // 1. Create karaoke sessions table (stores session metadata)
-    const sessionsPrefix = `karaoke_sessions_${userPrefix}_${this.TABLE_VERSION}`
-    const { meta: sessionsMeta } = await this.db
-      .prepare(`CREATE TABLE ${sessionsPrefix} (
+    // Execute all CREATE TABLE statements in a single transaction using exec()
+    const createTablesSQL = `
+      CREATE TABLE karaoke_sessions_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         session_id TEXT UNIQUE NOT NULL,
         song_id INTEGER NOT NULL,
@@ -141,17 +140,9 @@ export class TablelandWriteService {
         total_score INTEGER NOT NULL,
         started_at INTEGER NOT NULL,
         completed_at INTEGER NOT NULL
-      )`)
-      .run()
-    
-    await sessionsMeta.txn?.wait()
-    const karaokeSessionsTable = sessionsMeta.txn?.names?.[0]
-    if (!karaokeSessionsTable) throw new Error('Failed to create sessions table')
-
-    // 2. Create karaoke lines table (core SRS table with FSRS parameters)
-    const linesPrefix = `karaoke_lines_${userPrefix}_${this.TABLE_VERSION}`
-    const { meta: linesMeta } = await this.db
-      .prepare(`CREATE TABLE ${linesPrefix} (
+      );
+      
+      CREATE TABLE karaoke_lines_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         song_id INTEGER NOT NULL,
         line_index INTEGER NOT NULL,
@@ -168,17 +159,9 @@ export class TablelandWriteService {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         UNIQUE(song_id, line_index)
-      )`)
-      .run()
-    
-    await linesMeta.txn?.wait()
-    const karaokeLinesTable = linesMeta.txn?.names?.[0]
-    if (!karaokeLinesTable) throw new Error('Failed to create lines table')
-
-    // 3. Create exercise sessions table
-    const exercisePrefix = `exercise_sessions_${userPrefix}_${this.TABLE_VERSION}`
-    const { meta: exerciseMeta } = await this.db
-      .prepare(`CREATE TABLE ${exercisePrefix} (
+      );
+      
+      CREATE TABLE exercise_sessions_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         session_id TEXT UNIQUE NOT NULL,
         cards_reviewed INTEGER NOT NULL,
@@ -186,24 +169,35 @@ export class TablelandWriteService {
         session_date INTEGER NOT NULL,
         started_at INTEGER NOT NULL,
         completed_at INTEGER NOT NULL
-      )`)
-      .run()
+      );
+    `
+
+    console.log('📦 Creating all 3 tables in single transaction...')
+    const result = await this.db.exec(createTablesSQL)
     
-    await exerciseMeta.txn?.wait()
-    const exerciseSessionsTable = exerciseMeta.txn?.names?.[0]
-    if (!exerciseSessionsTable) throw new Error('Failed to create exercise table')
+    if (result.txn) {
+      await result.txn.wait()
+      
+      // Extract table names from result
+      const tableNames = result.txn.names
+      if (!tableNames || tableNames.length !== 3) {
+        throw new Error('Failed to create all tables')
+      }
 
-    const tableInfo: UserTableInfo = {
-      karaokeSessionsTable,
-      karaokeLinesTable,
-      exerciseSessionsTable
+      const tableInfo: UserTableInfo = {
+        karaokeSessionsTable: tableNames[0],
+        karaokeLinesTable: tableNames[1],
+        exerciseSessionsTable: tableNames[2]
+      }
+
+      // Cache in localStorage
+      localStorage.setItem(`${this.STORAGE_KEY}_${userAddress}`, JSON.stringify(tableInfo))
+
+      console.log('✅ Created SRS tables:', tableInfo)
+      return tableInfo
+    } else {
+      throw new Error('Failed to create tables - no transaction returned')
     }
-
-    // Cache in localStorage
-    localStorage.setItem(`${this.STORAGE_KEY}_${userAddress}`, JSON.stringify(tableInfo))
-
-    console.log('✅ Created SRS tables:', tableInfo)
-    return tableInfo
   }
 
   /**

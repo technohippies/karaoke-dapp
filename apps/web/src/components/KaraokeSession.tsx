@@ -135,10 +135,19 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
   
   // Show completion page when done
   if (showCompletion) {
+    // Enhance scoring details with expected text from lyrics
+    const enhancedScoringDetails = scoringDetails ? {
+      ...scoringDetails,
+      lines: scoringDetails.lines?.map((line: any, index: number) => ({
+        ...line,
+        expectedText: testLyrics[index]?.text || ''
+      }))
+    } : null
+
     return (
       <KaraokeCompletion
         score={karaokeScore}
-        scoringDetails={scoringDetails}
+        scoringDetails={enhancedScoringDetails}
         transcript={transcript}
         initialProgressState="idle"
         hasTable={false}

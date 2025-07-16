@@ -23,23 +23,13 @@ import { ChainSwitcher } from '../components/ChainSwitcher'
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
-  const { isConnected, address, chain } = useAccount()
+  const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [showKaraoke, setShowKaraoke] = useState(false)
   const [isStartingKaraoke, setIsStartingKaraoke] = useState(false)
   const [karaokeStartStep, setKaraokeStartStep] = useState<'idle' | 'checking-mic' | 'requesting-permission' | 'calling-contract' | 'starting'>('idle')
-  
-  // Log current chain for debugging
-  useEffect(() => {
-    console.log('🔗 SongPage - Current chain:', {
-      chainId: chain?.id,
-      chainName: chain?.name,
-      isConnected,
-      expectedChain: 'Base Sepolia (84532)'
-    })
-  }, [chain, isConnected])
   
   // Validate songId
   const validSongId = songId && !isNaN(parseInt(songId)) ? songId : null
@@ -108,7 +98,22 @@ export function SongPage() {
   // Combined karaoke start loading state
   const isKaraokeStartLoading = isStartingKaraoke || isStartKaraokePending || isStartKaraokeLoading
   
-  // Removed unused debug logging for karaoke state
+  // Log current chain for debugging
+  useEffect(() => {
+    console.log('🔗 SongPage - Current chain:', {
+      chainId: chain?.id,
+      chainName: chain?.name,
+      isConnected,
+      isReconnecting,
+      isConnecting,
+      address,
+      expectedChain: 'Base Sepolia (84532)',
+      hasVoiceCredits,
+      hasSongCredits,
+      voiceCreditsRaw: voiceCredits,
+      songCreditsRaw: songCredits
+    })
+  }, [chain, isConnected, isReconnecting, isConnecting, address, hasVoiceCredits, hasSongCredits, voiceCredits, songCredits])
 
   useEffect(() => {
     if (!validSongId) {
@@ -553,98 +558,116 @@ export function SongPage() {
         {/* Sticky footer with action button */}
         <div className="fixed bottom-0 left-0 right-0 bg-neutral-900/95 backdrop-blur-sm border-t border-neutral-700 z-20">
           <div className="w-full max-w-2xl mx-auto px-6 py-4">
-            {/* No credits at all - show Buy Credits */}
-            {!hasVoiceCredits && !hasSongCredits && (
+            {/* Check if we're connected and on the correct chain */}
+            {isReconnecting || isConnecting ? (
               <Button
-                onClick={() => navigate('/pricing')}
+                disabled
                 className="w-full px-6 py-3"
               >
-                Buy Credits
+                <CircleNotch size={20} className="animate-spin mr-2" />
+                Connecting...
               </Button>
-            )}
-            
-            {/* Has song credits but song not unlocked - show Unlock Song */}
-            {hasSongCredits && !songIsUnlocked && (
-              <ChainSwitcher requiredChainId={84532} className="w-full">
-                <Button
-                  onClick={handleUnlockSong}
-                  disabled={isUnlocking}
-                  className="w-full px-6 py-3 flex items-center justify-center gap-2"
-                >
-                  {isUnlocking ? (
-                    <>
-                      <CircleNotch size={20} className="animate-spin" />
-                      Unlocking...
-                    </>
-                  ) : (
-                    'Unlock and Decrypt'
-                  )}
-                </Button>
-              </ChainSwitcher>
-            )}
-            
-            {/* Song unlocked but no voice credits - show Buy Voice Credits */}
-            {songIsUnlocked && !hasVoiceCredits && (
+            ) : !isConnected ? (
               <Button
-                onClick={() => navigate('/pricing')}
-                className="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700"
+                disabled
+                className="w-full px-6 py-3"
               >
-                Buy Voice Credits for Karaoke
+                Connect Wallet
               </Button>
-            )}
-            
-            {/* Song unlocked AND has voice credits - content is accessible */}
-            {songIsUnlocked && hasVoiceCredits && (
-              <div className="w-full text-center py-3">
-                {console.log('🎵 SongPage button logic:', { hasContent: !!content, hasMidiData: !!content?.midiData, showDownloadButton: !content || !content.midiData }) || (!content || !content.midiData) ? (
-                  <>
-                    <Button
-                      onClick={() => {
-                        if (song && address) {
-                          loadContent(song, address)
-                        }
-                      }}
-                      disabled={isContentLoading || !song || !address}
-                      className="w-full py-3 flex items-center justify-center gap-2"
-                    >
-                      {isContentLoading ? (
-                        <>
-                          <CircleNotch size={20} className="animate-spin" />
-                          Loading Content...
-                        </>
-                      ) : (
-                        'Download & Decrypt'
-                      )}
-                    </Button>
-                    {contentError && (
-                      <p className="text-red-400 text-sm mt-2">{contentError}</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <ChainSwitcher requiredChainId={84532} className="w-full">
-                      <Button
-                        onClick={handleStartKaraoke}
-                        disabled={isKaraokeStartLoading}
-                        className="w-full py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                      >
-                        {isKaraokeStartLoading ? (
-                          <>
-                            <CircleNotch className="animate-spin" size={20} />
-                            {karaokeStartStep === 'checking-mic' && 'Checking Microphone...'}
-                            {karaokeStartStep === 'requesting-permission' && 'Requesting Microphone...'}
-                            {karaokeStartStep === 'calling-contract' && 'Deducting Voice Credit...'}
-                            {karaokeStartStep === 'starting' && 'Starting Karaoke...'}
-                            {karaokeStartStep === 'idle' && 'Starting...'}
-                          </>
-                        ) : (
-                          'Start Karaoke (1 voice credit)'
-                        )}
-                      </Button>
-                    </ChainSwitcher>
-                  </>
+            ) : chain?.id !== 84532 ? (
+              <ChainSwitcher requiredChainId={84532} className="w-full" />
+            ) : (
+              <>
+                {/* No credits at all - show Buy Credits */}
+                {!hasVoiceCredits && !hasSongCredits && (
+                  <Button
+                    onClick={() => navigate('/pricing')}
+                    className="w-full px-6 py-3"
+                  >
+                    Buy Credits
+                  </Button>
                 )}
-              </div>
+                
+                {/* Has song credits but song not unlocked - show Unlock Song */}
+                {hasSongCredits && !songIsUnlocked && (
+                  <Button
+                    onClick={handleUnlockSong}
+                    disabled={isUnlocking}
+                    className="w-full px-6 py-3 flex items-center justify-center gap-2"
+                  >
+                    {isUnlocking ? (
+                      <>
+                        <CircleNotch size={20} className="animate-spin" />
+                        Unlocking...
+                      </>
+                    ) : (
+                      'Unlock and Decrypt'
+                    )}
+                  </Button>
+                )}
+                
+                {/* Song unlocked but no voice credits - show Buy Voice Credits */}
+                {songIsUnlocked && !hasVoiceCredits && (
+                  <Button
+                    onClick={() => navigate('/pricing')}
+                    className="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700"
+                  >
+                    Buy Voice Credits for Karaoke
+                  </Button>
+                )}
+                
+                {/* Song unlocked AND has voice credits - content is accessible */}
+                {songIsUnlocked && hasVoiceCredits && (
+                  <div className="w-full text-center py-3">
+                    {console.log('🎵 SongPage button logic:', { hasContent: !!content, hasMidiData: !!content?.midiData, showDownloadButton: !content || !content.midiData }) || (!content || !content.midiData) ? (
+                      <>
+                        <Button
+                          onClick={() => {
+                            if (song && address) {
+                              loadContent(song, address)
+                            }
+                          }}
+                          disabled={isContentLoading || !song || !address}
+                          className="w-full py-3 flex items-center justify-center gap-2"
+                        >
+                          {isContentLoading ? (
+                            <>
+                              <CircleNotch size={20} className="animate-spin" />
+                              Loading Content...
+                            </>
+                          ) : (
+                            'Download & Decrypt'
+                          )}
+                        </Button>
+                        {contentError && (
+                          <p className="text-red-400 text-sm mt-2">{contentError}</p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={handleStartKaraoke}
+                          disabled={isKaraokeStartLoading}
+                          className="w-full py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                        >
+                          {isKaraokeStartLoading ? (
+                            <>
+                              <CircleNotch className="animate-spin" size={20} />
+                              {karaokeStartStep === 'checking-mic' && 'Checking Microphone...'}
+                              {karaokeStartStep === 'requesting-permission' && 'Requesting Microphone...'}
+                              {karaokeStartStep === 'calling-contract' && 'Deducting Voice Credit...'}
+                              {karaokeStartStep === 'starting' && 'Starting Karaoke...'}
+                              {karaokeStartStep === 'idle' && 'Starting...'}
+                            </>
+                          ) : (
+                            'Start Karaoke (1 voice credit)'
+                          )}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
