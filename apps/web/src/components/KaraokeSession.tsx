@@ -5,7 +5,7 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { KaraokeDisplay } from './KaraokeDisplay'
 import { KaraokeCompletion } from './KaraokeCompletion'
 import { useKaraoke } from '../hooks/useKaraoke'
-import { karaokeScoringService } from '../services/KaraokeScoringService'
+import { karaokeScoringService } from '../services/integrations/lit/KaraokeScoringService'
 import { Spinner } from './ui/spinner'
 
 interface KaraokeSessionProps {

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
-import { PostUnlockContentLoader, type LoadedContent } from '../services/PostUnlockContentLoader'
-import type { Song } from '../services/tableland'
+import { PostUnlockContentLoader, type LoadedContent } from '../services/core/content/PostUnlockContentLoader'
+import type { Song } from '../services/database/tableland/TablelandReadService'
 
 interface PostUnlockContentState {
   isLoading: boolean

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
-import { tablelandService, type Song } from '../services/tableland'
+import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
 import { combineLyricsWithTranslation, parseLrcLyrics } from '../utils/parseLyrics'
 import { 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { midiPlayerService } from '../services/MidiPlayerService'
+import { midiPlayerService } from '../services/core/midi/MidiPlayerService'
 import * as lame from '@breezystack/lamejs'
 
 interface KaraokeLine {

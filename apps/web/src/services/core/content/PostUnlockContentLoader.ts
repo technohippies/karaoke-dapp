@@ -1,10 +1,10 @@
-import { LrcLibService } from './LrcLibService'
-import { litProtocolService } from '../lib/litProtocol'
+import { LrcLibService } from '../../integrations/lrclib/LrcLibService'
+import { litProtocolService } from '../../../lib/litProtocol'
 import { decryptToString, decryptToFile } from '@lit-protocol/encryption'
-import { getDetectedLanguage } from '../i18n'
-import type { Song } from './tableland'
-import { getSessionSigs } from '../lib/authHelpers'
-import { contentCacheService } from './ContentCacheService'
+import { getDetectedLanguage } from '../../../i18n'
+import type { Song } from '../../database/tableland/TablelandReadService'
+import { getSessionSigs } from '../../../lib/authHelpers'
+import { contentCacheService } from '../../database/cache/ContentCacheService'
 
 export interface LoadedContent {
   lyrics: string | null

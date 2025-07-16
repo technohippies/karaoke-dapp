@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAccount, useWalletClient } from 'wagmi'
-import { tablelandWriteService } from '../services/TablelandWriteService'
+import { tablelandWriteService } from '../services/database/tableland/TablelandWriteService'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
 
 interface SaveKaraokeParams {
@@ -20,12 +20,13 @@ export function useTablelandWrite() {
   const [sessionHash, setSessionHash] = useState<string | null>(null)
   const [lastChainId, setLastChainId] = useState<number | null>(null)
   
-  console.log('🎯 useTablelandWrite state:', {
-    isConnected,
-    currentChain: chain?.id,
-    isInitialized,
-    error
-  })
+  // Remove verbose logging in production
+  // console.log('🎯 useTablelandWrite state:', {
+  //   isConnected,
+  //   currentChain: chain?.id,
+  //   isInitialized,
+  //   error
+  // })
 
   // Initialize service when wallet is connected or chain changes
   useEffect(() => {
@@ -34,22 +35,17 @@ export function useTablelandWrite() {
       const currentChainId = chain?.id
       const needsInit = walletClient && (!isInitialized || (lastChainId && lastChainId !== currentChainId))
       
-      console.log('🔍 useTablelandWrite init check:', {
-        currentChainId,
-        lastChainId,
-        isInitialized,
-        needsInit,
-        hasWalletClient: !!walletClient
-      })
+      // Only log if initialization is needed
+      if (needsInit) {
+        console.log('🔍 Tableland init needed for chain:', currentChainId)
+      }
       
       if (needsInit) {
         try {
-          console.log('🔧 Initializing Tableland for chain:', currentChainId)
           const signer = await walletClientToSigner(walletClient)
           await tablelandWriteService.initialize(signer, true) // Force reinit
           setIsInitialized(true)
           setLastChainId(currentChainId || null)
-          console.log('✅ Tableland initialized successfully')
         } catch (err) {
           console.error('❌ Failed to initialize Tableland:', err)
           setError('Failed to initialize database')
@@ -61,14 +57,6 @@ export function useTablelandWrite() {
   }, [walletClient, chain?.id, isInitialized, lastChainId])
 
   const saveKaraokeSession = useCallback(async (params: SaveKaraokeParams) => {
-    console.log('💾 Attempting to save karaoke session:', {
-      isConnected,
-      address,
-      isInitialized,
-      currentChain: chain?.id,
-      requiredChain: 11155420
-    })
-    
     if (!isConnected || !address || !isInitialized) {
       const msg = 'Wallet not connected or service not initialized'
       console.error('❌', msg)

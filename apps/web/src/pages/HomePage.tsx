@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAccount } from 'wagmi'
-import { tablelandService, type Song } from '../services/tableland'
+import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
 import { StudyStats } from '../components/StudyStats'

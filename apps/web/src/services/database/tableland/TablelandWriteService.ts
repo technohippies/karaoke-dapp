@@ -1,4 +1,4 @@
-import { Database } from '@tableland/sdk'
+import { Database, Registry } from '@tableland/sdk'
 import { ethers } from 'ethers'
 
 interface UserTableInfo {
@@ -19,26 +19,22 @@ interface KaraokeSession {
 
 export class TablelandWriteService {
   private db: Database | null = null
+  private registry: Registry | null = null
   private STORAGE_KEY = 'karaoke_tables'
   private CHAIN_ID = 11155420 // Optimism Sepolia
 
   async initialize(signer: ethers.Signer, forceReinit = false) {
-    console.log('🔧 TablelandWriteService.initialize called', { 
-      hasDb: !!this.db, 
-      forceReinit,
-      signerAddress: await signer.getAddress()
-    })
-    
-    if (!this.db || forceReinit) {
+    if (!this.db || !this.registry || forceReinit) {
       try {
         // Configure for Optimism Sepolia
         this.db = new Database({ 
           signer,
           baseUrl: 'https://testnets.tableland.network/api/v1'
         })
-        console.log('✅ Tableland Database initialized/reinitialized', { dbCreated: !!this.db })
+        this.registry = new Registry({ signer })
+        console.log('✅ Tableland Database and Registry initialized')
       } catch (error) {
-        console.error('❌ Failed to create Database instance:', error)
+        console.error('❌ Failed to create Database/Registry instance:', error)
         throw error
       }
     }
@@ -49,24 +45,31 @@ export class TablelandWriteService {
    */
   async getUserTables(userAddress: string): Promise<UserTableInfo | null> {
     // Check local storage first
-    const stored = localStorage.getItem(`${this.STORAGE_KEY}_${userAddress}`)
+    const storageKey = `${this.STORAGE_KEY}_${userAddress}`
+    const stored = localStorage.getItem(storageKey)
+    
     if (stored) {
+      console.log('📂 Found cached table info in localStorage:', storageKey)
       const tableInfo = JSON.parse(stored)
       
       // Verify tables still exist by attempting a simple query
       if (this.db) {
         try {
+          console.log('🔍 Verifying table exists:', tableInfo.karaokeSessionsTable)
           await this.db
             .prepare(`SELECT COUNT(*) FROM ${tableInfo.karaokeSessionsTable} LIMIT 1`)
             .all()
           
+          console.log('✅ Tables verified and accessible')
           return tableInfo // Tables exist!
         } catch (error) {
           // Tables don't exist anymore, clear localStorage
-          console.warn('Tables not accessible, clearing cache...', error)
-          localStorage.removeItem(`${this.STORAGE_KEY}_${userAddress}`)
+          console.warn('❌ Tables not accessible, clearing cache...', error)
+          localStorage.removeItem(storageKey)
         }
       }
+    } else {
+      console.log('📂 No cached table info found for:', userAddress)
     }
 
     // If not in storage or verification failed, try to find existing tables
@@ -180,12 +183,6 @@ export class TablelandWriteService {
     _transcript: string,
     startedAt: number
   ): Promise<string> {
-    console.log('📝 saveKaraokeSession called', { 
-      hasDb: !!this.db,
-      userAddress,
-      songId
-    })
-    
     if (!this.db) {
       throw new Error('Database not initialized')
     }
