@@ -30,9 +30,14 @@ export function StudyStats({ newCount, learningCount, dueCount, onStudy }: Study
       {/* Study button */}
       <button
         onClick={onStudy}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+        disabled={dueCount === 0}
+        className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+          dueCount === 0 
+            ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed' 
+            : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+        }`}
       >
-        Study
+        {dueCount === 0 ? 'All Caught Up!' : 'Study'}
       </button>
     </div>
   )

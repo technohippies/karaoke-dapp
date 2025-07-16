@@ -129,9 +129,9 @@ export class TablelandWriteService {
     const userPrefix = userAddress.slice(2, 8).toLowerCase()
     console.log('Creating SRS tables for user:', userAddress, 'with prefix:', userPrefix)
 
-    // Execute all CREATE TABLE statements in a single transaction using exec()
-    const createTablesSQL = `
-      CREATE TABLE karaoke_sessions_${userPrefix}_${this.TABLE_VERSION} (
+    // Prepare each CREATE statement
+    const createSessions = this.db.prepare(
+      `CREATE TABLE karaoke_sessions_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         session_id TEXT UNIQUE NOT NULL,
         song_id INTEGER NOT NULL,
@@ -140,9 +140,11 @@ export class TablelandWriteService {
         total_score INTEGER NOT NULL,
         started_at INTEGER NOT NULL,
         completed_at INTEGER NOT NULL
-      );
-      
-      CREATE TABLE karaoke_lines_${userPrefix}_${this.TABLE_VERSION} (
+      )`
+    )
+
+    const createLines = this.db.prepare(
+      `CREATE TABLE karaoke_lines_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         song_id INTEGER NOT NULL,
         line_index INTEGER NOT NULL,
@@ -159,9 +161,11 @@ export class TablelandWriteService {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         UNIQUE(song_id, line_index)
-      );
-      
-      CREATE TABLE exercise_sessions_${userPrefix}_${this.TABLE_VERSION} (
+      )`
+    )
+
+    const createExercises = this.db.prepare(
+      `CREATE TABLE exercise_sessions_${userPrefix}_${this.TABLE_VERSION} (
         id INTEGER PRIMARY KEY,
         session_id TEXT UNIQUE NOT NULL,
         cards_reviewed INTEGER NOT NULL,
@@ -169,35 +173,31 @@ export class TablelandWriteService {
         session_date INTEGER NOT NULL,
         started_at INTEGER NOT NULL,
         completed_at INTEGER NOT NULL
-      );
-    `
+      )`
+    )
 
-    console.log('📦 Creating all 3 tables in single transaction...')
-    const result = await this.db.exec(createTablesSQL)
+    // Batch create all tables in one transaction
+    console.log('📦 Creating all 3 tables in single batch transaction...')
+    const [response] = await this.db.batch([createSessions, createLines, createExercises])
     
-    if (result.txn) {
-      await result.txn.wait()
-      
-      // Extract table names from result
-      const tableNames = result.txn.names
-      if (!tableNames || tableNames.length !== 3) {
-        throw new Error('Failed to create all tables')
-      }
-
-      const tableInfo: UserTableInfo = {
-        karaokeSessionsTable: tableNames[0],
-        karaokeLinesTable: tableNames[1],
-        exerciseSessionsTable: tableNames[2]
-      }
-
-      // Cache in localStorage
-      localStorage.setItem(`${this.STORAGE_KEY}_${userAddress}`, JSON.stringify(tableInfo))
-
-      console.log('✅ Created SRS tables:', tableInfo)
-      return tableInfo
-    } else {
+    if (!response.meta?.txn) {
       throw new Error('Failed to create tables - no transaction returned')
     }
+    
+    await response.meta.txn.wait()
+    
+    // Extract table names from response (order matches batch array)
+    const tableInfo: UserTableInfo = {
+      karaokeSessionsTable: response.meta.txn.names[0],
+      karaokeLinesTable: response.meta.txn.names[1],
+      exerciseSessionsTable: response.meta.txn.names[2]
+    }
+
+    // Cache in localStorage
+    localStorage.setItem(`${this.STORAGE_KEY}_${userAddress}`, JSON.stringify(tableInfo))
+
+    console.log('✅ Created SRS tables:', tableInfo)
+    return tableInfo
   }
 
   /**
@@ -528,8 +528,9 @@ export class TablelandWriteService {
   }
 
   /**
-   * Sync all data in a single transaction (1 signature!)
-   * This includes table creation and all data operations
+   * Sync all data with minimal transactions
+   * If tables exist: 1 transaction for all data  
+   * If tables don't exist: Create them first, then sync data
    */
   async syncAllDataInOneTransaction(
     userAddress: string,
@@ -541,65 +542,38 @@ export class TablelandWriteService {
       throw new Error('Database not initialized')
     }
 
-    const userPrefix = userAddress.slice(2, 8).toLowerCase()
     const now = Date.now()
     
-    // Build complete SQL string with CREATE TABLE IF NOT EXISTS + all data operations
-    let sql = `
-      -- Create tables if they don't exist (no-op if they do)
-      CREATE TABLE IF NOT EXISTS karaoke_sessions_${userPrefix}_${this.TABLE_VERSION} (
-        id INTEGER PRIMARY KEY,
-        session_id TEXT UNIQUE NOT NULL,
-        song_id INTEGER NOT NULL,
-        song_title TEXT NOT NULL,
-        artist_name TEXT NOT NULL,
-        total_score INTEGER NOT NULL,
-        started_at INTEGER NOT NULL,
-        completed_at INTEGER NOT NULL
-      );
-      
-      CREATE TABLE IF NOT EXISTS karaoke_lines_${userPrefix}_${this.TABLE_VERSION} (
-        id INTEGER PRIMARY KEY,
-        song_id INTEGER NOT NULL,
-        line_index INTEGER NOT NULL,
-        line_text TEXT NOT NULL,
-        difficulty INTEGER DEFAULT 250,
-        stability INTEGER DEFAULT 100,
-        elapsed_days INTEGER DEFAULT 0,
-        scheduled_days INTEGER DEFAULT 1,
-        reps INTEGER DEFAULT 0,
-        lapses INTEGER DEFAULT 0,
-        state INTEGER DEFAULT 0,
-        last_review INTEGER,
-        due_date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        UNIQUE(song_id, line_index)
-      );
-      
-      CREATE TABLE IF NOT EXISTS exercise_sessions_${userPrefix}_${this.TABLE_VERSION} (
-        id INTEGER PRIMARY KEY,
-        session_id TEXT UNIQUE NOT NULL,
-        cards_reviewed INTEGER NOT NULL,
-        cards_correct INTEGER NOT NULL,
-        session_date INTEGER NOT NULL,
-        started_at INTEGER NOT NULL,
-        completed_at INTEGER NOT NULL
-      );
-    `
+    // Get or create user tables
+    let tables = await this.getUserTables(userAddress)
+    if (!tables) {
+      console.log('📊 Creating tables for user...')
+      tables = await this.createUserTables(userAddress)
+    }
+    
+    // Build array of prepared statements for batch
+    const statements = []
 
     // Add session inserts
     for (const session of sessions) {
-      sql += `
-      INSERT INTO karaoke_sessions_${userPrefix}_${this.TABLE_VERSION} 
-        (session_id, song_id, song_title, artist_name, total_score, started_at, completed_at) 
-        VALUES ('${session.sessionId}', ${session.songId}, '${session.songTitle.replace(/'/g, "''")}', 
-                '${session.artistName.replace(/'/g, "''")}', ${Math.round(session.totalScore)}, 
-                ${session.startedAt}, ${session.completedAt || now})
-        ON CONFLICT(session_id) DO UPDATE SET
-          total_score = excluded.total_score,
-          completed_at = excluded.completed_at;
-      `
+      statements.push(
+        this.db.prepare(
+          `INSERT INTO ${tables.karaokeSessionsTable} 
+            (session_id, song_id, song_title, artist_name, total_score, started_at, completed_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id) DO UPDATE SET
+              total_score = excluded.total_score,
+              completed_at = excluded.completed_at`
+        ).bind(
+          session.sessionId,
+          session.songId,
+          session.songTitle,
+          session.artistName,
+          Math.round(session.totalScore),
+          session.startedAt,
+          session.completedAt || now
+        )
+      )
 
       // Add line upserts for each session
       for (const line of session.lines) {
@@ -609,118 +583,150 @@ export class TablelandWriteService {
         const rating = isCorrect ? Rating.Good : Rating.Again
         const { card } = scheduling[rating]
 
-        sql += `
-        INSERT INTO karaoke_lines_${userPrefix}_${this.TABLE_VERSION} (
-          song_id, line_index, line_text,
-          difficulty, stability, elapsed_days, scheduled_days,
-          reps, lapses, state, last_review, due_date,
-          created_at, updated_at
-        ) VALUES (${session.songId}, ${line.lineIndex}, '${line.expectedText.replace(/'/g, "''")}',
-          ${toStoredDifficulty(card.difficulty)}, ${toStoredStability(card.stability)}, 0, ${card.scheduled_days},
-          1, ${isCorrect ? 0 : 1}, ${card.state}, ${now}, ${card.due.getTime()},
-          ${now}, ${now})
-        ON CONFLICT(song_id, line_index) DO UPDATE SET
-          difficulty = CASE 
-            WHEN karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.reps = 0 THEN excluded.difficulty 
-            ELSE karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.difficulty 
-          END,
-          stability = CASE
-            WHEN excluded.lapses > 0 THEN MAX(karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.stability / 2, 100)
-            ELSE MIN(karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.stability * 2, 36500)
-          END,
-          scheduled_days = CASE
-            WHEN excluded.lapses > 0 THEN 1
-            ELSE MIN(karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.scheduled_days * 2, 365)
-          END,
-          reps = karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.reps + 1,
-          lapses = karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.lapses + excluded.lapses,
-          state = CASE
-            WHEN excluded.lapses > 0 THEN 3
-            WHEN karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.reps = 0 THEN 1
-            ELSE 2
-          END,
-          last_review = excluded.last_review,
-          due_date = excluded.last_review + (
-            CASE
-              WHEN excluded.lapses > 0 THEN MAX(karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.stability / 2, 100)
-              ELSE MIN(karaoke_lines_${userPrefix}_${this.TABLE_VERSION}.stability * 2, 36500)
-            END * 864000
-          ),
-          updated_at = excluded.updated_at;
-        `
+        statements.push(
+          this.db.prepare(
+            `INSERT INTO ${tables.karaokeLinesTable} (
+              song_id, line_index, line_text,
+              difficulty, stability, elapsed_days, scheduled_days,
+              reps, lapses, state, last_review, due_date,
+              created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(song_id, line_index) DO UPDATE SET
+              difficulty = CASE 
+                WHEN ${tables.karaokeLinesTable}.reps = 0 THEN excluded.difficulty 
+                ELSE ${tables.karaokeLinesTable}.difficulty 
+              END,
+              stability = CASE
+                WHEN excluded.lapses > 0 THEN MAX(${tables.karaokeLinesTable}.stability / 2, 100)
+                ELSE MIN(${tables.karaokeLinesTable}.stability * 2, 36500)
+              END,
+              scheduled_days = CASE
+                WHEN excluded.lapses > 0 THEN 1
+                ELSE MIN(${tables.karaokeLinesTable}.scheduled_days * 2, 365)
+              END,
+              reps = ${tables.karaokeLinesTable}.reps + 1,
+              lapses = ${tables.karaokeLinesTable}.lapses + excluded.lapses,
+              state = CASE
+                WHEN excluded.lapses > 0 THEN 3
+                WHEN ${tables.karaokeLinesTable}.reps = 0 THEN 1
+                ELSE 2
+              END,
+              last_review = excluded.last_review,
+              due_date = excluded.last_review + (
+                CASE
+                  WHEN excluded.lapses > 0 THEN MAX(${tables.karaokeLinesTable}.stability / 2, 100)
+                  ELSE MIN(${tables.karaokeLinesTable}.stability * 2, 36500)
+                END * 864000
+              ),
+              updated_at = excluded.updated_at`
+          ).bind(
+            session.songId,
+            line.lineIndex,
+            line.expectedText,
+            toStoredDifficulty(card.difficulty),
+            toStoredStability(card.stability),
+            0,
+            card.scheduled_days,
+            1,
+            isCorrect ? 0 : 1,
+            card.state,
+            now,
+            card.due.getTime(),
+            now,
+            now
+          )
+        )
       }
     }
 
     // Add line updates (from exercise reviews)
     for (const update of lineUpdates) {
       const wasCorrect = update.wasCorrect
-      sql += `
-      UPDATE karaoke_lines_${userPrefix}_${this.TABLE_VERSION} SET
-        stability = CASE
-          WHEN ${wasCorrect ? 'TRUE' : 'FALSE'} THEN MIN(stability * 2, 36500)
-          ELSE MAX(stability / 2, 100)
-        END,
-        scheduled_days = CASE
-          WHEN ${wasCorrect ? 'TRUE' : 'FALSE'} THEN MIN(scheduled_days * 2, 365)
-          ELSE 1
-        END,
-        reps = reps + 1,
-        lapses = lapses + ${wasCorrect ? 0 : 1},
-        state = CASE
-          WHEN ${wasCorrect ? 'TRUE' : 'FALSE'} THEN 2
-          ELSE 3
-        END,
-        last_review = ${now},
-        due_date = ${now} + (
-          CASE
-            WHEN ${wasCorrect ? 'TRUE' : 'FALSE'} THEN MIN(stability * 2, 36500)
-            ELSE MAX(stability / 2, 100)
-          END * 864000
-        ),
-        updated_at = ${now}
-      WHERE song_id = ${update.songId} AND line_index = ${update.lineIndex};
-      `
+      statements.push(
+        this.db.prepare(
+          `UPDATE ${tables.karaokeLinesTable} SET
+            stability = CASE
+              WHEN ? THEN MIN(stability * 2, 36500)
+              ELSE MAX(stability / 2, 100)
+            END,
+            scheduled_days = CASE
+              WHEN ? THEN MIN(scheduled_days * 2, 365)
+              ELSE 1
+            END,
+            reps = reps + 1,
+            lapses = lapses + ?,
+            state = CASE
+              WHEN ? THEN 2
+              ELSE 3
+            END,
+            last_review = ?,
+            due_date = ? + (
+              CASE
+                WHEN ? THEN MIN(stability * 2, 36500)
+                ELSE MAX(stability / 2, 100)
+              END * 864000
+            ),
+            updated_at = ?
+          WHERE song_id = ? AND line_index = ?`
+        ).bind(
+          wasCorrect,
+          wasCorrect,
+          wasCorrect ? 0 : 1,
+          wasCorrect,
+          now,
+          now,
+          wasCorrect,
+          now,
+          update.songId,
+          update.lineIndex
+        )
+      )
     }
 
     // Add exercise sessions
     for (const exercise of exercises) {
       const sessionDate = parseInt(new Date(exercise.startedAt).toISOString().slice(0, 10).replace(/-/g, ''))
-      sql += `
-      INSERT INTO exercise_sessions_${userPrefix}_${this.TABLE_VERSION} 
-        (session_id, cards_reviewed, cards_correct, session_date, started_at, completed_at) 
-        VALUES ('${exercise.sessionId}', ${exercise.cardsReviewed}, ${exercise.cardsCorrect}, 
-                ${sessionDate}, ${exercise.startedAt}, ${exercise.completedAt || now})
-        ON CONFLICT(session_id) DO UPDATE SET
-          cards_reviewed = excluded.cards_reviewed,
-          cards_correct = excluded.cards_correct,
-          completed_at = excluded.completed_at;
-      `
+      statements.push(
+        this.db.prepare(
+          `INSERT INTO ${tables.exerciseSessionsTable} 
+            (session_id, cards_reviewed, cards_correct, session_date, started_at, completed_at) 
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id) DO UPDATE SET
+              cards_reviewed = excluded.cards_reviewed,
+              cards_correct = excluded.cards_correct,
+              completed_at = excluded.completed_at`
+        ).bind(
+          exercise.sessionId,
+          exercise.cardsReviewed,
+          exercise.cardsCorrect,
+          sessionDate,
+          exercise.startedAt,
+          exercise.completedAt || now
+        )
+      )
     }
 
-    console.log(`📦 Executing single transaction with ${sessions.length} sessions, ${lineUpdates.length} line updates, ${exercises.length} exercises`)
+    // If no data to sync, return early
+    if (statements.length === 0) {
+      console.log('✅ No data to sync')
+      return { transactionHash: 'no-op' }
+    }
+
+    console.log(`📦 Syncing ${sessions.length} sessions, ${lineUpdates.length} line updates, ${exercises.length} exercises in single batch`)
     
-    // Execute everything in one transaction!
-    const result = await this.db.exec(sql)
+    // Execute batch
+    const [response] = await this.db.batch(statements)
     
-    if (result.txn) {
-      await result.txn.wait()
-      
-      // Store table info if this was the first creation
-      const tableInfo: UserTableInfo = {
-        karaokeSessionsTable: `karaoke_sessions_${userPrefix}_${this.TABLE_VERSION}_${this.CHAIN_ID}_${result.txn.tableIds?.[0]}`,
-        karaokeLinesTable: `karaoke_lines_${userPrefix}_${this.TABLE_VERSION}_${this.CHAIN_ID}_${result.txn.tableIds?.[1]}`,
-        exerciseSessionsTable: `exercise_sessions_${userPrefix}_${this.TABLE_VERSION}_${this.CHAIN_ID}_${result.txn.tableIds?.[2]}`
-      }
-      localStorage.setItem(`${this.STORAGE_KEY}_${userAddress}`, JSON.stringify(tableInfo))
-      
-      console.log('✅ Synced all data in single transaction:', result.txn.transactionHash)
-      return { 
-        tableIds: result.txn.tableIds, 
-        transactionHash: result.txn.transactionHash 
-      }
+    if (!response.meta?.txn) {
+      throw new Error('Failed to sync data - no transaction returned')
     }
     
-    throw new Error('Failed to sync data - no transaction returned')
+    await response.meta.txn.wait()
+    
+    console.log('✅ Synced all data in single transaction:', response.meta.txn.transactionHash)
+    return { 
+      transactionHash: response.meta.txn.transactionHash 
+    }
   }
 }
 

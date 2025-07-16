@@ -1,4 +1,5 @@
-import { openDB, type IDBPDatabase } from 'idb'
+import type { IDBPDatabase } from 'idb'
+import { getGlobalDB } from './globalDB'
 import { fsrs, generatorParameters, Rating, createEmptyCard, type Card } from 'ts-fsrs'
 import type { 
   KaraokeSessionData,
@@ -19,60 +20,30 @@ import {
   fromStoredStability
 } from '../../../types/srs.types'
 
-export class IDBWriteService {
+class IDBWriteService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
   private fsrs = fsrs(generatorParameters({ enable_fuzz: false }))
   private DB_NAME = 'KaraokeSRS'
   private DB_VERSION = 1
 
   async initialize(): Promise<void> {
-    if (this.db) return
+    if (this.db) {
+      console.log('✅ IDB Write Service already initialized, reusing connection')
+      return
+    }
 
     try {
-      this.db = await openDB<KaraokeSRSDB>(this.DB_NAME, this.DB_VERSION, {
-        upgrade(db) {
-          // Create karaoke_sessions store
-          if (!db.objectStoreNames.contains('karaoke_sessions')) {
-            const sessionStore = db.createObjectStore('karaoke_sessions', { 
-              keyPath: 'id', 
-              autoIncrement: true 
-            })
-            sessionStore.createIndex('by-session-id', 'sessionId')
-            sessionStore.createIndex('by-sync-status', 'synced')
-          }
-
-          // Create karaoke_lines store
-          if (!db.objectStoreNames.contains('karaoke_lines')) {
-            const linesStore = db.createObjectStore('karaoke_lines', { 
-              keyPath: 'id', 
-              autoIncrement: true 
-            })
-            linesStore.createIndex('by-song-line', ['songId', 'lineIndex'])
-            linesStore.createIndex('by-due-date', 'dueDate')
-            linesStore.createIndex('by-sync-status', 'synced')
-          }
-
-          // Create exercise_sessions store
-          if (!db.objectStoreNames.contains('exercise_sessions')) {
-            const exerciseStore = db.createObjectStore('exercise_sessions', { 
-              keyPath: 'id', 
-              autoIncrement: true 
-            })
-            exerciseStore.createIndex('by-session-id', 'sessionId')
-            exerciseStore.createIndex('by-sync-status', 'synced')
-          }
-
-          // Create sync_metadata store
-          if (!db.objectStoreNames.contains('sync_metadata')) {
-            db.createObjectStore('sync_metadata', { keyPath: 'id' })
-          }
-        }
-      })
-
-      console.log('✅ IDB Write Service initialized')
+      this.db = await getGlobalDB()
+      console.log('✅ IDB Write Service initialized with global DB')
       
       // Initialize sync metadata if not exists
       await this.initializeSyncMetadata()
+      
+      // Debug: Check what's in the database after init
+      const debugTx = this.db.transaction(['karaoke_lines'], 'readonly')
+      const debugStore = debugTx.objectStore('karaoke_lines')
+      const lineCount = await debugStore.count()
+      console.log('📊 After Write Service init, line count:', lineCount)
     } catch (error) {
       console.error('❌ Failed to initialize IDB:', error)
       throw error

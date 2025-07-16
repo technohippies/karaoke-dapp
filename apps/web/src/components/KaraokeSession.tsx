@@ -129,19 +129,20 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
   }, [paymentTxHash])
   
   // Detect network changes and close session
-  useEffect(() => {
-    // Store initial chain ID
-    const initialChainId = chain?.id
-    
-    return () => {
-      // Cleanup function runs when chain changes
-      if (chain?.id && chain.id !== initialChainId) {
-        console.log('🔗 Network changed during karaoke - closing session')
-        stopKaraoke()
-        onClose()
-      }
-    }
-  }, [chain?.id, onClose, stopKaraoke])
+  // TEMPORARILY DISABLED: Allowing chain switching for testing Tableland on Optimism Sepolia
+  // useEffect(() => {
+  //   // Store initial chain ID
+  //   const initialChainId = chain?.id
+  //   
+  //   return () => {
+  //     // Cleanup function runs when chain changes
+  //     if (chain?.id && chain.id !== initialChainId) {
+  //       console.log('🔗 Network changed during karaoke - closing session')
+  //       stopKaraoke()
+  //       onClose()
+  //     }
+  //   }
+  // }, [chain?.id, onClose, stopKaraoke])
   
   // Show loading state during scoring
   if (isScoring) {

@@ -1,19 +1,44 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAccount } from 'wagmi'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
 import { StudyStats } from '../components/StudyStats'
+import { useDirectIDB } from '../hooks/useDirectIDB'
 
 export function HomePage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const { isConnected, address } = useAccount()
+  const navigate = useNavigate()
+  const { getUserStats, isReady: isDBReady } = useDirectIDB()
+  const [srsStats, setSrsStats] = useState({ new: 0, learning: 0, due: 0 })
 
   useEffect(() => {
     loadSongs()
-  }, [])
+    if (isDBReady && address) {
+      loadSRSStats()
+    }
+  }, [address, isDBReady])
+  
+  const loadSRSStats = async () => {
+    if (!address) return
+    
+    try {
+      const stats = await getUserStats()
+      console.log('🏠 HomePage SRS stats loaded:', stats)
+      // Calculate new, learning, and due based on SRS states
+      // State 0 = New, State 1 = Learning, State 2/3 = Review (due if due_date <= now)
+      setSrsStats({
+        new: stats.newCards || 0,
+        learning: stats.learningCards || 0,
+        due: stats.cardsToReview || 0
+      })
+    } catch (error) {
+      console.error('Failed to load SRS stats:', error)
+    }
+  }
 
   const loadSongs = async () => {
     try {
@@ -64,10 +89,14 @@ export function HomePage() {
       />
       <div className="w-full max-w-2xl mx-auto px-6 py-8">
         <StudyStats
-          newCount={15}
-          learningCount={8}
-          dueCount={23}
-          onStudy={() => console.log('Study clicked')}
+          newCount={srsStats.new}
+          learningCount={srsStats.learning}
+          dueCount={srsStats.due}
+          onStudy={() => {
+            if (srsStats.due > 0) {
+              navigate('/study')
+            }
+          }}
         />
         
         <h1 className="text-2xl font-bold text-white mb-6 mt-8">Songs</h1>

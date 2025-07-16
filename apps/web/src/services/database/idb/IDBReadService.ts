@@ -1,4 +1,5 @@
-import { openDB, type IDBPDatabase } from 'idb'
+import type { IDBPDatabase } from 'idb'
+import { getGlobalDB } from './globalDB'
 import type { 
   KaraokeSRSDB,
   IDBKaraokeSession,
@@ -9,17 +10,20 @@ import type {
 import type { DueCard } from '../../../types/srs.types'
 import { fromStoredDifficulty, fromStoredStability } from '../../../types/srs.types'
 
-export class IDBReadService {
+class IDBReadService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
   private DB_NAME = 'KaraokeSRS'
   private DB_VERSION = 1
 
   async initialize(): Promise<void> {
-    if (this.db) return
+    if (this.db) {
+      console.log('✅ IDB Read Service already initialized, reusing connection')
+      return
+    }
 
     try {
-      this.db = await openDB<KaraokeSRSDB>(this.DB_NAME, this.DB_VERSION)
-      console.log('✅ IDB Read Service initialized')
+      this.db = await getGlobalDB()
+      console.log('✅ IDB Read Service initialized with global DB')
     } catch (error) {
       console.error('❌ Failed to initialize IDB Read Service:', error)
       throw error
@@ -27,7 +31,11 @@ export class IDBReadService {
   }
 
   async getDueCards(limit: number = 20): Promise<DueCard[]> {
+    console.log('🔍 getDueCards called with limit:', limit)
+    console.log('📊 DB instance:', this.db?.name, this.db?.version, 'isOpen:', this.db && !this.db.close)
+    
     if (!this.db) {
+      console.error('❌ getDueCards: IDB not initialized!')
       throw new Error('IDB not initialized')
     }
 
@@ -35,6 +43,43 @@ export class IDBReadService {
     const tx = this.db.transaction('karaoke_lines', 'readonly')
     const store = tx.objectStore('karaoke_lines')
     const index = store.index('by-due-date')
+
+    // Debug: Get all cards first to understand the data
+    const allCards = await store.getAll()
+    console.log('🎯 getDueCards Debug:', {
+      totalCards: allCards.length,
+      currentTime: new Date(now).toISOString(),
+      nowTimestamp: now,
+      dbInstance: this.db,
+      dbName: this.db.name,
+      dbVersion: this.db.version,
+      objectStores: Array.from(this.db.objectStoreNames),
+      cards: allCards.map(c => ({
+        songId: c.songId,
+        lineIndex: c.lineIndex,
+        dueDate: new Date(c.dueDate).toISOString(),
+        dueDateTimestamp: c.dueDate,
+        isDue: c.dueDate <= now,
+        state: c.state,
+        reps: c.reps
+      }))
+    })
+    
+    // Double check the data exists
+    if (allCards.length === 0) {
+      console.warn('⚠️ No cards found in IDB!')
+      const dbCheck = await store.count()
+      console.log('Store count:', dbCheck)
+      
+      // Check the window global
+      const globalDBCheck = (window as any).__karaoke_db
+      if (globalDBCheck) {
+        const globalTx = globalDBCheck.transaction('karaoke_lines', 'readonly')
+        const globalStore = globalTx.objectStore('karaoke_lines')
+        const globalCount = await globalStore.count()
+        console.log('🌍 Global DB line count:', globalCount)
+      }
+    }
 
     const dueCards: DueCard[] = []
     let cursor = await index.openCursor()
@@ -66,6 +111,7 @@ export class IDBReadService {
       cursor = await cursor.continue()
     }
 
+    console.log(`📚 Found ${dueCards.length} due cards`)
     return dueCards
   }
 
@@ -89,12 +135,16 @@ export class IDBReadService {
     totalCards: number
     cardsToReview: number
     averageScore: number
+    newCards: number
+    learningCards: number
   }> {
     if (!this.db) {
       throw new Error('IDB not initialized')
     }
 
     const now = Date.now()
+    console.log('📊 getUserStats called, DB:', this.db?.name, this.db?.version)
+    
     const tx = this.db.transaction(['karaoke_sessions', 'karaoke_lines'], 'readonly')
 
     // Get session stats
@@ -109,13 +159,49 @@ export class IDBReadService {
     const linesStore = tx.objectStore('karaoke_lines')
     const allLines = await linesStore.getAll()
     const totalCards = allLines.length
-    const cardsToReview = allLines.filter(line => line.dueDate <= now).length
+    console.log('📊 getUserStats found lines:', totalCards)
+    
+    // Count cards by state
+    // State 0 = New, State 1 = Learning, State 2 = Review, State 3 = Relearning
+    let newCards = 0
+    let learningCards = 0
+    let cardsToReview = 0
+    
+    allLines.forEach(line => {
+      if (line.state === 0) {
+        newCards++
+      } else if (line.state === 1 || line.state === 3) {
+        learningCards++
+      }
+      
+      // Any card past due date needs review
+      if (line.dueDate <= now) {
+        cardsToReview++
+      }
+    })
+    
+    console.log('📊 SRS Stats Debug:', {
+      totalLines: allLines.length,
+      states: allLines.map(l => ({ 
+        songId: l.songId, 
+        lineIndex: l.lineIndex, 
+        state: l.state, 
+        dueDate: new Date(l.dueDate).toISOString(),
+        isDue: l.dueDate <= now 
+      })),
+      newCards,
+      learningCards,
+      cardsToReview,
+      currentTime: new Date(now).toISOString()
+    })
 
     return {
       totalSessions,
       totalCards,
       cardsToReview,
-      averageScore
+      averageScore,
+      newCards,
+      learningCards
     }
   }
 

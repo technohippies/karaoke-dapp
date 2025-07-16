@@ -241,14 +241,15 @@ export function SongPage() {
   }, [isStartKaraokeSuccess, startKaraokeHash])
   
   // Effect to handle chain changes - reset karaoke state
-  useEffect(() => {
-    if (showKaraoke) {
-      console.log('🔗 Chain changed while karaoke active - resetting state')
-      setShowKaraoke(false)
-      setIsStartingKaraoke(false)
-      setKaraokeStartStep('idle')
-    }
-  }, [chain?.id]) // Reset when chain changes
+  // TEMPORARILY DISABLED: Allowing chain switching for testing Tableland on Optimism Sepolia
+  // useEffect(() => {
+  //   if (showKaraoke) {
+  //     console.log('🔗 Chain changed while karaoke active - resetting state')
+  //     setShowKaraoke(false)
+  //     setIsStartingKaraoke(false)
+  //     setKaraokeStartStep('idle')
+  //   }
+  // }, [chain?.id]) // Reset when chain changes
 
   const loadSong = async (id: number) => {
     try {

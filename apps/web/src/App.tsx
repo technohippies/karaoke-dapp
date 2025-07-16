@@ -4,6 +4,9 @@ import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
 import { PricingPage } from './pages/PricingPage'
+import { StudyPage } from './pages/StudyPage'
+import { DebugIDB } from './pages/DebugIDB'
+import { IDBProvider } from './contexts/IDBContext'
 
 // Helper component to redirect from old song URLs
 function SongRedirect() {
@@ -41,17 +44,21 @@ function App() {
   }, [])
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/s/:songId" element={<SongPage />} />
-        {/* Redirect old song URLs to new format */}
-        <Route path="/song/:songId" element={<SongRedirect />} />
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <IDBProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/study" element={<StudyPage />} />
+          <Route path="/debug" element={<DebugIDB />} />
+          <Route path="/s/:songId" element={<SongPage />} />
+          {/* Redirect old song URLs to new format */}
+          <Route path="/song/:songId" element={<SongRedirect />} />
+          {/* Catch all - redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </IDBProvider>
   )
 }
 
