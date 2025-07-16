@@ -4,8 +4,8 @@ import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-prot
 import { ethers } from 'ethers'
 import { getDetectedLanguage } from '../../../i18n'
 
-// Single Line Scorer V1 deployed to IPFS
-const SINGLE_LINE_SCORER_CID = 'QmRg6Jikwjvf9CtvdbPzSZ4wD93br9JFgAjtQJwtqLhUGr'
+// Single Line Scorer V2 deployed to IPFS - with error handling
+const SINGLE_LINE_SCORER_CID = 'QmW9ZUkHAmSAnjeuH7ruwKwndMi4guzvEGWDpJkHMqHd4Y'
 
 interface LineScoreResult {
   success: boolean
