@@ -24,6 +24,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
   const [transcript, setTranscript] = useState<string>('')
   const [isScoring, setIsScoring] = useState(false)
   const hasProcessedRef = useRef(false)
+  const [sessionStartTime] = useState(Date.now())
   
   // Use ref to capture current wallet client
   const walletClientRef = useRef(walletClient)
@@ -123,10 +124,10 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
   // Show loading state during scoring
   if (isScoring) {
     return (
-      <div className="h-screen bg-neutral-900 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" className="mb-4" />
-          <p className="text-xl text-neutral-300">Grading Karaoke...</p>
+      <div className="min-h-screen bg-neutral-900">
+        <div className="min-h-screen flex flex-col items-center justify-center">
+          <h2 className="text-3xl font-bold text-white mb-6">Grading</h2>
+          <Spinner size="lg" />
         </div>
       </div>
     )
@@ -142,6 +143,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
         initialProgressState="idle"
         hasTable={false}
         songId={songId.toString()}
+        startedAt={sessionStartTime}
         onClose={onClose}
       />
     )

@@ -1,14 +1,10 @@
 import { Crown, Fire, CaretLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'
-import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
+import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from '@web3auth/modal/react'
 import { useAccount } from 'wagmi'
 
-interface HeaderProps {
-  isLoggedIn?: boolean
-  address?: string
-  onLogin?: () => void
-  onAccount?: () => void
+interface HeaderWithAuthProps {
   crownCount?: number
   fireCount?: number
   showBack?: boolean
@@ -16,19 +12,28 @@ interface HeaderProps {
   pageTitle?: string
 }
 
-export function Header({ 
-  isLoggedIn = false, 
-  address = '0x742d35Cc6634C0532925a3b8D',
-  onLogin,
-  onAccount,
+export function HeaderWithAuth({ 
   crownCount = 5,
   fireCount = 12,
   showBack = false,
   onBack,
   pageTitle
-}: HeaderProps) {
+}: HeaderWithAuthProps) {
+  const { address, isConnected } = useAccount()
+  const { connect, loading: connectLoading } = useWeb3AuthConnect()
+  const { disconnect, loading: disconnectLoading } = useWeb3AuthDisconnect()
+  const { userInfo } = useWeb3AuthUser()
+  
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-3)}`
+  }
+
+  const handleAuth = () => {
+    if (isConnected) {
+      disconnect()
+    } else {
+      connect()
+    }
   }
 
   return (
@@ -66,18 +71,21 @@ export function Header({
           </div>
           
           <div>
-            {isLoggedIn ? (
-              <Button 
-                variant="outline" 
-                onClick={onAccount}
-              >
-                {formatAddress(address)}
-              </Button>
-            ) : (
-              <Button variant="outline" onClick={onLogin}>
-                Connect Wallet
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              onClick={handleAuth}
+              disabled={connectLoading || disconnectLoading}
+            >
+              {isConnected && address ? (
+                userInfo?.name || formatAddress(address)
+              ) : connectLoading ? (
+                'Connecting...'
+              ) : disconnectLoading ? (
+                'Disconnecting...'
+              ) : (
+                'Connect'
+              )}
+            </Button>
           </div>
         </div>
       </div>

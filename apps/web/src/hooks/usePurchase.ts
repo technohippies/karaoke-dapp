@@ -95,10 +95,15 @@ export function usePurchase() {
     if (isBuySuccess || isBuyVoiceSuccess || isBuySongSuccess) {
       console.log('✅ Purchase successful!')
       setIsPurchasing(false)
-      refetchBalance()
-      refetchVoiceCredits()
-      refetchSongCredits()
-      refetchAllowance()
+      
+      // Add delay before refetching to ensure blockchain state is updated
+      setTimeout(() => {
+        console.log('🔄 Refetching balances...')
+        refetchBalance()
+        refetchVoiceCredits()
+        refetchSongCredits()
+        refetchAllowance()
+      }, 2000) // 2 second delay
     }
   }, [isBuySuccess, isBuyVoiceSuccess, isBuySongSuccess, refetchBalance, refetchVoiceCredits, refetchSongCredits, refetchAllowance])
 

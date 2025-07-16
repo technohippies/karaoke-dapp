@@ -1,0 +1,8 @@
+// Base Mainnet Contract Addresses
+export const BASE_MAINNET_CONTRACTS = {
+  KARAOKE_CONTRACT_ADDRESS: '0x0000000000000000000000000000000000000000', // TODO: Deploy to Base mainnet
+  USDC_ADDRESS: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base mainnet USDC
+};
+
+// Base Mainnet Chain ID
+export const BASE_MAINNET_CHAIN_ID = 8453;

@@ -9,7 +9,7 @@ import {
   KARAOKE_CONTRACT_ADDRESS
 } from '../constants'
 import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
-import { Header } from '../components/Header'
+import { HeaderWithAuth } from '../components/HeaderWithAuth'
 import { ListItem } from '../components/ListItem'
 import { LyricsSheet } from '../components/LyricsSheet'
 import { IconButton } from '../components/IconButton'
@@ -18,17 +18,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Leaderboard } from '../components/Leaderboard'
 import { KaraokeSession } from '../components/KaraokeSession'
 import { Button } from '../components/ui/button'
+import { ChainSwitcher } from '../components/ChainSwitcher'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
-  const { isConnected, address } = useAccount()
+  const { isConnected, address, chain } = useAccount()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [showKaraoke, setShowKaraoke] = useState(false)
   const [isStartingKaraoke, setIsStartingKaraoke] = useState(false)
   const [karaokeStartStep, setKaraokeStartStep] = useState<'idle' | 'checking-mic' | 'requesting-permission' | 'calling-contract' | 'starting'>('idle')
+  
+  // Log current chain for debugging
+  useEffect(() => {
+    console.log('🔗 SongPage - Current chain:', {
+      chainId: chain?.id,
+      chainName: chain?.name,
+      isConnected,
+      expectedChain: 'Base Sepolia (84532)'
+    })
+  }, [chain, isConnected])
   
   // Validate songId
   const validSongId = songId && !isNaN(parseInt(songId)) ? songId : null
@@ -111,8 +122,11 @@ export function SongPage() {
   useEffect(() => {
     if (isUnlockSuccess && address && song) {
       console.log('✅ Unlock successful, loading content...')
-      refetchSongUnlocked() // Refetch unlock status
-      loadContent(song, address)
+      // Add a small delay to ensure blockchain state is updated
+      setTimeout(() => {
+        refetchSongUnlocked() // Refetch unlock status
+        loadContent(song, address)
+      }, 1000)
     }
   }, [isUnlockSuccess, address, song, loadContent, refetchSongUnlocked])
 
@@ -399,15 +413,12 @@ export function SongPage() {
       
       {/* Content */}
       <div className="relative z-10 h-screen flex flex-col">
-        <Header 
-          isLoggedIn={isConnected}
-          address={address}
-          onLogin={handleLogin}
-          onAccount={handleAccount}
+        <HeaderWithAuth 
           crownCount={Number(voiceCredits || 0)}
           fireCount={Number(songCredits || 0)}
           showBack={true}
           onBack={() => navigate('/')}
+          pageTitle={song?.title || 'Loading...'}
         />
         
         {/* Scrollable content */}
@@ -554,20 +565,22 @@ export function SongPage() {
             
             {/* Has song credits but song not unlocked - show Unlock Song */}
             {hasSongCredits && !songIsUnlocked && (
-              <Button
-                onClick={handleUnlockSong}
-                disabled={isUnlocking}
-                className="w-full px-6 py-3 flex items-center justify-center gap-2"
-              >
-                {isUnlocking ? (
-                  <>
-                    <CircleNotch size={20} className="animate-spin" />
-                    Unlocking...
-                  </>
-                ) : (
-                  'Unlock'
-                )}
-              </Button>
+              <ChainSwitcher requiredChainId={84532} className="w-full">
+                <Button
+                  onClick={handleUnlockSong}
+                  disabled={isUnlocking}
+                  className="w-full px-6 py-3 flex items-center justify-center gap-2"
+                >
+                  {isUnlocking ? (
+                    <>
+                      <CircleNotch size={20} className="animate-spin" />
+                      Unlocking...
+                    </>
+                  ) : (
+                    'Unlock and Decrypt'
+                  )}
+                </Button>
+              </ChainSwitcher>
             )}
             
             {/* Song unlocked but no voice credits - show Buy Voice Credits */}
@@ -600,7 +613,7 @@ export function SongPage() {
                           Loading Content...
                         </>
                       ) : (
-                        'Download & Decrypt Content'
+                        'Download & Decrypt'
                       )}
                     </Button>
                     {contentError && (
@@ -609,24 +622,26 @@ export function SongPage() {
                   </>
                 ) : (
                   <>
-                    <Button
-                      onClick={handleStartKaraoke}
-                      disabled={isKaraokeStartLoading}
-                      className="w-full py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                    >
-                      {isKaraokeStartLoading ? (
-                        <>
-                          <CircleNotch className="animate-spin" size={20} />
-                          {karaokeStartStep === 'checking-mic' && 'Checking Microphone...'}
-                          {karaokeStartStep === 'requesting-permission' && 'Requesting Microphone...'}
-                          {karaokeStartStep === 'calling-contract' && 'Deducting Voice Credit...'}
-                          {karaokeStartStep === 'starting' && 'Starting Karaoke...'}
-                          {karaokeStartStep === 'idle' && 'Starting...'}
-                        </>
-                      ) : (
-                        'Start Karaoke (1 voice credit)'
-                      )}
-                    </Button>
+                    <ChainSwitcher requiredChainId={84532} className="w-full">
+                      <Button
+                        onClick={handleStartKaraoke}
+                        disabled={isKaraokeStartLoading}
+                        className="w-full py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                      >
+                        {isKaraokeStartLoading ? (
+                          <>
+                            <CircleNotch className="animate-spin" size={20} />
+                            {karaokeStartStep === 'checking-mic' && 'Checking Microphone...'}
+                            {karaokeStartStep === 'requesting-permission' && 'Requesting Microphone...'}
+                            {karaokeStartStep === 'calling-contract' && 'Deducting Voice Credit...'}
+                            {karaokeStartStep === 'starting' && 'Starting Karaoke...'}
+                            {karaokeStartStep === 'idle' && 'Starting...'}
+                          </>
+                        ) : (
+                          'Start Karaoke (1 voice credit)'
+                        )}
+                      </Button>
+                    </ChainSwitcher>
                   </>
                 )}
               </div>

@@ -118,16 +118,18 @@ const go = async () => {
     const lyricLines = expectedLyrics.split('\n').filter(line => line.trim());
     const numberedLyrics = lyricLines.map((line, i) => `${i + 1}. ${line}`).join('\n');
     
-    const scoringPrompt = `You are a karaoke scoring system analyzing speech-to-text output. The STT may have made errors that don't reflect actual singing quality.
+    const scoringPrompt = `You are scoring karaoke for a spaced repetition learning system.
 
-USER CONTEXT: The singer is a native Mandarin speaker learning English. Common pronunciation patterns include:
-- th→s/z (teeth→tees, with→wis)
-- Final consonants dropped (cut→cu, flesh→fle)
-- r/l confusion (ring→ling)
-- v/w confusion (movies→mowies)
-- Consonant clusters simplified (rings→ring)
+SCORING RULES:
+- 100: Perfect match (ignore case, punctuation, and capitalization)
+- 90-99: Missing small words (a, the, and, is) or minor variations
+- 70-89: Mostly correct but some word substitutions
+- Below 70: Significant errors requiring practice
 
-These are normal L2 patterns, not "errors" - score generously considering the learning journey.
+Examples:
+"I've never seen a diamond in the flesh" → "i've never seen a diamond in the flesh" = 100
+"And I'm not proud of my address" → "I'm not proud of my address" = 90 (missing "And")
+"And I'm not proud of my address" → "and i'm not caught on my dress" = 65 (wrong key words)
 
 ORIGINAL LYRICS:
 ${numberedLyrics}
@@ -135,22 +137,16 @@ ${numberedLyrics}
 STT TRANSCRIPT:
 ${transcript}
 
-Scoring guidelines:
-- 90-100: Understandable with L1 accent features (this is success!)
-- 70-89: Clear effort, some pronunciation challenges
-- 50-69: Partially understood, needs practice
-- 0-49: Major comprehension issues
-
-Return ONLY valid JSON:
+Return ONLY valid JSON with this exact structure:
 {
-  "lines": [
-    {"line": 1, "expected": "...", "heard": "...", "score": 85, "issues": ["..."]},
-    ...
-  ],
   "overall_score": 85,
-  "pronunciation_patterns": ["th sounds", "final consonants"],
-  "encouragement": "Great job! Your pronunciation is clear and improving."
-}`;
+  "lines": [
+    {"lineIndex": 0, "score": 100, "needsPractice": false},
+    {"lineIndex": 1, "score": 65, "needsPractice": true, "expectedText": "line text here", "transcribedText": "what was heard"}
+  ]
+}
+
+Only include expectedText and transcribedText for lines with needsPractice: true.`;
     
     const llmResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -203,9 +199,7 @@ Return ONLY valid JSON:
       }
       scoringResult = {
         overall_score: score,
-        lines: [],
-        pronunciation_patterns: [],
-        encouragement: `Score calculated but detailed feedback unavailable. Raw LLM response: ${llmContent.substring(0, 200)}...`
+        lines: []
       };
     }
     
@@ -217,11 +211,10 @@ Return ONLY valid JSON:
       response: JSON.stringify({
         success: true,
         score: score,
-        feedback: scoringResult.encouragement || `Score: ${score}/100`,
+        feedback: `Score: ${score}/100`,
         transcript: transcript,
         expectedLyrics: expectedLyrics,
-        scoringDetails: scoringResult,  // Include full line-by-line details
-        llmRawResponse: llmContent.substring(0, 500), // Include first 500 chars for debugging
+        scoringDetails: scoringResult,  // Include line data for exercise generation
         timestamp: Date.now()
       })
     });

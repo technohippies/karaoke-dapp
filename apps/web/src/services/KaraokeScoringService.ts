@@ -55,22 +55,20 @@ const encryptedKeysData = {
   ]
 }
 
-// Deployed Lit Action CID - V21 with markdown stripping
-const LIT_ACTION_CID = 'QmZTR9pbSAQ3MzCCiWzVRhaBQCuCUT9AMtRiwhL4S9dCzC'
+// Deployed Lit Action CID - V22 simplified for SRS integration
+const LIT_ACTION_CID = 'QmePqHXsmuZvyi8z33y3ynsDH3aVPkFhTzMkFUZwj7iBPK'
 
 interface LineScore {
-  line: number
-  expected: string
-  heard: string
+  lineIndex: number
   score: number
-  issues: string[]
+  needsPractice: boolean
+  expectedText?: string
+  transcribedText?: string
 }
 
 interface ScoringDetails {
   lines: LineScore[]
   overall_score: number
-  pronunciation_patterns: string[]
-  encouragement: string
 }
 
 interface KaraokeScoringResult {

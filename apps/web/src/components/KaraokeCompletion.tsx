@@ -1,21 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CloseHeader } from './CloseHeader'
 import { Spinner } from './ui/spinner'
 import coachImage from '../assets/scarlett-right-128x128.png'
+import { useTablelandWrite } from '../hooks/useTablelandWrite'
+import { ChainSwitcher } from './ChainSwitcher'
+import { useAccount } from 'wagmi'
 
 interface LineScore {
-  line: number
-  expected: string
-  heard: string
+  lineIndex: number
   score: number
-  issues: string[]
+  needsPractice: boolean
+  expectedText?: string
+  transcribedText?: string
 }
 
 interface ScoringDetails {
   lines: LineScore[]
   overall_score: number
-  pronunciation_patterns: string[]
-  encouragement: string
 }
 
 export interface KaraokeCompletionProps {
@@ -25,6 +26,7 @@ export interface KaraokeCompletionProps {
   scoringDetails?: ScoringDetails
   transcript?: string
   songId?: string
+  startedAt?: number
   onClose: () => void
 }
 
@@ -35,9 +37,32 @@ export function KaraokeCompletion({
   scoringDetails,
   transcript,
   songId,
+  startedAt = Date.now(),
   onClose
 }: KaraokeCompletionProps) {
   const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved'>(initialProgressState)
+  const { saveKaraokeSession, isReady, currentChainId, isInitialized } = useTablelandWrite()
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const { chain } = useAccount()
+  
+  // Monitor chain changes
+  useEffect(() => {
+    console.log('🔗 KaraokeCompletion chain changed:', {
+      chainId: chain?.id,
+      chainName: chain?.name,
+      isReady,
+      isInitialized
+    })
+  }, [chain, isReady, isInitialized])
+  
+  console.log('📊 KaraokeCompletion state:', {
+    progressState,
+    isReady,
+    currentChainId,
+    isInitialized,
+    saveError,
+    actualChain: chain?.id
+  })
 
   const getScoreMessage = () => {
     if (score >= 90) return "Excellent work!"
@@ -57,9 +82,36 @@ export function KaraokeCompletion({
     }
   }
 
-  const handleSaveProgress = () => {
+  const handleSaveProgress = async () => {
+    if (!isReady || !songId) {
+      setSaveError('Unable to save: wallet not connected or missing data')
+      return
+    }
+    
     setProgressState('saving')
-    // TODO: Create Tableland table + sync to blockchain (2 signatures)
+    setSaveError(null)
+    
+    try {
+      const sessionHash = await saveKaraokeSession({
+        songId: parseInt(songId),
+        score: score || 0,
+        scoringDetails,
+        transcript: transcript || '',
+        startedAt
+      })
+      
+      if (sessionHash) {
+        setProgressState('saved')
+        console.log('✅ Saved with session hash:', sessionHash)
+      } else {
+        setProgressState('idle')
+        setSaveError('Failed to save progress')
+      }
+    } catch (err) {
+      setProgressState('idle')
+      setSaveError('Failed to save progress')
+      console.error('Save error:', err)
+    }
   }
 
   const handlePractice = () => {
@@ -71,12 +123,17 @@ export function KaraokeCompletion({
     switch (progressState) {
       case 'idle':
         return (
-          <button
-            onClick={handleSaveProgress}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+          <ChainSwitcher 
+            requiredChainId={11155420}
+            className="w-full"
           >
-            Save Progress
-          </button>
+            <button
+              onClick={handleSaveProgress}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+            >
+              Save Progress
+            </button>
+          </ChainSwitcher>
         )
       case 'saving':
         return (
@@ -113,6 +170,13 @@ export function KaraokeCompletion({
               <div className="text-6xl font-bold text-white mb-8">
                 {score}
               </div>
+              
+              {/* Error message */}
+              {saveError && (
+                <div className="text-red-400 text-sm mb-4">
+                  {saveError}
+                </div>
+              )}
 
               {/* Coach feedback */}
               <div className="flex gap-4 w-full max-w-lg mb-8">
@@ -121,65 +185,19 @@ export function KaraokeCompletion({
                 </div>
                 <div className="bg-neutral-800 px-4 py-3 rounded-lg w-96">
                   <p className="text-lg text-neutral-300 text-left">
-                    {scoringDetails?.encouragement || getScoreMessage()}
+                    {getScoreMessage()}
                   </p>
                   {getActionMessage() && (
                     <p className="text-lg text-neutral-400 text-left mt-2">
-                      {getActionMessage()}
+                      {progressState === 'idle' && !isReady ? 
+                        'Connect your wallet to Optimism Sepolia to save progress' : 
+                        getActionMessage()
+                      }
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Line-by-line scores */}
-              {scoringDetails?.lines && scoringDetails.lines.length > 0 && (
-                <div className="w-full max-w-2xl mx-auto mt-8">
-                  <h2 className="text-xl font-semibold text-white mb-4">Line by Line Score</h2>
-                  <div className="space-y-3">
-                    {scoringDetails.lines.map((line) => (
-                      <div key={line.line} className="bg-neutral-800 rounded-lg p-4 text-left">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-sm text-neutral-400">Line {line.line}</span>
-                          <span className={`text-lg font-semibold ${
-                            line.score >= 90 ? 'text-green-400' :
-                            line.score >= 70 ? 'text-yellow-400' :
-                            'text-red-400'
-                          }`}>
-                            {line.score}
-                          </span>
-                        </div>
-                        <div className="text-sm text-neutral-300 mb-1">
-                          <span className="text-neutral-500">Expected: </span>
-                          {line.expected}
-                        </div>
-                        <div className="text-sm text-neutral-300 mb-2">
-                          <span className="text-neutral-500">Heard: </span>
-                          {line.heard || '(no words detected)'}
-                        </div>
-                        {line.issues.length > 0 && (
-                          <div className="text-xs text-neutral-500">
-                            Issues: {line.issues.join(', ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Pronunciation patterns */}
-                  {scoringDetails.pronunciation_patterns && scoringDetails.pronunciation_patterns.length > 0 && (
-                    <div className="mt-6 bg-neutral-800 rounded-lg p-4">
-                      <h3 className="text-sm font-semibold text-white mb-2">Areas to Practice</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {scoringDetails.pronunciation_patterns.map((pattern, idx) => (
-                          <span key={idx} className="text-xs bg-neutral-700 px-2 py-1 rounded">
-                            {pattern}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
