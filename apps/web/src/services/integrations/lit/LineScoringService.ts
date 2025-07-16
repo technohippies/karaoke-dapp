@@ -1,154 +1,117 @@
-import { litProtocolService } from '../../../lib/litProtocol'
-import { getSessionSigs } from '../../../lib/authHelpers'
+import { LitNodeClient } from '@lit-protocol/lit-node-client'
+import { LIT_ABILITY, LIT_NETWORK } from '@lit-protocol/constants'
+import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers'
 import { ethers } from 'ethers'
-import type { SessionSigsMap } from '@lit-protocol/types'
+import { getDetectedLanguage } from '../../../i18n'
 
-// Simpler Lit Action for scoring individual lines without OpenAI
-const lineScoringLitAction = `
-(async () => {
-  const audioData = dataToSign;
-  const expectedText = expectedTextParam;
-  
-  try {
-    // For now, just return a mock result based on expected text length
-    // In production, this would use Whisper API or other speech-to-text
-    const mockTranscripts = [
-      expectedText, // Perfect match
-      expectedText.toLowerCase(), // Case difference
-      expectedText.replace(/[.,!?]/g, ''), // Punctuation difference
-      expectedText.split(' ').slice(0, -1).join(' '), // Missing last word
-      'something completely different', // Wrong
-    ];
-    
-    // Randomly pick a transcript for testing
-    const randomIndex = Math.floor(Math.random() * mockTranscripts.length);
-    const transcript = mockTranscripts[randomIndex];
-    
-    // Simple scoring based on similarity
-    const score = calculateSimilarity(transcript.toLowerCase(), expectedText.toLowerCase());
-    
-    // Return results
-    const result = {
-      success: true,
-      transcript: transcript,
-      score: Math.round(score),
-      timestamp: new Date().toISOString()
-    };
-    
-    Lit.Actions.setResponse({ response: JSON.stringify(result) });
-    
-  } catch (error) {
-    const errorResult = {
-      success: false,
-      error: error.message,
-      transcript: '',
-      score: 0
-    };
-    Lit.Actions.setResponse({ response: JSON.stringify(errorResult) });
-  }
-  
-  // Simple similarity calculation
-  function calculateSimilarity(actual, expected) {
-    // Normalize texts
-    const normalizeText = (text) => text.trim().toLowerCase().replace(/[^a-z0-9\\s]/g, '');
-    const actualNorm = normalizeText(actual);
-    const expectedNorm = normalizeText(expected);
-    
-    if (actualNorm === expectedNorm) return 100;
-    
-    // Word-level comparison
-    const actualWords = actualNorm.split(/\\s+/).filter(w => w.length > 0);
-    const expectedWords = expectedNorm.split(/\\s+/).filter(w => w.length > 0);
-    
-    let matches = 0;
-    const minLength = Math.min(actualWords.length, expectedWords.length);
-    
-    for (let i = 0; i < minLength; i++) {
-      if (actualWords[i] === expectedWords[i]) {
-        matches++;
-      }
-    }
-    
-    const wordAccuracy = (matches / Math.max(expectedWords.length, 1)) * 100;
-    
-    // Character-level comparison (Levenshtein distance)
-    const maxLen = Math.max(actualNorm.length, expectedNorm.length);
-    if (maxLen === 0) return 100;
-    
-    const distance = levenshteinDistance(actualNorm, expectedNorm);
-    const charAccuracy = ((maxLen - distance) / maxLen) * 100;
-    
-    // Weighted average (70% word accuracy, 30% character accuracy)
-    return Math.max(0, Math.min(100, wordAccuracy * 0.7 + charAccuracy * 0.3));
-  }
-  
-  function levenshteinDistance(a, b) {
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-    return matrix[b.length][a.length];
-  }
-})();
-`
+// Single Line Scorer V1 deployed to IPFS
+const SINGLE_LINE_SCORER_CID = 'QmRg6Jikwjvf9CtvdbPzSZ4wD93br9JFgAjtQJwtqLhUGr'
 
 interface LineScoreResult {
   success: boolean
   transcript?: string
   score?: number
+  feedback?: string | null
   error?: string
 }
 
-class LineScoringService {
+export class LineScoringService {
+  private client: LitNodeClient | null = null
+  private signer: ethers.Signer | null = null
+
+  async initialize(signer?: ethers.Signer) {
+    if (signer) {
+      this.signer = signer
+    }
+    
+    if (!this.client) {
+      this.client = new LitNodeClient({
+        litNetwork: LIT_NETWORK.DatilDev,
+        debug: true
+      })
+      await this.client.connect()
+      console.log('✅ Connected to Lit Network for line scoring')
+    }
+    
+    // Ensure client is ready
+    if (!this.client.ready) {
+      await this.client.connect()
+      console.log('✅ Lit client reconnected and ready')
+    }
+  }
+
   async scoreLine(
     audioData: Uint8Array,
     expectedText: string,
     signer: ethers.Signer,
-    sessionSigs?: SessionSigsMap | null
+    sessionSigs?: any
   ): Promise<LineScoreResult> {
+    await this.initialize(signer)
+    
+    if (!this.client) {
+      throw new Error('Lit client not initialized')
+    }
+
+    if (!this.signer) {
+      throw new Error('Signer not provided - wallet connection required')
+    }
+
     try {
-      // Use provided session sigs or create new ones
-      const authSigs = sessionSigs || await getSessionSigs(
-        await signer.getAddress(),
-        'baseSepolia',
-        signer
-      )
+      // Get user address from signer
+      const userAddress = await this.signer!.getAddress()
       
       console.log('🎯 Scoring line with Lit Protocol')
+      console.log('📝 Expected text:', expectedText)
+      console.log('🎧 Audio data size:', audioData.length, 'bytes')
       
-      // Execute Lit Action
-      const result = await litProtocolService.client!.executeJs({
+      // Get user language for feedback
+      const userLanguage = getDetectedLanguage()
+      console.log('🌐 User language:', userLanguage)
+      
+      // Get session signatures if not provided
+      let authSigs = sessionSigs
+      if (!authSigs) {
+        console.log('🔐 Generating session signatures...')
+        authSigs = await this.client.getSessionSigs({
+          chain: 'baseSepolia',
+          expiration: new Date(Date.now() + 1000 * 60 * 10).toISOString(), // 10 minutes
+          resourceAbilityRequests: [
+            {
+              resource: new LitActionResource('*'),
+              ability: LIT_ABILITY.LitActionExecution,
+            },
+          ],
+          authNeededCallback: async ({ uri, expiration, resourceAbilityRequests }) => {
+            const toSign = await createSiweMessage({
+              uri,
+              expiration,
+              resources: resourceAbilityRequests,
+              walletAddress: await this.signer!.getAddress(),
+              nonce: await this.client!.getLatestBlockhash(),
+              litNodeClient: this.client!,
+            });
+            return await generateAuthSig({
+              signer: this.signer!,
+              toSign,
+            });
+          },
+        })
+        console.log('✅ Session signatures generated')
+      }
+      
+      // Execute Lit Action using IPFS CID
+      const result = await this.client.executeJs({
         sessionSigs: authSigs,
-        code: lineScoringLitAction,
-        params: {
+        ipfsId: SINGLE_LINE_SCORER_CID,
+        jsParams: {
           dataToSign: audioData,
           expectedTextParam: expectedText,
-          openaiApiKey: litProtocolService.getDecryptedApiKey()
-        },
-        jsParams: {}
+          userLanguageParam: userLanguage
+        }
       })
       
-      console.log('📊 Lit Action result:', result)
-      
-      // Parse response
-      const response = JSON.parse(result.response as string)
-      return response
+      console.log('📊 Lit Action result:', result.response)
+      return JSON.parse(result.response)
       
     } catch (error) {
       console.error('❌ Line scoring error:', error)
@@ -156,6 +119,13 @@ class LineScoringService {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }
+    }
+  }
+
+  async disconnect() {
+    if (this.client) {
+      await this.client.disconnect()
+      this.client = null
     }
   }
 }

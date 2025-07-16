@@ -40,6 +40,7 @@ export function StudyPageV2() {
   const [lastScore, setLastScore] = useState<number | null>(null)
   const [transcript, setTranscript] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
+  const [aiFeedback, setAiFeedback] = useState<string | null>(null)
   
   const [studyStats, setStudyStats] = useState<StudyStats>({
     totalCards: 0,
@@ -108,9 +109,10 @@ export function StudyPageV2() {
       if (result.success && result.transcript) {
         setTranscript(result.transcript)
         setLastScore(result.score || 0)
+        setAiFeedback(result.feedback || null)
         setShowFeedback(true)
         
-        const isCorrect = (result.score || 0) >= 70
+        const isCorrect = (result.score || 0) >= 80  // Changed threshold to 80%
         
         if (isCorrect) {
           // Update card as correct
@@ -147,7 +149,7 @@ export function StudyPageV2() {
     const currentCard = dueCards[currentCardIndex]
     
     // If moving to next after failures, mark as incorrect
-    if (attempts >= 2 && lastScore !== null && lastScore < 70) {
+    if (attempts >= 2 && lastScore !== null && lastScore < 80) {  // Changed threshold to 80%
       await updateCardReview(
         currentCard.songId,
         currentCard.lineIndex,
@@ -165,6 +167,7 @@ export function StudyPageV2() {
     setLastScore(null)
     setTranscript('')
     setShowFeedback(false)
+    setAiFeedback(null)
     
     // Move to next card or complete
     if (currentCardIndex < dueCards.length - 1) {
@@ -209,7 +212,7 @@ export function StudyPageV2() {
     if (isProcessing) return 'processing'
     if (isRecording) return 'recording'
     if (attempts >= 2) return 'next'
-    if (showFeedback && lastScore !== null && lastScore < 70) return 'try-again'
+    if (showFeedback && lastScore !== null && lastScore < 80) return 'try-again'
     return 'start'
   }
   
@@ -274,20 +277,33 @@ export function StudyPageV2() {
           
           {/* Feedback */}
           {showFeedback && (
-            <Card className={`p-6 border ${lastScore !== null && lastScore >= 70 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            <Card className={`p-6 border ${lastScore !== null && lastScore >= 80 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
               <div className="space-y-3">
-                {transcript && (
-                  <div>
-                    <p className="text-sm text-white/60 mb-1">You said:</p>
-                    <p className="text-white">{transcript}</p>
+                {lastScore !== null && lastScore >= 80 ? (
+                  // Success - just show checkmark
+                  <div className="flex items-center justify-center py-4">
+                    <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
+                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
+                ) : (
+                  // Failure - show transcript and AI feedback
+                  <>
+                    {transcript && (
+                      <div>
+                        <p className="text-sm text-white/60 mb-1">You said:</p>
+                        <p className="text-white">{transcript}</p>
+                      </div>
+                    )}
+                    {aiFeedback && (
+                      <div className="mt-4 p-3 bg-neutral-800 rounded-lg">
+                        <p className="text-white font-medium">{aiFeedback}</p>
+                      </div>
+                    )}
+                  </>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-white/80">Score:</span>
-                  <span className={`text-2xl font-bold ${lastScore !== null && lastScore >= 70 ? 'text-green-500' : 'text-red-500'}`}>
-                    {lastScore}%
-                  </span>
-                </div>
               </div>
             </Card>
           )}
@@ -316,12 +332,12 @@ export function StudyPageV2() {
             disabled={getButtonState() === 'processing'}
             variant={
               getButtonState() === 'recording' ? 'destructive' :
-              getButtonState() === 'next' || (showFeedback && lastScore !== null && lastScore < 70) ? 'secondary' :
+              getButtonState() === 'next' || (showFeedback && lastScore !== null && lastScore < 80) ? 'secondary' :
               'default'
             }
             className={`w-full h-auto px-6 py-3 text-base ${
               getButtonState() === 'next' ? 'bg-yellow-600 hover:bg-yellow-700' :
-              showFeedback && lastScore !== null && lastScore < 70 ? 'bg-orange-600 hover:bg-orange-700' :
+              showFeedback && lastScore !== null && lastScore < 80 ? 'bg-orange-600 hover:bg-orange-700' :
               ''
             }`}
           >
