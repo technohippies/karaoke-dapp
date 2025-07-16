@@ -4,7 +4,7 @@ import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
 import { PricingPage } from './pages/PricingPage'
-import { StudyPage } from './pages/StudyPage'
+import { StudyPageV2 } from './pages/StudyPageV2'
 import { DebugIDB } from './pages/DebugIDB'
 import { IDBProvider } from './contexts/IDBContext'
 
@@ -49,7 +49,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/study" element={<StudyPage />} />
+          <Route path="/study" element={<StudyPageV2 />} />
           <Route path="/debug" element={<DebugIDB />} />
           <Route path="/s/:songId" element={<SongPage />} />
           {/* Redirect old song URLs to new format */}

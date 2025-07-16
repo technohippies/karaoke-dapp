@@ -3,33 +3,26 @@ import { getSessionSigs } from '../../../lib/authHelpers'
 import { ethers } from 'ethers'
 import type { SessionSigsMap } from '@lit-protocol/types'
 
-// Simpler Lit Action for scoring individual lines
+// Simpler Lit Action for scoring individual lines without OpenAI
 const lineScoringLitAction = `
 (async () => {
   const audioData = dataToSign;
   const expectedText = expectedTextParam;
   
   try {
-    // Call Whisper API to transcribe
-    const formData = new FormData();
-    formData.append('file', new Blob([audioData], { type: 'audio/webm' }), 'audio.webm');
-    formData.append('model', 'whisper-1');
-    formData.append('language', 'en');
+    // For now, just return a mock result based on expected text length
+    // In production, this would use Whisper API or other speech-to-text
+    const mockTranscripts = [
+      expectedText, // Perfect match
+      expectedText.toLowerCase(), // Case difference
+      expectedText.replace(/[.,!?]/g, ''), // Punctuation difference
+      expectedText.split(' ').slice(0, -1).join(' '), // Missing last word
+      'something completely different', // Wrong
+    ];
     
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + openaiApiKey
-      },
-      body: formData
-    });
-    
-    if (!response.ok) {
-      throw new Error('Whisper API error: ' + response.status);
-    }
-    
-    const data = await response.json();
-    const transcript = data.text || '';
+    // Randomly pick a transcript for testing
+    const randomIndex = Math.floor(Math.random() * mockTranscripts.length);
+    const transcript = mockTranscripts[randomIndex];
     
     // Simple scoring based on similarity
     const score = calculateSimilarity(transcript.toLowerCase(), expectedText.toLowerCase());
@@ -64,13 +57,17 @@ const lineScoringLitAction = `
     if (actualNorm === expectedNorm) return 100;
     
     // Word-level comparison
-    const actualWords = actualNorm.split(/\\s+/);
-    const expectedWords = expectedNorm.split(/\\s+/);
+    const actualWords = actualNorm.split(/\\s+/).filter(w => w.length > 0);
+    const expectedWords = expectedNorm.split(/\\s+/).filter(w => w.length > 0);
     
     let matches = 0;
-    expectedWords.forEach((word, i) => {
-      if (actualWords[i] === word) matches++;
-    });
+    const minLength = Math.min(actualWords.length, expectedWords.length);
+    
+    for (let i = 0; i < minLength; i++) {
+      if (actualWords[i] === expectedWords[i]) {
+        matches++;
+      }
+    }
     
     const wordAccuracy = (matches / Math.max(expectedWords.length, 1)) * 100;
     
