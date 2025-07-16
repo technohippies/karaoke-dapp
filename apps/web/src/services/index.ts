@@ -16,3 +16,6 @@ export { karaokeScoringService } from './integrations/lit/KaraokeScoringService'
 export { songContentManager } from './core/content/SongContentManager'
 export { postUnlockContentLoader } from './core/content/PostUnlockContentLoader'
 export { midiPlayerService } from './core/midi/MidiPlayerService'
+
+// Export SRS types for convenience
+export * from '../types/srs.types'

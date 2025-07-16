@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { CloseHeader } from './CloseHeader'
 import { Spinner } from './ui/spinner'
 import coachImage from '../assets/scarlett-right-128x128.png'
-import { useTablelandWrite } from '../hooks/useTablelandWrite'
+import { useTablelandSRS } from '../hooks/useTablelandSRS'
 import { ChainSwitcher } from './ChainSwitcher'
 import { useAccount } from 'wagmi'
 
@@ -41,7 +41,7 @@ export function KaraokeCompletion({
   onClose
 }: KaraokeCompletionProps) {
   const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved'>(initialProgressState)
-  const { saveKaraokeSession, isReady, currentChainId, isInitialized } = useTablelandWrite()
+  const { saveKaraokeSession, isReady, currentChainId, isInitialized } = useTablelandSRS()
   const [saveError, setSaveError] = useState<string | null>(null)
   const { chain } = useAccount()
   
