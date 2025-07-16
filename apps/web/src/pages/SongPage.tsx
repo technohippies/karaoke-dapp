@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
@@ -19,11 +19,13 @@ import { Leaderboard } from '../components/Leaderboard'
 import { KaraokeSession } from '../components/KaraokeSession'
 import { Button } from '../components/ui/button'
 import { ChainSwitcher } from '../components/ChainSwitcher'
+import { walletClientToSigner } from '../utils/walletClientToSigner'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
+  const { data: walletClient } = useWalletClient()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
@@ -128,9 +130,17 @@ export function SongPage() {
     if (isUnlockSuccess && address && song) {
       console.log('✅ Unlock successful, loading content...')
       // Add a small delay to ensure blockchain state is updated
-      setTimeout(() => {
+      setTimeout(async () => {
         refetchSongUnlocked() // Refetch unlock status
-        loadContent(song, address)
+        let signer = undefined
+        if (walletClient) {
+          try {
+            signer = await walletClientToSigner(walletClient)
+          } catch (error) {
+            console.error('Failed to convert wallet client to signer:', error)
+          }
+        }
+        loadContent(song, address, signer)
       }, 1000)
     }
   }, [isUnlockSuccess, address, song, loadContent, refetchSongUnlocked])
@@ -222,13 +232,23 @@ export function SongPage() {
   
   // Effect to start karaoke when transaction succeeds
   useEffect(() => {
-    if (isStartKaraokeSuccess) {
+    if (isStartKaraokeSuccess && startKaraokeHash) {
       setKaraokeStartStep('starting')
       setShowKaraoke(true)
       setIsStartingKaraoke(false)
       setKaraokeStartStep('idle')
     }
-  }, [isStartKaraokeSuccess])
+  }, [isStartKaraokeSuccess, startKaraokeHash])
+  
+  // Effect to handle chain changes - reset karaoke state
+  useEffect(() => {
+    if (showKaraoke) {
+      console.log('🔗 Chain changed while karaoke active - resetting state')
+      setShowKaraoke(false)
+      setIsStartingKaraoke(false)
+      setKaraokeStartStep('idle')
+    }
+  }, [chain?.id]) // Reset when chain changes
 
   const loadSong = async (id: number) => {
     try {
@@ -408,7 +428,12 @@ export function SongPage() {
         songId={song.id}
         lyrics={karaokeData}
         midiData={content.midiData}
-        onClose={() => setShowKaraoke(false)}
+        onClose={() => {
+          setShowKaraoke(false)
+          // Reset transaction hash when closing
+          setKaraokeStartStep('idle')
+        }}
+        paymentTxHash={startKaraokeHash}
       />
     )
   }
@@ -622,9 +647,17 @@ export function SongPage() {
                     {console.log('🎵 SongPage button logic:', { hasContent: !!content, hasMidiData: !!content?.midiData, showDownloadButton: !content || !content.midiData }) || (!content || !content.midiData) ? (
                       <>
                         <Button
-                          onClick={() => {
+                          onClick={async () => {
                             if (song && address) {
-                              loadContent(song, address)
+                              let signer = undefined
+                              if (walletClient) {
+                                try {
+                                  signer = await walletClientToSigner(walletClient)
+                                } catch (error) {
+                                  console.error('Failed to convert wallet client to signer:', error)
+                                }
+                              }
+                              loadContent(song, address, signer)
                             }
                           }}
                           disabled={isContentLoading || !song || !address}

@@ -2,7 +2,7 @@
 
 ## Latest Deployment
 - **Contract**: SimpleKaraoke
-- **Address**: `0x387a4888A678350cBe8a0e3804723B6989Ead1cA`
+- **Address**: `0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`
 - **Network**: Base Sepolia
 - **Deployer**: `0x0C6433789d14050aF47198B2751f6689731Ca79C`
 - **Block**: Latest deployment

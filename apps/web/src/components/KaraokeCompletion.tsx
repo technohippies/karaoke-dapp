@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { CloseHeader } from './CloseHeader'
 import { Spinner } from './ui/spinner'
+import { Button } from './ui/button'
 import coachImage from '../assets/scarlett-right-128x128.png'
-import { useTablelandSRS } from '../hooks/useTablelandSRS'
+import { useIDBSRS } from '../hooks/useIDBSRS'
 import { ChainSwitcher } from './ChainSwitcher'
 import { useAccount } from 'wagmi'
 
@@ -20,7 +21,7 @@ interface ScoringDetails {
 }
 
 export interface KaraokeCompletionProps {
-  initialProgressState?: 'idle' | 'saving' | 'saved'
+  initialProgressState?: 'idle' | 'saving' | 'saved' | 'syncing' | 'synced'
   hasTable?: boolean
   score?: number
   scoringDetails?: ScoringDetails
@@ -40,10 +41,49 @@ export function KaraokeCompletion({
   startedAt = Date.now(),
   onClose
 }: KaraokeCompletionProps) {
-  const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved'>(initialProgressState)
-  const { saveKaraokeSession, isReady, currentChainId, isInitialized } = useTablelandSRS()
+  const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved' | 'syncing' | 'synced'>(initialProgressState)
+  const [localSaveComplete, setLocalSaveComplete] = useState(false)
+  const { 
+    saveKaraokeSession, 
+    syncToTableland, 
+    isReady, 
+    currentChainId, 
+    isInitialized,
+    syncStatus,
+    isSyncing 
+  } = useIDBSRS()
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const { chain } = useAccount()
+  
+  // Auto-save to IDB when component mounts with scoring data
+  useEffect(() => {
+    const autoSaveToIDB = async () => {
+      if (!isInitialized || !songId || !scoringDetails || localSaveComplete) {
+        return
+      }
+      
+      console.log('🔄 Auto-saving to IDB...')
+      try {
+        const sessionHash = await saveKaraokeSession({
+          songId: parseInt(songId),
+          score: score || 0,
+          scoringDetails,
+          transcript: transcript || '',
+          startedAt
+        })
+        
+        if (sessionHash) {
+          setLocalSaveComplete(true)
+          console.log('✅ Auto-saved to IDB:', sessionHash)
+        }
+      } catch (err) {
+        console.error('❌ Auto-save to IDB failed:', err)
+      }
+    }
+    
+    autoSaveToIDB()
+  }, [isInitialized, songId, scoringDetails, score, transcript, startedAt, saveKaraokeSession, localSaveComplete])
   
   // Monitor chain changes
   useEffect(() => {
@@ -61,7 +101,9 @@ export function KaraokeCompletion({
     currentChainId,
     isInitialized,
     saveError,
-    actualChain: chain?.id
+    syncError,
+    actualChain: chain?.id,
+    syncStatus
   })
 
   const getScoreMessage = () => {
@@ -73,44 +115,33 @@ export function KaraokeCompletion({
   }
 
   const getActionMessage = () => {
-    if (progressState === 'saved') return "Now you can study with exercises!"
-    
-    if (hasTable) {
-      return "Save your progress!"
-    } else {
-      return "You can save your data to your own database that you own and control. This means you can import this data into other educational dapps!"
-    }
+    if (progressState === 'synced') return "Now you can study with exercises!"
+    return "Your progress is saved locally. Study with exercises anytime!"
   }
 
-  const handleSaveProgress = async () => {
-    if (!isReady || !songId) {
-      setSaveError('Unable to save: wallet not connected or missing data')
+  const handleSyncToChain = async () => {
+    if (!isReady) {
+      setSyncError('Unable to sync: wallet not connected')
       return
     }
     
-    setProgressState('saving')
-    setSaveError(null)
+    setProgressState('syncing')
+    setSyncError(null)
     
     try {
-      const sessionHash = await saveKaraokeSession({
-        songId: parseInt(songId),
-        score: score || 0,
-        scoringDetails,
-        transcript: transcript || '',
-        startedAt
-      })
+      const result = await syncToTableland()
       
-      if (sessionHash) {
-        setProgressState('saved')
-        console.log('✅ Saved with session hash:', sessionHash)
+      if (result && result.success && (result.syncedSessions > 0 || result.syncedLines > 0 || result.syncedExercises > 0)) {
+        setProgressState('synced')
+        console.log('✅ Synced to chain:', result)
       } else {
+        // User declined or no data was synced
         setProgressState('idle')
-        setSaveError('Failed to save progress')
+        console.log('⚠️ Sync incomplete or declined:', result)
       }
     } catch (err) {
       setProgressState('idle')
-      setSaveError('Failed to save progress')
-      console.error('Save error:', err)
+      console.error('Sync error:', err)
     }
   }
 
@@ -120,41 +151,46 @@ export function KaraokeCompletion({
   }
 
   const getProgressContent = () => {
-    switch (progressState) {
-      case 'idle':
-        return (
+    // Show sync status if there are pending changes
+    const showSyncButton = localSaveComplete && syncStatus.pendingChanges > 0
+
+    return (
+      <div className="grid grid-cols-2 gap-3">
+        {/* Study button - always on the left */}
+        <Button
+          variant="secondary"
+          onClick={handlePractice}
+          className="w-full"
+        >
+          Study
+        </Button>
+        
+        {/* Sync button - always on the right */}
+        <div className="w-full">
           <ChainSwitcher 
             requiredChainId={11155420}
             className="w-full"
           >
-            <button
-              onClick={handleSaveProgress}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
+            <Button
+              onClick={handleSyncToChain}
+              disabled={progressState === 'syncing' || progressState === 'synced' || !showSyncButton}
+              className="w-full"
             >
-              Save Progress
-            </button>
+              {progressState === 'syncing' ? (
+                <>
+                  <Spinner size="sm" />
+                  Syncing...
+                </>
+              ) : progressState === 'synced' ? (
+                'Saved'
+              ) : (
+                'Save Progress'
+              )}
+            </Button>
           </ChainSwitcher>
-        )
-      case 'saving':
-        return (
-          <button
-            disabled
-            className="w-full bg-neutral-600 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            <Spinner size="sm" />
-            Saving...
-          </button>
-        )
-      case 'saved':
-        return (
-          <button
-            onClick={handlePractice}
-            className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors cursor-pointer"
-          >
-            Study
-          </button>
-        )
-    }
+        </div>
+      </div>
+    )
   }
 
   return (

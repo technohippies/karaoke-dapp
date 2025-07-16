@@ -13,10 +13,11 @@ interface KaraokeSessionProps {
   lyrics: Array<{ time: number; text: string; translation?: string }>
   midiData: Uint8Array
   onClose: () => void
+  paymentTxHash?: string // Proof of payment
 }
 
-export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSessionProps) {
-  const { address, isConnected } = useAccount()
+export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHash }: KaraokeSessionProps) {
+  const { address, isConnected, chain } = useAccount()
   const { data: walletClient, isLoading: isWalletLoading } = useWalletClient()
   const [showCompletion, setShowCompletion] = useState(false)
   const [karaokeScore, setKaraokeScore] = useState(85) // Default score
@@ -116,10 +117,31 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose }: KaraokeSes
     onComplete: handleKaraokeComplete
   })
   
-  // Auto-start when component mounts
+  // Start karaoke only after payment verification
   useEffect(() => {
-    startKaraoke()
-  }, [])
+    if (paymentTxHash) {
+      console.log('💰 Starting karaoke with payment proof:', paymentTxHash)
+      startKaraoke()
+    } else {
+      console.error('❌ No payment proof provided - cannot start karaoke')
+      onClose()
+    }
+  }, [paymentTxHash])
+  
+  // Detect network changes and close session
+  useEffect(() => {
+    // Store initial chain ID
+    const initialChainId = chain?.id
+    
+    return () => {
+      // Cleanup function runs when chain changes
+      if (chain?.id && chain.id !== initialChainId) {
+        console.log('🔗 Network changed during karaoke - closing session')
+        stopKaraoke()
+        onClose()
+      }
+    }
+  }, [chain?.id, onClose, stopKaraoke])
   
   // Show loading state during scoring
   if (isScoring) {

@@ -5,6 +5,7 @@ import { getDetectedLanguage } from '../../../i18n'
 import type { Song } from '../../database/tableland/TablelandReadService'
 import { getSessionSigs } from '../../../lib/authHelpers'
 import { contentCacheService } from '../../database/cache/ContentCacheService'
+import { ethers } from 'ethers'
 
 export interface LoadedContent {
   lyrics: string | null
@@ -31,7 +32,7 @@ export class PostUnlockContentLoader {
     return null
   }
 
-  async loadContent(song: Song, userAddress: string): Promise<LoadedContent> {
+  async loadContent(song: Song, userAddress: string, signer?: ethers.Signer): Promise<LoadedContent> {
     const userLanguage = getDetectedLanguage()
     
     // Check IndexedDB cache first
@@ -77,7 +78,8 @@ export class PostUnlockContentLoader {
         console.log(`🌐 Loading ${userLanguage} translation...`)
         result.translation = await this.decryptTranslation(
           song.translations[userLanguage],
-          userAddress
+          userAddress,
+          signer
         )
       }
 
@@ -90,7 +92,7 @@ export class PostUnlockContentLoader {
       
       if (song.stems?.piano) {
         console.log('🎹 Loading MIDI data...')
-        result.midiData = await this.decryptMidi(song.stems.piano, userAddress)
+        result.midiData = await this.decryptMidi(song.stems.piano, userAddress, signer)
       } else {
         console.log('❌ No MIDI data found - song.stems.piano is missing')
       }
@@ -112,7 +114,7 @@ export class PostUnlockContentLoader {
     }
   }
 
-  private async decryptTranslation(ipfsHash: string, userAddress: string): Promise<string | null> {
+  private async decryptTranslation(ipfsHash: string, userAddress: string, signer?: ethers.Signer): Promise<string | null> {
     try {
       console.log('🔍 Decrypting translation from IPFS:', ipfsHash)
       console.log('👤 User address:', userAddress)
@@ -154,7 +156,7 @@ export class PostUnlockContentLoader {
       // Get session sigs for decryption
       console.log('🔑 Getting session signatures for decryption...')
       
-      const sessionSigs = await getSessionSigs(userAddress)
+      const sessionSigs = await getSessionSigs(userAddress, 'baseSepolia', signer)
       console.log('🔐 Session sigs obtained:', !!sessionSigs)
 
       // Decrypt using v7.2 approach
@@ -203,7 +205,7 @@ export class PostUnlockContentLoader {
     }
   }
 
-  private async decryptMidi(ipfsHash: string, userAddress: string): Promise<Uint8Array | null> {
+  private async decryptMidi(ipfsHash: string, userAddress: string, signer?: ethers.Signer): Promise<Uint8Array | null> {
     try {
       // Fetch encrypted content from IPFS
       const response = await fetch(`${this.ipfsGateway}/ipfs/${ipfsHash}`)
@@ -219,7 +221,7 @@ export class PostUnlockContentLoader {
       // Get session sigs for decryption
       console.log('🔑 Getting session signatures for MIDI decryption...')
       
-      const sessionSigs = await getSessionSigs(userAddress)
+      const sessionSigs = await getSessionSigs(userAddress, 'baseSepolia', signer)
       console.log('🔐 Session sigs obtained:', !!sessionSigs)
 
       // Decrypt using v7.2 approach

@@ -27,19 +27,13 @@ export function useLitSession() {
     try {
       console.log('🔐 Creating Lit session for:', address)
 
-      // Get the capacity delegation auth sig from the app
+      // Check if capacity delegation is available
       const capacityDelegationAuthSig = litProtocolService.getCapacityDelegation()
       
-      if (!capacityDelegationAuthSig) {
-        throw new Error('Capacity delegation not configured')
-      }
-
-      console.log('📋 Using capacity delegation from:', capacityDelegationAuthSig.address)
-
-      const sessionSigs = await litProtocolService.litNodeClient.getSessionSigs({
+      // Create session configuration based on whether we have capacity delegation
+      const sessionConfig: any = {
         chain: 'ethereum',
-        expiration: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour like test
-        capacityDelegationAuthSig, // Use singular like test script
+        expiration: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 1 hour
         resourceAbilityRequests: [
           {
             resource: new LitActionResource('*'),
@@ -72,7 +66,17 @@ export function useLitSession() {
             toSign 
           })
         },
-      })
+      }
+
+      // Only add capacity delegation if it's available
+      if (capacityDelegationAuthSig) {
+        console.log('📋 Using capacity delegation from:', capacityDelegationAuthSig.address)
+        sessionConfig.capacityDelegationAuthSig = capacityDelegationAuthSig
+      } else {
+        console.log('📋 Creating session without capacity delegation')
+      }
+
+      const sessionSigs = await litProtocolService.litNodeClient.getSessionSigs(sessionConfig)
 
       console.log('✅ Session created successfully')
       

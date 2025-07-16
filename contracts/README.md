@@ -37,7 +37,7 @@ The private key is already configured in `.env` for convenience.
 ### Current Deployment
 
 - **Contract**: SimpleKaraoke
-- **Address**: `0x387a4888A678350cBe8a0e3804723B6989Ead1cA`
+- **Address**: `0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`
 - **Network**: Base Sepolia
 - **Status**: ✅ ACTIVE
 
@@ -67,10 +67,10 @@ Main contract with:
 Test basic functions:
 ```bash
 # Check owner
-cast call 0x387a4888A678350cBe8a0e3804723B6989Ead1cA "owner()" --rpc-url https://sepolia.base.org
+cast call 0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d "owner()" --rpc-url https://sepolia.base.org
 
 # Check voice credits for address
-cast call 0x387a4888A678350cBe8a0e3804723B6989Ead1cA "voiceCredits(address)" YOUR_ADDRESS --rpc-url https://sepolia.base.org
+cast call 0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d "voiceCredits(address)" YOUR_ADDRESS --rpc-url https://sepolia.base.org
 ```
 
 ## Directory Structure

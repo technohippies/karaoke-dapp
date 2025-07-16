@@ -19,7 +19,7 @@ const PREPARED_SONGS = join(__dirname, '..', 'data', 'encrypted', 'prepared-song
 const SONGS_CONFIG = join(__dirname, '..', 'data', 'metadata.json')
 
 // Configure your table name here
-const TABLE_NAME = process.env.SONGS_TABLE_NAME || 'songs_84532_xxx'
+const TABLE_NAME = process.env.SONGS_TABLE_NAME || 'karaoke_songs_11155420_11155420_181'
 
 async function updateTableland() {
   if (!process.env.PRIVATE_KEY) {

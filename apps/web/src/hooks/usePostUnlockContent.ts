@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { PostUnlockContentLoader, type LoadedContent } from '../services/core/content/PostUnlockContentLoader'
 import type { Song } from '../services/database/tableland/TablelandReadService'
+import { ethers } from 'ethers'
 
 interface PostUnlockContentState {
   isLoading: boolean
@@ -17,11 +18,11 @@ export function usePostUnlockContent() {
 
   const loaderRef = useRef<PostUnlockContentLoader>(new PostUnlockContentLoader())
 
-  const loadContent = useCallback(async (song: Song, userAddress: string) => {
+  const loadContent = useCallback(async (song: Song, userAddress: string, signer?: ethers.Signer) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
 
     try {
-      const content = await loaderRef.current.loadContent(song, userAddress)
+      const content = await loaderRef.current.loadContent(song, userAddress, signer)
       console.log('📦 Content loaded by hook:', {
         hasContent: !!content,
         hasMidiData: !!content?.midiData,

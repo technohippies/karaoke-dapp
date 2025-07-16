@@ -39,9 +39,23 @@ export async function getAuthSig(walletAddress: string) {
   return authSig
 }
 
-export async function getSessionSigs(walletAddress: string) {
-  const provider = new ethers.BrowserProvider(window.ethereum)
-  const signer = await provider.getSigner()
+export async function getSessionSigs(walletAddress: string, chain: string = 'baseSepolia', signer?: ethers.Signer) {
+  // If no signer provided, try to create one from window.ethereum (fallback for non-Web3Auth)
+  if (!signer) {
+    if (!window.ethereum) {
+      throw new Error('No ethereum provider available')
+    }
+    const provider = new ethers.BrowserProvider(window.ethereum)
+    signer = await provider.getSigner()
+  }
+  
+  const signerAddress = await signer.getAddress()
+  
+  console.log('🔐 Creating session sigs:', {
+    requestedAddress: walletAddress,
+    signerAddress: signerAddress,
+    match: walletAddress.toLowerCase() === signerAddress.toLowerCase()
+  })
   
   const litNodeClient = litProtocolService.getClient()
   const latestBlockhash = await litNodeClient.getLatestBlockhash()
@@ -82,12 +96,16 @@ export async function getSessionSigs(walletAddress: string) {
   
   // Get the session signatures
   console.log('📝 Getting session sigs with:', {
-    chain: 'baseSepolia',
+    chain,
     network: litNodeClient.config.litNetwork
   })
   
-  const sessionSigs = await litNodeClient.getSessionSigs({
-    chain: 'baseSepolia',
+  // Check if capacity delegation is available
+  const capacityDelegationAuthSig = litProtocolService.getCapacityDelegation()
+  
+  // Create session configuration
+  const sessionConfig: any = {
+    chain,
     resourceAbilityRequests: [
       {
         resource: litResource,
@@ -95,7 +113,17 @@ export async function getSessionSigs(walletAddress: string) {
       },
     ],
     authNeededCallback,
-  })
+  }
+  
+  // Only add capacity delegation if available
+  if (capacityDelegationAuthSig) {
+    console.log('📋 Using capacity delegation from:', capacityDelegationAuthSig.address)
+    sessionConfig.capacityDelegationAuthSig = capacityDelegationAuthSig
+  } else {
+    console.log('📋 Creating session without capacity delegation')
+  }
+  
+  const sessionSigs = await litNodeClient.getSessionSigs(sessionConfig)
   
   console.log('✅ Session sigs created for nodes:', Object.keys(sessionSigs))
   
