@@ -6,12 +6,12 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
-import { IconButton } from '../components/IconButton'
+import { SimpleHeader } from '../components/SimpleHeader'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
 import { Spinner } from '../components/ui/spinner'
 import { Button } from '../components/ui/button'
-import { X, Microphone, StopCircle } from '@phosphor-icons/react'
+import { Microphone, StopCircle } from '@phosphor-icons/react'
 import { lineScoringScoringService } from '../services/integrations/lit/LineScoringService'
 import { useSimpleAudioRecorder } from '../hooks/useSimpleAudioRecorder'
 import type { DueCard } from '../types/srs.types'
@@ -250,18 +250,15 @@ export function StudyPageV2() {
   
   return (
     <div className="min-h-screen bg-neutral-900 flex flex-col">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-10 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-700">
-        <div className="flex items-center justify-between p-4">
-          <IconButton variant="ghost" onClick={() => navigate('/')}>
-            <X size={24} weight="bold" />
-          </IconButton>
-          <Progress value={progress} className="flex-1 mx-4 h-2" />
-        </div>
+      <SimpleHeader />
+      
+      {/* Progress bar */}
+      <div className="fixed top-16 left-0 right-0 z-10 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-700 px-4 py-2">
+        <Progress value={progress} className="h-2" />
       </div>
       
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-4 pt-20 pb-32">
+      <div className="flex-1 flex items-center justify-center px-4 pt-28 pb-32">
         <div className="max-w-2xl w-full space-y-8">
           {/* Instruction */}
           <h2 className="text-2xl font-semibold text-white">

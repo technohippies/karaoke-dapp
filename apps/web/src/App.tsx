@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
 import { PricingPage } from './pages/PricingPage'
 import { StudyPageV2 } from './pages/StudyPageV2'
+import { AccountPage } from './pages/AccountPage'
 import { DebugIDB } from './pages/DebugIDB'
 import { IDBProvider } from './contexts/IDBContext'
 
@@ -50,6 +51,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/study" element={<StudyPageV2 />} />
+          <Route path="/account" element={<AccountPage />} />
           <Route path="/debug" element={<DebugIDB />} />
           <Route path="/s/:songId" element={<SongPage />} />
           {/* Redirect old song URLs to new format */}

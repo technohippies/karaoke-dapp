@@ -1,4 +1,4 @@
-import { Crown, Fire, CaretLeft } from '@phosphor-icons/react'
+import { CrownCross, Fire, CaretLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'
 import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
@@ -53,7 +53,7 @@ export function Header({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 flex items-center justify-center">
-                <Crown weight="fill" size={24} color="#EAB308" />
+                <CrownCross weight="fill" size={24} color="#EAB308" />
               </div>
               <span className="text-neutral-300 font-bold text-sm">{crownCount}</span>
             </div>

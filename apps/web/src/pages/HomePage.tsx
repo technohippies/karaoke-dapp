@@ -73,8 +73,7 @@ export function HomePage() {
   }
 
   const handleAccount = () => {
-    // Handle account page navigation
-    console.log('Account clicked')
+    navigate('/account')
   }
 
   return (

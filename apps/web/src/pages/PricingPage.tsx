@@ -4,6 +4,7 @@ import { Spinner } from '../components/ui/spinner'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
+import { CreditsWidget } from '../components/CreditsWidget'
 
 export function PricingPage() {
   const navigate = useNavigate()
@@ -145,16 +146,13 @@ export function PricingPage() {
         </div>
       )}
 
-      {/* Wallet Info */}
+      {/* Credits Widget */}
       {isConnected && (
-        <div className="mb-8 bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-          <h3 className="font-semibold mb-2 text-white">Wallet Info</h3>
-          <div className="space-y-1 text-sm text-neutral-300">
-            <p>USDC Balance: <span className="font-mono text-white">${balance}</span></p>
-            <p>Voice Credits: <span className="font-mono text-white">{voiceCredits}</span></p>
-            <p>Song Credits: <span className="font-mono text-white">{songCredits}</span></p>
-          </div>
-        </div>
+        <CreditsWidget 
+          balance={balance}
+          voiceCredits={voiceCredits}
+          songCredits={songCredits}
+        />
       )}
 
       {/* FAQ */}
