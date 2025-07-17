@@ -4,6 +4,7 @@ import { IconButton } from './IconButton'
 
 interface LyricLine {
   text: string
+  translation?: string // Translation for this line
   duration?: number // Duration in milliseconds for this line
 }
 
@@ -109,15 +110,30 @@ export function KaraokeDisplay({
               return (
                 <div
                   key={index}
-                  className={`text-3xl transition-all duration-500 leading-relaxed ${
+                  className={`transition-all duration-500 ${
+                    isCurrent ? 'scale-105' : ''
+                  }`}
+                >
+                  <div className={`text-3xl leading-relaxed ${
                     isCurrent 
-                      ? 'text-white scale-105' 
+                      ? 'text-white' 
                       : isPast 
                         ? 'text-neutral-600'
                         : 'text-neutral-500'
-                  }`}
-                >
-                  {lyric.text}
+                  }`}>
+                    {lyric.text}
+                  </div>
+                  {lyric.translation && (
+                    <div className={`text-xl mt-2 leading-relaxed ${
+                      isCurrent 
+                        ? 'text-neutral-300' 
+                        : isPast 
+                          ? 'text-neutral-700'
+                          : 'text-neutral-600'
+                    }`}>
+                      {lyric.translation}
+                    </div>
+                  )}
                 </div>
               )
             })}

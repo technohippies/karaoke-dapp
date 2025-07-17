@@ -24,7 +24,7 @@ export const Basic: Story = {
         <TabsContent value="lyrics">
           <div className="text-white">
             <h3 className="text-lg font-semibold mb-4">Song Lyrics</h3>
-            <p className="text-neutral-300">I've never seen a diamond in the flesh...</p>
+            <p className="text-neutral-300">Yo, I'm building on a foundation that's solid as rock...</p>
           </div>
         </TabsContent>
         <TabsContent value="leaderboard">

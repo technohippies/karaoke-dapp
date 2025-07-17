@@ -183,7 +183,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
   
   return (
     <KaraokeDisplay
-      lyrics={testLyrics.map(l => ({ text: l.text }))}
+      lyrics={testLyrics}
       onClose={onClose}
       autoStart={true} // Let KaraokeDisplay handle countdown
       currentLineIndex={currentLineIndex} // Pass synchronized line index

@@ -185,6 +185,37 @@ This project is licensed under the GNU Affero General Public License v3.0 (AGPLv
 - Always encrypt sensitive content before storage
 - Test thoroughly on testnet before mainnet deployment
 
+## 📚 Repository Access
+
+This project is available on multiple platforms for redundancy and censorship resistance:
+
+### Primary Repository
+- **GitHub**: https://github.com/technohippies/karaoke-dapp.git
+
+### Decentralized Mirror
+- **Radicle**: https://app.radicle.xyz/nodes/rosa.radicle.xyz/rad:zjAPSYMsctUsESkgc9XqTgcstWUH
+- **Clone via Radicle**: `rad:zjAPSYMsctUsESkgc9XqTgcstWUH`
+
+The Radicle repository serves as a decentralized, censorship-resistant mirror. Updates are automatically synchronized from GitHub with a slight delay. If the repository is removed from centralized platforms for any reason, or if you're in a region with restricted access, the complete codebase will remain permanently accessible through Radicle's peer-to-peer network.
+
+## ⚖️ Legal Notice & Copyright Compliance
+
+### Content Licensing
+This platform operates in full compliance with copyright law and digital rights management:
+
+- **Lyrics Content**: All copyrighted lyrics are dynamically loaded from LRCLIB's API. We do not host, store, or distribute any copyrighted lyrical content on our servers or in this repository.
+
+- **Musical Compositions**: No copyrighted audio recordings or musical compositions are hosted on our infrastructure. The platform utilizes MIDI files which represent musical notation data only, not recorded performances.
+
+- **Digital Rights Management**: Encrypted MIDI files are made available for download (not streaming) exclusively after an on-chain purchase transaction is completed. This ensures proper licensing and royalty tracking.
+
+- **Royalty Compliance**: All transactions are recorded on-chain with complete transparency. Royalties are automatically calculated and reserved for rights holders in accordance with Mechanical Licensing Collective (MLC) requirements and applicable copyright law.
+
+- **Rights Holder Payments**: Smart contracts ensure that appropriate royalties are segregated and made available to verified rights holders through transparent on-chain mechanisms.
+
+### Disclaimer
+This software is provided as a decentralized platform for language learning through karaoke. Users are responsible for ensuring their use of the platform complies with all applicable laws in their jurisdiction. The platform operators make no representations regarding the availability of content in any particular jurisdiction.
+
 ## 🙏 Acknowledgments
 
 - Lit Protocol for content encryption

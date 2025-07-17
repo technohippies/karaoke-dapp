@@ -6,18 +6,18 @@ interface KaraokeLyricsProps {
 }
 
 export function KaraokeLyrics({ isPlaying, currentTime }: KaraokeLyricsProps) {
-  // Placeholder lyrics for now
+  // Placeholder lyrics - "Faith Base" by Scarlett X
   const placeholderLyrics = [
-    { time: 0, text: "I've never seen a diamond in the flesh" },
-    { time: 3, text: "I cut my teeth on wedding rings in the movies" },
-    { time: 7, text: "And I'm not proud of my address" },
-    { time: 10, text: "In a torn-up town, no postcode envy" },
-    { time: 14, text: "But every song's like gold teeth, Grey Goose, trippin' in the bathroom" },
-    { time: 18, text: "Bloodstains, ball gowns, trashin' the hotel room" },
-    { time: 21, text: "We don't care, we're driving Cadillacs in our dreams" },
-    { time: 25, text: "But everybody's like Cristal, Maybach, diamonds on your timepiece" },
-    { time: 29, text: "Jet planes, islands, tigers on a gold leash" },
-    { time: 32, text: "We don't care, we aren't caught up in your love affair" },
+    { time: 0, text: "Yo, I'm building on a foundation that's solid as rock" },
+    { time: 3, text: "Got my faith base strong, yeah I'm ready to walk" },
+    { time: 7, text: "Through the valleys and peaks, I ain't moving alone" },
+    { time: 10, text: "Got the Spirit inside, made my heart His home" },
+    { time: 14, text: "They be chasing the clout, fame, money and power" },
+    { time: 18, text: "But I'm planted like trees by the living water" },
+    { time: 21, text: "When the storms come through, I ain't shook, I ain't fazed" },
+    { time: 25, text: "'Cause my faith base strong, giving glory and praise" },
+    { time: 29, text: "Faith base, faith base, we building it up" },
+    { time: 32, text: "Grace flows like rivers when times getting tough" },
   ]
 
   const [activeLine, setActiveLine] = useState(0)

@@ -20,7 +20,7 @@ type Story = StoryObj<typeof ExerciseContainer>
 
 export const Initial: Story = {
   args: {
-    line: "I've never seen a diamond in the flesh",
+    line: "Welcome to the language learning journey",
     onSubmit: (audioBlob: Blob) => console.log('Audio submitted:', audioBlob),
     onNext: () => console.log('Next clicked'),
   },
@@ -28,8 +28,8 @@ export const Initial: Story = {
 
 export const WithCorrectAnswer: Story = {
   args: {
-    line: "I've never seen a diamond in the flesh",
-    transcript: "I've never seen a diamond in the flesh",
+    line: "Welcome to the language learning journey",
+    transcript: "Welcome to the language learning journey",
     isCorrect: true,
     onNext: () => console.log('Next clicked'),
   },
@@ -37,8 +37,8 @@ export const WithCorrectAnswer: Story = {
 
 export const WithIncorrectAnswer: Story = {
   args: {
-    line: "I've never seen a diamond in the flesh",
-    transcript: "I never saw a diamond in the flesh",
+    line: "Welcome to the language learning journey",
+    transcript: "Welcome to the language learning jorney",
     isCorrect: false,
     onNext: () => console.log('Next clicked'),
   },

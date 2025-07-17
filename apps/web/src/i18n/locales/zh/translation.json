@@ -80,5 +80,56 @@
       "baseSepolia": "Base Sepolia",
       "base": "Base"
     }
+  },
+  "pricing": {
+    "title": "价格",
+    "starterPack": "新手包",
+    "voicePack": "语音包",
+    "songPack": "歌曲包",
+    "voiceCredits": "语音积分",
+    "songCredits": "歌曲积分",
+    "buy": "购买",
+    "approving": "批准中...",
+    "purchasing": "购买中...",
+    "connectToPurchase": "连接钱包以购买"
+  },
+  "faq": {
+    "title": "常见问题",
+    "howDoesItWork": {
+      "question": "这是如何工作的？",
+      "answer": "歌曲积分解锁歌曲。一旦解锁，您可以通过卡拉OK学习英语歌词，阅读翻译，并练习由AI评分的练习。一旦解锁，您将永远拥有该歌曲的访问权限。"
+    },
+    "whatAreSongCredits": {
+      "question": "什么是歌曲积分？",
+      "answer": "歌曲积分让您可以访问歌曲的歌词、翻译以及进行卡拉OK的能力。"
+    },
+    "whatAreVoiceCredits": {
+      "question": "什么是语音积分？",
+      "answer": "语音积分用于卡拉OK和语言学习练习。"
+    },
+    "whyPayGas": {
+      "question": "为什么我必须支付gas费？",
+      "answer": "您在Tableland上拥有自己的数据库中的数据。您可以在其他dapp中使用这些数据，我们相信这是教育运作的未来方式。"
+    },
+    "isThisNew": {
+      "question": "这是新的吗？",
+      "answer": "是的，这是一个全新的dapp，请报告错误。"
+    },
+    "whereDoesMoneyGo": {
+      "question": "钱都去哪了？",
+      "answer": "每$1歌曲：\n• $0.50捐赠给无国界医生（Médecins Sans Frontières/MSF）\n• $0.20给版权持有人\n• $0.176用于我们的运营费用\n• $0.124给MLC用于歌曲评分\n\n您可以在智能合约中验证这一点（在Base Scout上查看）- 感谢Splits.org！语音积分用于支付我们使用的语音转文本AI和LLM评分服务的费用。"
+    },
+    "moreComingSoon": {
+      "question": "你们会添加更多歌曲吗？",
+      "answer": "是的，很多。还有更多乐器。"
+    },
+    "justEnglish": {
+      "question": "只教英语吗？",
+      "answer": "是的，但社区成员很快会分叉一个西班牙语版本。"
+    },
+    "isOpenSource": {
+      "question": "这个代码是开源的吗？",
+      "answer": "是的，我们所有的代码都是完全开源的（AGPLv3），在"
+    }
   }
 }

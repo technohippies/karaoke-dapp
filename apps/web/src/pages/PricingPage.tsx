@@ -6,9 +6,11 @@ import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { BASE_SEPOLIA_CHAIN_ID, BASE_MAINNET_CHAIN_ID } from '../constants'
+import { useTranslation } from 'react-i18next'
 
 export function PricingPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const {
     isConnected,
     address,
@@ -158,19 +160,52 @@ export function PricingPage() {
 
       {/* FAQ */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6 text-center text-white">FAQ</h2>
-        <div className="space-y-4">
-          <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-            <h3 className="font-semibold mb-2 text-white">What are Voice Credits?</h3>
-            <p className="text-neutral-400 text-sm">Voice Credits are used during karaoke sessions for AI voice grading and feedback.</p>
+        <h2 className="text-2xl font-bold mb-8 text-center text-white">{t('faq.title')}</h2>
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.howDoesItWork.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.howDoesItWork.answer')}</p>
           </div>
-          <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-            <h3 className="font-semibold mb-2 text-white">What are Song Credits?</h3>
-            <p className="text-neutral-400 text-sm">Song Credits unlock individual songs, giving you access to lyrics and backing tracks.</p>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whatAreSongCredits.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.whatAreSongCredits.answer')}</p>
           </div>
-          <div className="bg-neutral-800 rounded-lg p-4 border border-neutral-700">
-            <h3 className="font-semibold mb-2 text-white">Why the Starter Pack?</h3>
-            <p className="text-neutral-400 text-sm">New users get the best value with 100 Voice Credits + 10 Song Credits for just $3.</p>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whatAreVoiceCredits.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.whatAreVoiceCredits.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whyPayGas.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.whyPayGas.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.isThisNew.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.isThisNew.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whereDoesMoneyGo.question')}</h3>
+            <p className="text-neutral-50 text-md whitespace-pre-line">{t('faq.whereDoesMoneyGo.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.moreComingSoon.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.moreComingSoon.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.justEnglish.question')}</h3>
+            <p className="text-neutral-50 text-md">{t('faq.justEnglish.answer')}</p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.isOpenSource.question')}</h3>
+            <p className="text-neutral-50 text-md">
+              {t('faq.isOpenSource.answer')}{' '}
+              <a href="https://github.com/technohippies/karaoke-dapp" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                GitHub
+              </a>{' '}
+              and{' '}
+              <a href="https://app.radicle.xyz/nodes/rosa.radicle.xyz/rad:zjAPSYMsctUsESkgc9XqTgcstWUH" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
+                Radicle.xyz
+              </a>.
+            </p>
           </div>
         </div>
       </div>

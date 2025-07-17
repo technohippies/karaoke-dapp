@@ -20,9 +20,10 @@ export class PostUnlockContentLoader {
 
   async checkCacheOnly(song: Song, userAddress: string): Promise<LoadedContent | null> {
     const userLanguage = getDetectedLanguage()
+    const translationLanguage = (userLanguage === 'ug' || userLanguage === 'bo') ? userLanguage : 'zh'
     
     // Only check cache, don't load fresh content
-    const cachedContent = await contentCacheService.getContent(song.id, userAddress, userLanguage)
+    const cachedContent = await contentCacheService.getContent(song.id, userAddress, translationLanguage)
     if (cachedContent && cachedContent.midiData) {
       console.log('📦 Found complete cached content (cache-only check)')
       return { ...cachedContent, cached: true }
@@ -34,9 +35,10 @@ export class PostUnlockContentLoader {
 
   async loadContent(song: Song, userAddress: string, signer?: ethers.Signer): Promise<LoadedContent> {
     const userLanguage = getDetectedLanguage()
+    const translationLanguage = (userLanguage === 'ug' || userLanguage === 'bo') ? userLanguage : 'zh'
     
     // Check IndexedDB cache first
-    const cachedContent = await contentCacheService.getContent(song.id, userAddress, userLanguage)
+    const cachedContent = await contentCacheService.getContent(song.id, userAddress, translationLanguage)
     if (cachedContent) {
       console.log('🔍 Cache check:', {
         hasContent: !!cachedContent,
@@ -62,7 +64,7 @@ export class PostUnlockContentLoader {
       lyrics: null,
       translation: null,
       midiData: null,
-      language: userLanguage,
+      language: translationLanguage,
       cached: false
     }
 
@@ -73,11 +75,12 @@ export class PostUnlockContentLoader {
         result.lyrics = await LrcLibService.fetchLyrics(song.lrclib_id)
       }
 
-      // Load translation if user language is supported
-      if (userLanguage !== 'en' && song.translations?.[userLanguage]) {
-        console.log(`🌐 Loading ${userLanguage} translation...`)
+      // Load translation - default to Chinese unless user language is Uyghur or Tibetan
+      const translationLanguage = (userLanguage === 'ug' || userLanguage === 'bo') ? userLanguage : 'zh'
+      if (song.translations?.[translationLanguage]) {
+        console.log(`🌐 Loading ${translationLanguage} translation (user language: ${userLanguage})...`)
         result.translation = await this.decryptTranslation(
-          song.translations[userLanguage],
+          song.translations[translationLanguage],
           userAddress,
           signer
         )
@@ -98,11 +101,11 @@ export class PostUnlockContentLoader {
       }
 
       // Cache the result in IndexedDB
-      await contentCacheService.saveContent(song.id, userAddress, userLanguage, {
+      await contentCacheService.saveContent(song.id, userAddress, translationLanguage, {
         lyrics: result.lyrics,
         translation: result.translation,
         midiData: result.midiData,
-        language: userLanguage
+        language: translationLanguage
       })
       
       console.log('✅ Content loaded and cached successfully')

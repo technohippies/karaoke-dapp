@@ -288,100 +288,100 @@ export function SongPage() {
   // Use parsed lyrics if available, otherwise show sample
   const displayLyrics = parsedLyrics.length > 0 ? parsedLyrics : [
     {
-      english: "I've never seen a diamond in the flesh",
-      translation: "我从未见过真正的钻石",
-      meaning: "表达对奢华生活的陌生和好奇。",
-      grammar: "现在完成时 'I've never seen' 表示从未有过的经历。"
+      english: "Yo, I'm building on a foundation that's solid as rock",
+      translation: "我正在建立一个坚如磐石的基础",
+      meaning: "表达建立坚固信仰基础的决心。",
+      grammar: "现在进行时 'I'm building' 表示正在进行的动作。"
     },
     {
-      english: "I cut my teeth on wedding rings in the movies",
-      translation: "我在电影中的婚戒上学会了这些",
-      meaning: "通过电影了解奢华物品，暗示现实与虚幻的对比。",
-      grammar: "习语 'cut my teeth' 意为学习或获得经验。"
+      english: "Got my faith base strong, yeah I'm ready to walk",
+      translation: "我的信仰基础很强，我准备好前行了",
+      meaning: "表达信仰给予的力量和准备面对挑战的态度。",
+      grammar: "口语表达 'Got my' 相当于 'I have my'。"
     },
     {
-      english: "And I'm not proud of my address",
-      translation: "我不为我的地址感到自豪",
-      meaning: "对自己居住地区的不满和自卑感。",
-      grammar: "形容词 'proud' 后接介词 'of' 表示为某事感到自豪。"
+      english: "Through the valleys and peaks, I ain't moving alone",
+      translation: "穿越山谷和高峰，我并非独自前行",
+      meaning: "表达在人生起伏中有信仰陪伴的安心感。",
+      grammar: "否定结构 'ain't' 是 'am not' 的非正式说法。"
     },
     {
-      english: "In a torn-up town, no postcode envy",
-      translation: "在一个破败的小镇，没有邮编嫉妒",
-      meaning: "描述居住在不富裕地区，不羡慕富人区的邮编。",
-      grammar: "形容词短语 'torn-up' 修饰名词 'town'。"
+      english: "Got the Spirit inside, made my heart His home",
+      translation: "圣灵在我心中，我心成为祂的家",
+      meaning: "描述与神同在的亲密关系。",
+      grammar: "过去分词 'made' 表示完成的动作。"
     },
     {
-      english: "But every song's like gold teeth, Grey Goose, trippin' in the bathroom",
-      translation: "但每首歌都像金牙、灰鹅伏特加、在浴室里狂欢",
-      meaning: "批评流行音乐中过度渲染的奢华生活方式。",
-      grammar: "比喻结构 'every song's like...' 使用一系列名词来形容。"
+      english: "They be chasing the clout, fame, money and power",
+      translation: "他们追逐名声、荣誉、金钱和权力",
+      meaning: "对比世俗追求与属灵追求的不同。",
+      grammar: "口语化 'They be chasing' 表示持续的动作习惯。"
     },
     {
-      english: "Bloodstains, ball gowns, trashin' the hotel room",
-      translation: "血迹、晚礼服、毁掉酒店房间",
-      meaning: "继续列举奢华生活中的破坏性行为。",
-      grammar: "名词短语并列，使用现在分词 'trashin'' 表示进行时动作。"
+      english: "But I'm planted like trees by the living water",
+      translation: "但我像栽在活水旁的树",
+      meaning: "引用圣经诗篇，表达在神话语中扎根的生命。",
+      grammar: "被动语态 'I'm planted' 表示被神栽种的状态。"
     },
     {
-      english: "We don't care, we're driving Cadillacs in our dreams",
-      translation: "我们不在乎，我们在梦中开着凯迪拉克",
-      meaning: "表达对虚幻奢华的向往，即使只存在于梦中。",
-      grammar: "现在进行时 'we're driving' 表示持续的动作状态。"
+      english: "When the storms come through, I ain't shook, I ain't fazed",
+      translation: "当风暴来临，我不动摇，不惊慌",
+      meaning: "表达信仰带来的内心平安和稳定。",
+      grammar: "并列否定 'ain't shook, ain't fazed' 加强语气。"
     },
     {
-      english: "But everybody's like Cristal, Maybach, diamonds on your timepiece",
-      translation: "但每个人都像水晶香槟、迈巴赫、手表上的钻石",
-      meaning: "描述社会对奢侈品的普遍追求和炫耀。",
-      grammar: "'everybody's like' 是口语化表达，相当于 'everybody is like'。"
+      english: "'Cause my faith base strong, giving glory and praise",
+      translation: "因为我的信仰基础坚固，献上荣耀和赞美",
+      meaning: "说明坚固信仰的结果是感恩和敬拜。",
+      grammar: "'Cause' 是 'because' 的缩写，表示原因。"
     },
     {
-      english: "Jet planes, islands, tigers on a gold leash",
-      translation: "私人飞机、岛屿、金链拴着的老虎",
-      meaning: "极端奢华的象征，连野生动物都成为炫富工具。",
-      grammar: "名词短语并列，'on a gold leash' 介词短语修饰 'tigers'。"
+      english: "Faith base, faith base, we building it up",
+      translation: "信仰基础，信仰基础，我们正在建立",
+      meaning: "副歌部分，强调建立信仰的重要性。",
+      grammar: "重复强调，省略 'are' 的进行时态。"
     },
     {
-      english: "We don't care, we aren't caught up in your love affair",
-      translation: "我们不在乎，我们不会陷入你的爱情故事",
-      meaning: "拒绝被奢华生活方式所迷惑或卷入其中。",
-      grammar: "被动语态 'aren't caught up' 表示不被卷入的状态。"
+      english: "Grace flows like rivers when times getting tough",
+      translation: "困难时期恩典如河流涌流",
+      meaning: "表达神的恩典在困难中更加丰盛。",
+      grammar: "第三人称单数 'flows' 与不可数名词 'grace' 搭配。"
     },
     {
-      english: "And we'll never be royals",
-      translation: "我们永远不会成为皇室",
-      meaning: "承认永远无法达到最高层次的奢华地位。",
-      grammar: "将来时 'we'll never be' 表示对未来的确定性陈述。"
+      english: "Faith base, faith base, foundation secure",
+      translation: "信仰基础，信仰基础，根基稳固",
+      meaning: "重申信仰根基的稳固性。",
+      grammar: "形容词 'secure' 作表语，描述根基的状态。"
     },
     {
-      english: "It don't run in our blood",
-      translation: "这不在我们的血液中流淌",
-      meaning: "奢华不是与生俱来的特质，不是家族传统。",
-      grammar: "口语化语法 'it don't' 代替标准的 'it doesn't'。"
+      english: "His love everlasting, His promises sure",
+      translation: "祂的爱永恒不变，祂的应许确实可靠",
+      meaning: "强调神的信实和不变的本质。",
+      grammar: "形容词 'everlasting' 和 'sure' 分别修饰名词。"
     },
     {
-      english: "That kind of luxe just ain't for us",
-      translation: "那种奢华不适合我们",
-      meaning: "接受自己无法享受极致奢华生活的现实。",
-      grammar: "口语化 'ain't' 代替 'isn't'，'luxe' 是 'luxury' 的简化形式。"
+      english: "Started from the bottom but not where I'm at",
+      translation: "从底层开始但现在已不在原地",
+      meaning: "见证生命因信仰而改变提升。",
+      grammar: "对比过去与现在，'where I'm at' 是口语表达。"
     },
     {
-      english: "We crave a different kind of buzz",
-      translation: "我们渴望不同种类的兴奋感",
-      meaning: "寻求非物质的、更真实的生活满足感。",
-      grammar: "动词 'crave' 表示强烈的渴望，'buzz' 指兴奋或刺激感。"
+      english: "Got saved by His mercy, now I'm walking the path",
+      translation: "被祂的怜悯拯救，现在走在正路上",
+      meaning: "表达救赎的恩典和生命的转变。",
+      grammar: "被动语态 'got saved' 强调被拯救的经历。"
     },
     {
-      english: "Let me be your ruler",
-      translation: "让我成为你的统治者",
-      meaning: "提出一种新的领导方式，不基于财富而基于真实性。",
-      grammar: "祈使句 'let me be' 表示请求或建议。"
+      english: "Every morning new mercies, yeah that's how I rise",
+      translation: "每个早晨都有新的怜悯，这就是我起床的方式",
+      meaning: "引用圣经，表达每日更新的恩典。",
+      grammar: "时间状语 'every morning' 表示重复发生。"
     },
     {
-      english: "You can call me Queen Bee",
-      translation: "你可以叫我蜂王",
-      meaning: "用自然界的比喻来表达领导地位，而非人造的皇室头衔。",
-      grammar: "情态动词 'can' 表示可能性，'Queen Bee' 是复合名词。"
+      english: "Got my eyes on the Kingdom, that eternal prize",
+      translation: "我的眼目注视天国，那永恒的奖赏",
+      meaning: "表达永恒价值观和属天的盼望。",
+      grammar: "习语 'got my eyes on' 表示专注于某事。"
     }
   ]
 
