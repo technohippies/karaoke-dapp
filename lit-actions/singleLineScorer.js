@@ -20,16 +20,24 @@ const ENCRYPTED_KEYS = {
 const go = async () => {
   console.log('✅ Inside go() function');
   try {
-    // Parameters from caller
-    const audioData = dataToSign;
+    // Parameters from caller - now receiving base64 audio like karaoke scorer
     const expectedText = expectedTextParam;
     const userLanguage = userLanguageParam || 'zh'; // zh, bo (Tibetan), ug (Uyghur)
     
     console.log('📋 Parameters:', {
-      audioLength: audioData.length,
+      audioDataBase64: typeof audioDataBase64,
       expectedText: expectedText.substring(0, 50) + '...',
       userLanguage
     });
+    
+    // Validate required parameters
+    if (!audioDataBase64 || !expectedText) {
+      throw new Error(`Missing required parameters: audioDataBase64=${!!audioDataBase64}, expectedText=${!!expectedText}`);
+    }
+    
+    // Decode base64 audio data back to Uint8Array (same as karaoke scorer)
+    const audioData = Uint8Array.from(atob(audioDataBase64), c => c.charCodeAt(0));
+    console.log('🎵 Decoded audio data:', audioData.length, 'bytes');
     
     // Simple access control conditions
     const accessControlConditions = [
@@ -79,63 +87,14 @@ const go = async () => {
     console.log('🌐 Deepgram URL:', deepgramUrl);
     console.log('📦 Audio data length:', audioData.length);
     
-    let deepgramResponse;
-    try {
-      deepgramResponse = await fetch(deepgramUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${deepgramApiKey}`,
-          'Content-Type': 'audio/mpeg',
-          'Connection': 'close', // Force HTTP/1.1 to avoid HTTP/2 issues
-        },
-        body: audioData
-      });
-    } catch (fetchError) {
-      console.error('❌ Fetch error:', fetchError);
-      // If network error, return a mock response for testing
-      console.log('⚠️ Using fallback mock response due to network error');
-      
-      // Mock response for testing when Deepgram fails
-      const mockTranscripts = [
-        expectedText,
-        expectedText.toLowerCase(),
-        expectedText.replace(/[.,!?]/g, ''),
-        expectedText.split(' ').slice(0, -1).join(' '),
-        'something completely different'
-      ];
-      const transcript = mockTranscripts[Math.floor(Math.random() * mockTranscripts.length)];
-      const score = calculateSimilarity(transcript.toLowerCase(), expectedText.toLowerCase());
-      
-      // Skip to scoring logic
-      deepgramResponse = null;
-      const deepgramData = { results: { channels: [{ alternatives: [{ transcript }] }] } };
-      
-      // Continue with scoring...
-      console.log('📝 Mock transcript:', transcript);
-      
-      if (score >= 80) {
-        Lit.Actions.setResponse({
-          response: JSON.stringify({
-            success: true,
-            transcript: transcript,
-            score: Math.round(score),
-            feedback: null
-          })
-        });
-        return;
-      }
-      
-      // For mock, provide simple feedback
-      Lit.Actions.setResponse({
-        response: JSON.stringify({
-          success: true,
-          transcript: transcript,
-          score: Math.round(score),
-          feedback: userLanguage === 'zh' ? '再试一次，注意发音清晰' : 'Try again with clearer pronunciation'
-        })
-      });
-      return;
-    }
+    const deepgramResponse = await fetch(deepgramUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${deepgramApiKey}`,
+        'Content-Type': 'audio/mpeg',
+      },
+      body: audioData
+    });
     
     if (!deepgramResponse.ok) {
       const errorText = await deepgramResponse.text();

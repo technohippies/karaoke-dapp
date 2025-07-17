@@ -4,8 +4,8 @@ import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-prot
 import { ethers } from 'ethers'
 import { getDetectedLanguage } from '../../../i18n'
 
-// Single Line Scorer V2 deployed to IPFS - with error handling
-const SINGLE_LINE_SCORER_CID = 'QmW9ZUkHAmSAnjeuH7ruwKwndMi4guzvEGWDpJkHMqHd4Y'
+// Single Line Scorer V3 deployed to IPFS - uses base64 audio like karaoke scorer
+const SINGLE_LINE_SCORER_CID = 'QmV9Lw8BD57Fbd5v8QGYJFfJoasiKdisTq6EbACRrnSQPg'
 
 interface LineScoreResult {
   success: boolean
@@ -99,12 +99,22 @@ export class LineScoringService {
         console.log('✅ Session signatures generated')
       }
       
+      // Convert audio to base64 for efficient serialization (same as karaoke scorer)
+      let binaryString = '';
+      const chunkSize = 8192; // Process in 8KB chunks
+      for (let i = 0; i < audioData.length; i += chunkSize) {
+        const chunk = audioData.slice(i, i + chunkSize);
+        binaryString += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      const audioBase64 = btoa(binaryString);
+      console.log(`🎵 Audio conversion: ${audioData.length} bytes → ${audioBase64.length} base64 chars`)
+      
       // Execute Lit Action using IPFS CID
       const result = await this.client.executeJs({
         sessionSigs: authSigs,
         ipfsId: SINGLE_LINE_SCORER_CID,
         jsParams: {
-          dataToSign: audioData,
+          audioDataBase64: audioBase64, // Pass as base64 string like karaoke scorer
           expectedTextParam: expectedText,
           userLanguageParam: userLanguage
         }
