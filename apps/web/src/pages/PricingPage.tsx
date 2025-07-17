@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
+import { BASE_SEPOLIA_CHAIN_ID, BASE_MAINNET_CHAIN_ID } from '../constants'
 
 export function PricingPage() {
   const navigate = useNavigate()
@@ -28,8 +29,8 @@ export function PricingPage() {
       {/* Content */}
       <div className="relative z-10 h-screen flex flex-col">
         <HeaderWithAuth 
-          crownCount={voiceCredits}
-          fireCount={songCredits}
+          crownCount={0}
+          fireCount={0}
           showBack={true}
           onBack={() => navigate('/')}
         />
@@ -55,7 +56,7 @@ export function PricingPage() {
                 Connect Wallet to Purchase
               </Button>
             ) : (
-              <ChainSwitcher requiredChainId={84532} className="w-full">
+              <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
                 <Button 
                   onClick={handleBuyCombo}
                   disabled={isApproving || isPurchasing}
@@ -90,7 +91,7 @@ export function PricingPage() {
               <li>50 Voice Credits</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={8453} className="w-full">
+            <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
               <Button 
                 onClick={handleBuyVoice}
                 disabled={isApproving || isPurchasing || !isConnected}
@@ -121,7 +122,7 @@ export function PricingPage() {
               <li>5 Song Credits</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={8453} className="w-full">
+            <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
               <Button 
                 onClick={handleBuySong}
                 disabled={isApproving || isPurchasing || !isConnected}

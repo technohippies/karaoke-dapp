@@ -146,7 +146,7 @@ export class IDBSyncService {
   /**
    * Import data from Tableland to IDB (for recovery/new device)
    */
-  async importFromTableland(userAddress: string): Promise<{
+  async importFromTableland(signer: ethers.Signer, userAddress: string): Promise<{
     importedSessions: number
     importedLines: number
     importedExercises: number
@@ -157,6 +157,9 @@ export class IDBSyncService {
 
     try {
       console.log('📥 Importing data from Tableland for user:', userAddress)
+
+      // Initialize Tableland with signer
+      await tablelandWriteService.initialize(signer)
 
       // Get user's Tableland tables
       const tables = await tablelandWriteService.getUserTables(userAddress)

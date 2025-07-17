@@ -4,6 +4,7 @@ import { IconButton } from './IconButton'
 import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from '@web3auth/modal/react'
 import { useAccount } from 'wagmi'
 import { useNavigate } from 'react-router-dom'
+import { useStreak } from '../hooks/useStreak'
 
 interface HeaderWithAuthProps {
   crownCount?: number
@@ -25,6 +26,7 @@ export function HeaderWithAuth({
   const { connect, loading: connectLoading } = useWeb3AuthConnect()
   const { disconnect, loading: disconnectLoading } = useWeb3AuthDisconnect()
   const { userInfo } = useWeb3AuthUser()
+  const { currentStreak } = useStreak()
   
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-3)}`
@@ -68,7 +70,7 @@ export function HeaderWithAuth({
               <div className="w-7 h-7 flex items-center justify-center">
                 <Fire weight="fill" size={24} color="#EF4444" />
               </div>
-              <span className="text-neutral-300 font-bold text-sm">{fireCount}</span>
+              <span className="text-neutral-300 font-bold text-sm">{currentStreak}</span>
             </div>
           </div>
           

@@ -10,15 +10,24 @@ export { idbSyncService } from './database/idb/IDBSyncService'
 
 // Storage Services
 export type { IStorageService, StorageFile } from './storage/types/StorageService'
-export { pinataStorageService } from './storage/ipfs/PinataStorageService'
+// Note: PinataStorageService is available but not instantiated by default
+// Use createPinataStorageService from './storage/ipfs/PinataStorageService' if needed
 
 // Integration Services
-export { lrclibService } from './integrations/lrclib/LrcLibService'
-export { contentEncryptionService, type IContentEncryptionService } from './integrations/lit/ContentEncryptionService'
+export { LrcLibService } from './integrations/lrclib/LrcLibService'
+export { 
+  ContentEncryptionService,
+  createContentEncryptionService, 
+  type IContentEncryptionService 
+} from './integrations/lit/ContentEncryptionService'
 export { karaokeScoringService } from './integrations/lit/KaraokeScoringService'
 
 // Core Services
-export { songContentManager } from './core/content/SongContentManager'
+export { 
+  SongContentManager,
+  createSongContentManager,
+  createSongContentSystem 
+} from './core/content/SongContentManager'
 export { postUnlockContentLoader } from './core/content/PostUnlockContentLoader'
 export { midiPlayerService } from './core/midi/MidiPlayerService'
 

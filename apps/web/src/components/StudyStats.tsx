@@ -11,17 +11,17 @@ export function StudyStats({ newCount, learningCount, dueCount, onStudy }: Study
     <div className="w-full">
       {/* Stats row */}
       <div className="flex gap-4 mb-6">
-        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center">
+        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center border border-neutral-700">
           <div className="text-2xl font-bold text-white">{newCount}</div>
           <div className="text-neutral-400 text-sm font-medium mt-2">NEW</div>
         </div>
         
-        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center">
+        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center border border-neutral-700">
           <div className="text-2xl font-bold text-white">{learningCount}</div>
           <div className="text-neutral-400 text-sm font-medium mt-2">LEARNING</div>
         </div>
         
-        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center">
+        <div className="flex-1 bg-neutral-800 rounded-lg p-6 text-center border border-neutral-700">
           <div className="text-2xl font-bold text-white">{dueCount}</div>
           <div className="text-neutral-400 text-sm font-medium mt-2">DUE</div>
         </div>

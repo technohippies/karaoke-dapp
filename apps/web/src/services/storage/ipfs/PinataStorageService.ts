@@ -12,7 +12,7 @@ import {
   StorageNotFoundError,
   StorageConfigError,
   StorageUtils
-} from './StorageService'
+} from '../types/StorageService'
 
 export interface PinataConfig extends StorageConfig {
   /** Pinata API key */

@@ -481,6 +481,35 @@ export class TablelandWriteService {
   }
 
   /**
+   * Get user's exercise sessions for streak calculation
+   */
+  async getExerciseSessions(userAddress: string): Promise<ExerciseSessionData[]> {
+    if (!this.db) {
+      throw new Error('Database not initialized')
+    }
+
+    const tables = await this.getUserTables(userAddress)
+    if (!tables) {
+      return []
+    }
+
+    const { results } = await this.db
+      .prepare(`SELECT * FROM ${tables.exerciseSessionsTable} 
+        ORDER BY session_date DESC`)
+      .all()
+
+    return results.map(row => ({
+      sessionId: row.session_id,
+      userAddress, // Add back the user address
+      sessionDate: row.session_date,
+      cardsReviewed: row.cards_reviewed,
+      cardsCorrect: row.cards_correct,
+      startedAt: row.started_at,
+      completedAt: row.completed_at
+    }))
+  }
+
+  /**
    * Get user's learning statistics
    */
   async getUserStats(userAddress: string): Promise<{

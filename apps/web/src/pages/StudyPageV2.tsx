@@ -14,6 +14,7 @@ import { Button } from '../components/ui/button'
 import { Microphone, StopCircle } from '@phosphor-icons/react'
 import { lineScoringScoringService } from '../services/integrations/lit/LineScoringService'
 import { useSimpleAudioRecorder } from '../hooks/useSimpleAudioRecorder'
+import { useStreak } from '../hooks/useStreak'
 import type { DueCard } from '../types/srs.types'
 
 interface StudyStats {
@@ -31,6 +32,7 @@ export function StudyPageV2() {
   const { sessionSigs, isReady: isLitReady } = useLitSession()
   const { getDueCards, getUserStats, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
+  const { invalidateCache: invalidateStreakCache } = useStreak()
   
   const [dueCards, setDueCards] = useState<DueCard[]>([])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
@@ -190,6 +192,9 @@ export function StudyPageV2() {
         startedAt: studyStats.startTime,
         completedAt: Date.now()
       })
+      
+      // Invalidate streak cache so it recalculates with new session
+      await invalidateStreakCache()
     } catch (error) {
       console.error('Failed to save exercise session:', error)
     }

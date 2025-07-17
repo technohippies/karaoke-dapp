@@ -265,3 +265,6 @@ export class PostUnlockContentLoader {
     await contentCacheService.clearCache()
   }
 }
+
+// Export singleton instance
+export const postUnlockContentLoader = new PostUnlockContentLoader()

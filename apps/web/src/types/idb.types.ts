@@ -27,11 +27,18 @@ export interface IDBExerciseSession extends Omit<ExerciseSessionData, 'userAddre
 }
 
 export interface SyncMetadata {
-  id: 'status'
+  id: 'status' | 'streak'
   lastSyncTimestamp: number
   pendingChanges: number
   syncInProgress: boolean
   lastSyncError?: string
+}
+
+export interface StreakCache {
+  id: 'streak'
+  currentStreak: number
+  lastCalculated: number // timestamp
+  lastActivityDate: number // YYYYMMDD format
 }
 
 // IndexedDB Schema
@@ -63,7 +70,7 @@ export interface KaraokeSRSDB extends DBSchema {
   }
   sync_metadata: {
     key: string
-    value: SyncMetadata
+    value: SyncMetadata | StreakCache
   }
 }
 

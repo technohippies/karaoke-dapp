@@ -6,7 +6,8 @@ import { tablelandService, type Song } from '../services/database/tableland/Tabl
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
 import { combineLyricsWithTranslation, parseLrcLyrics } from '../utils/parseLyrics'
 import { 
-  KARAOKE_CONTRACT_ADDRESS
+  KARAOKE_CONTRACT_ADDRESS,
+  DEFAULT_CHAIN_ID
 } from '../constants'
 import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
 import { HeaderWithAuth } from '../components/HeaderWithAuth'
@@ -109,7 +110,7 @@ export function SongPage() {
       isReconnecting,
       isConnecting,
       address,
-      expectedChain: 'Base Sepolia (84532)',
+      expectedChain: `Base Sepolia (${DEFAULT_CHAIN_ID})`,
       hasVoiceCredits,
       hasSongCredits,
       voiceCreditsRaw: voiceCredits,
@@ -445,11 +446,10 @@ export function SongPage() {
       {/* Content */}
       <div className="relative z-10 h-screen flex flex-col">
         <HeaderWithAuth 
-          crownCount={Number(voiceCredits || 0)}
-          fireCount={Number(songCredits || 0)}
+          crownCount={0}
+          fireCount={0}
           showBack={true}
           onBack={() => navigate('/')}
-          pageTitle={song?.title || 'Loading...'}
         />
         
         {/* Scrollable content */}
@@ -600,8 +600,8 @@ export function SongPage() {
               >
                 Connect Wallet
               </Button>
-            ) : chain?.id !== 84532 ? (
-              <ChainSwitcher requiredChainId={84532} className="w-full" />
+            ) : chain?.id !== DEFAULT_CHAIN_ID ? (
+              <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full" />
             ) : (
               <>
                 {/* No credits at all - show Buy Credits */}

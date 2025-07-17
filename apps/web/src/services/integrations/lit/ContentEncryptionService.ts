@@ -262,3 +262,6 @@ export function createContentEncryptionService(
 ): IContentEncryptionService {
   return new ContentEncryptionService(config)
 }
+
+// Note: This service requires configuration, so we don't export a default instance
+// Users should create their own instance with createContentEncryptionService()
