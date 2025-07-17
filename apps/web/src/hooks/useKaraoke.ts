@@ -29,6 +29,8 @@ export function useKaraoke({ lyrics, midiData, onComplete }: UseKaraokeProps) {
       return
     }
 
+    // console.log('🎶 Lyrics timing info:', lyrics.map((l, idx) => `[${idx}] ${l.time}s: ${l.text.substring(0, 30)}...`))
+
     // Don't handle countdown here - let KaraokeDisplay do it
     // Wait 3 seconds for KaraokeDisplay's countdown to finish
     setTimeout(() => {
@@ -52,7 +54,12 @@ export function useKaraoke({ lyrics, midiData, onComplete }: UseKaraokeProps) {
           return time >= line.time && (!nextLine || time < nextLine.time)
         })
         
-        if (lineIndex !== -1 && lineIndex !== currentLineIndex) {
+        // Uncomment for debugging sync issues
+        // if (time < 20) {
+        //   console.log(`🎵 Time: ${time.toFixed(2)}s, Current line index: ${lineIndex}, Line: ${lineIndex >= 0 ? lyrics[lineIndex].text.substring(0, 30) : 'none'}`)
+        // }
+        
+        if (lineIndex !== -1) {
           setCurrentLineIndex(lineIndex)
         }
       })

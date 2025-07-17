@@ -12,17 +12,24 @@ interface KaraokeDisplayProps {
   onClose: () => void
   autoStart?: boolean
   lineDelay?: number // Default delay between lines in ms
+  currentLineIndex?: number // Externally controlled line index
+  isPlaying?: boolean // External playing state
 }
 
 export function KaraokeDisplay({ 
   lyrics, 
   onClose, 
   autoStart = true,
-  lineDelay = 3000 // 3 seconds per line by default
+  lineDelay = 3000, // 3 seconds per line by default
+  currentLineIndex: externalLineIndex,
+  isPlaying: externalIsPlaying
 }: KaraokeDisplayProps) {
-  const [currentLineIndex, setCurrentLineIndex] = useState(-1) // -1 for countdown
+  const [internalLineIndex, setInternalLineIndex] = useState(-1) // -1 for countdown
   const [countdown, setCountdown] = useState(3)
   const [isStarted, setIsStarted] = useState(false)
+  
+  // Use external index if provided, otherwise use internal
+  const currentLineIndex = externalLineIndex !== undefined ? externalLineIndex : internalLineIndex
 
   // Countdown effect
   useEffect(() => {
@@ -33,7 +40,9 @@ export function KaraokeDisplay({
         if (prev <= 1) {
           clearInterval(countdownInterval)
           setIsStarted(true)
-          setCurrentLineIndex(0)
+          if (externalLineIndex === undefined) {
+            setInternalLineIndex(0)
+          }
           return 0
         }
         return prev - 1
@@ -50,19 +59,23 @@ export function KaraokeDisplay({
     // Don't schedule if we're past the last line
     if (currentLineIndex >= lyrics.length) return
 
-    const timer = setTimeout(() => {
-      setCurrentLineIndex((prev) => {
-        if (prev < lyrics.length - 1) {
-          return prev + 1
-        } else {
-          // Move to completion state
-          return prev + 1
-        }
-      })
-    }, lyrics[currentLineIndex]?.duration || lineDelay)
+    // Only use internal timer if no external control
+    if (externalLineIndex === undefined) {
+      const timer = setTimeout(() => {
+        setInternalLineIndex((prev) => {
+          if (prev < lyrics.length - 1) {
+            return prev + 1
+          } else {
+            // Move to completion state
+            return prev + 1
+          }
+        })
+      }, lyrics[currentLineIndex]?.duration || lineDelay)
+      
+      return () => clearTimeout(timer)
+    }
 
-    return () => clearTimeout(timer)
-  }, [currentLineIndex, isStarted, lyrics, lineDelay])
+  }, [currentLineIndex, isStarted, lyrics, lineDelay, externalLineIndex])
 
   // Removed unused manual control functions
 

@@ -1,15 +1,22 @@
 import * as Tone from 'tone'
 import { Midi } from '@tonejs/midi'
+import { pianoSampler } from '../../instruments/PianoSampler'
 
 export class MidiPlayerService {
-  private synth: Tone.PolySynth | null = null
   private isPlaying = false
+  private usePiano = true // Toggle between piano and synth
+  private synth: Tone.PolySynth | null = null
 
   constructor() {
-    this.initializeSynth()
+    // console.log('🎵 MidiPlayerService constructor - usePiano:', this.usePiano);
+    // Only initialize synth as fallback
+    if (!this.usePiano) {
+      this.initializeSynth()
+    }
   }
 
   private initializeSynth() {
+    // console.log('🎵 Initializing synth (fallback mode)');
     // Simple piano-like synth with increased polyphony
     this.synth = new Tone.PolySynth(Tone.Synth, {
       maxPolyphony: 32, // Increase from default
@@ -42,25 +49,56 @@ export class MidiPlayerService {
       // Start Tone.js
       await Tone.start()
       
+      // Initialize piano if using it
+      if (this.usePiano) {
+        // console.log('🎵 Initializing piano sampler...');
+        await pianoSampler.initialize()
+        // console.log('🎵 Piano sampler initialized');
+      }
+      
       // Set BPM from MIDI if available
       if (midi.header.tempos && midi.header.tempos.length > 0) {
         Tone.Transport.bpm.value = midi.header.tempos[0].bpm
       }
       
       // Schedule all notes using Transport time
-      midi.tracks.forEach(track => {
+      let noteCount = 0;
+      
+      midi.tracks.forEach((track, trackIndex) => {
         track.notes.forEach(note => {
-          // Schedule note with transport time
-          Tone.Transport.schedule((time) => {
-            this.synth?.triggerAttackRelease(
-              note.name,
-              note.duration,
-              time,
-              note.velocity
-            )
-          }, note.time)
+          if (this.usePiano) {
+            // Use piano sampler
+            noteCount++;
+            // Uncomment for debugging note scheduling
+            // if (noteCount <= 10) { // Log first 10 notes
+            //   console.log(`🎵 Scheduling piano note ${noteCount}:`, note.name, 'at time:', note.time);
+            // }
+            
+            // Schedule note with Transport
+            Tone.Transport.schedule((time) => {
+              pianoSampler.playNote(
+                note.name,
+                note.duration,
+                time,
+                note.velocity
+              )
+            }, note.time)
+          } else {
+            // Fall back to synth
+            console.log('🎵 Using synth for note:', note.name);
+            Tone.Transport.schedule((time) => {
+              this.synth?.triggerAttackRelease(
+                note.name,
+                note.duration,
+                time,
+                note.velocity
+              )
+            }, note.time)
+          }
         })
       })
+      
+      // console.log(`🎵 Total notes scheduled: ${noteCount} using ${this.usePiano ? 'piano' : 'synth'}`);
       
       // Start transport from beginning
       Tone.Transport.position = 0
@@ -81,7 +119,7 @@ export class MidiPlayerService {
       
       // Auto-stop at end
       const totalDuration = midi.duration
-      console.log('🎵 Scheduling stop at:', totalDuration, 'seconds')
+      // console.log('🎵 Scheduling stop at:', totalDuration, 'seconds')
       
       Tone.Transport.schedule(() => {
         this.stop()
@@ -105,6 +143,9 @@ export class MidiPlayerService {
 
   dispose() {
     this.stop()
+    if (this.usePiano) {
+      pianoSampler.dispose()
+    }
     this.synth?.dispose()
     this.synth = null
   }
