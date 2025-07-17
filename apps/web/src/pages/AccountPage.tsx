@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWalletClient } from 'wagmi'
+import { useTranslation } from 'react-i18next'
 import { CrownCross, Fire } from '@phosphor-icons/react'
 import { SimpleHeader } from '../components/SimpleHeader'
 import { CreditsWidget } from '../components/CreditsWidget'
@@ -17,6 +18,7 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 
 export function AccountPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { isConnected, address, chain } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { balance, voiceCredits, songCredits } = usePurchase()
@@ -107,7 +109,7 @@ export function AccountPage() {
         <div className="w-full max-w-2xl mx-auto">
           {/* Wallet Address */}
           <div className="mb-8">
-            <p className="text-neutral-400 mb-2">Your Wallet Address</p>
+            <p className="text-neutral-400 mb-2">{t('account.walletAddress')}</p>
             <p className="text-white font-mono break-all">{address}</p>
           </div>
           
@@ -119,7 +121,7 @@ export function AccountPage() {
                 <CrownCross size={40} weight="fill" className="text-yellow-500" />
                 <div>
                   <div className="text-3xl font-bold text-white">0</div>
-                  <div className="text-neutral-400">Crowns <span className="text-neutral-500 text-sm">(Coming Soon)</span></div>
+                  <div className="text-neutral-400">{t('account.crowns')} <span className="text-neutral-500 text-sm">{t('account.crownsComingSoon')}</span></div>
                 </div>
               </div>
             </div>
@@ -130,7 +132,7 @@ export function AccountPage() {
                 <Fire size={40} weight="fill" className="text-orange-500" />
                 <div>
                   <div className="text-3xl font-bold text-white">{localStreak}</div>
-                  <div className="text-neutral-400">Day Streak</div>
+                  <div className="text-neutral-400">{t('account.dayStreak')}</div>
                 </div>
               </div>
             </div>
@@ -162,7 +164,7 @@ export function AccountPage() {
           {chain && chain.id !== DEFAULT_CHAIN_ID && (
             <div className="mt-4">
               <p className="text-neutral-400">
-                Network: {chain.name || `Chain ${chain.id}`}. Please connect to {DEFAULT_CHAIN_ID === BASE_SEPOLIA_CHAIN_ID ? 'Base Sepolia' : 'Base'}.
+                {t('account.network.currentNetwork')}: {chain.name || `Chain ${chain.id}`}. {t('account.network.pleaseConnect')} {DEFAULT_CHAIN_ID === BASE_SEPOLIA_CHAIN_ID ? t('account.network.baseSepolia') : t('account.network.base')}.
               </p>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { CrownCross, Fire, CaretLeft } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'
 import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
@@ -27,6 +28,8 @@ export function Header({
   onBack,
   pageTitle
 }: HeaderProps) {
+  const { t } = useTranslation()
+  
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-3)}`
   }
@@ -75,7 +78,7 @@ export function Header({
               </Button>
             ) : (
               <Button variant="outline" onClick={onLogin}>
-                Connect Wallet
+                {t('common.connectWallet')}
               </Button>
             )}
           </div>

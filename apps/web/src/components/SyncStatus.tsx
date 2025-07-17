@@ -1,6 +1,7 @@
 import { CheckCircle, Warning, CloudArrowUp, CloudArrowDown } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { formatDistanceToNow } from '../utils/formatTime'
+import { useTranslation } from 'react-i18next'
 
 interface SyncStatusProps {
   localStreak: number
@@ -21,6 +22,7 @@ export function SyncStatus({
   isSyncing = false,
   isRecovering = false
 }: SyncStatusProps) {
+  const { t } = useTranslation()
   const isSynced = cloudStreak !== null && localStreak === cloudStreak
   const hasCloudData = cloudStreak !== null
   
@@ -28,15 +30,15 @@ export function SyncStatus({
     <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
       {isSynced ? (
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-white">Synced</h3>
+          <h3 className="text-xl font-semibold text-white">{t('account.syncStatus.synced')}</h3>
           <div className="flex items-center gap-2 text-neutral-400">
-            <span>{formatDistanceToNow(lastSyncTimestamp || Date.now())} ago</span>
+            <span>{formatDistanceToNow(lastSyncTimestamp || Date.now())} {t('account.syncStatus.ago')}</span>
             <CheckCircle size={20} weight="fill" className="text-green-500" />
           </div>
         </div>
       ) : (
         <>
-          <h3 className="text-xl font-semibold text-white mb-4">Sync Status</h3>
+          <h3 className="text-xl font-semibold text-white mb-4">{t('account.syncStatus.title')}</h3>
           <div className="flex gap-3">
           <Button
             onClick={onSaveProgress}
@@ -51,7 +53,7 @@ export function SyncStatus({
             ) : (
               <>
                 <CloudArrowUp size={20} weight="bold" className="mr-2" />
-                Save Progress
+                {t('account.syncStatus.saveProgress')}
               </>
             )}
           </Button>
@@ -71,7 +73,7 @@ export function SyncStatus({
               ) : (
                 <>
                   <CloudArrowDown size={20} weight="bold" className="mr-2" />
-                  Recover from Cloud
+                  {t('account.syncStatus.recoverFromCloud')}
                 </>
               )}
             </Button>

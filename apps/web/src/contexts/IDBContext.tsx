@@ -83,11 +83,15 @@ export function IDBProvider({ children }: IDBProviderProps) {
           setIsReady(true)
           console.log('✅ IDBProvider: Database opened successfully')
           
-          // Debug: Check what's in the database
-          const tx = database.transaction('karaoke_lines', 'readonly')
-          const store = tx.objectStore('karaoke_lines')
-          const count = await store.count()
-          console.log('📊 IDBProvider: Initial line count:', count)
+          // Debug: Check what's in the database (only if store exists)
+          try {
+            const tx = database.transaction('karaoke_lines', 'readonly')
+            const store = tx.objectStore('karaoke_lines')
+            const count = await store.count()
+            console.log('📊 IDBProvider: Initial line count:', count)
+          } catch (e) {
+            console.log('📊 IDBProvider: Database is empty (new user)')
+          }
         }
       } catch (err) {
         console.error('❌ IDBProvider: Failed to open database:', err)

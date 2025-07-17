@@ -1,0 +1,84 @@
+{
+  "common": {
+    "connectWallet": "ھەمياننى ئۇلاش",
+    "buyCredits": "نومۇر سېتىۋېلىش"
+  },
+  "home": {
+    "yourFlashcards": "سىزنىڭ ئۆگىنىش كارتىلىرىڭىز",
+    "songs": "ناخشىلار",
+    "loadingSongs": "ناخشىلار يۈكلىنىۋاتىدۇ...",
+    "noSongs": "ناخشا يوق",
+    "study": {
+      "new": "يېڭى",
+      "learning": "ئۆگىنىۋاتقان",
+      "due": "تەكرارلاش",
+      "studyButton": "ئۆگىنىش",
+      "allCaughtUp": "ھەممىسى تامام!"
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "تەرتىپ تىزىملىكى يېقىندا!"
+  },
+  "song": {
+    "loading": "ناخشا يۈكلىنىۋاتىدۇ...",
+    "loadingContent": "مەزمۇن يۈكلىنىۋاتىدۇ...",
+    "tabs": {
+      "lyrics": "ناخشا تېكىستى",
+      "leaderboard": "تەرتىپ تىزىملىكى"
+    },
+    "unlock": {
+      "title": "بۇ ناخشىنى ئېچىڭ",
+      "loadContent": "ناخشا تېكىستىنى كۆرۈش ئۈچۈن مەزمۇننى يۈكلەڭ",
+      "button": "ئېچىش ۋە شىفىرسىزلاش",
+      "unlocking": "ئېچىۋاتىدۇ...",
+      "needSongCredit": "ئېچىش (1 ناخشا نومۇرى)",
+      "needVoiceCredit": "ئاۋاز نومۇرى سېتىۋېلىش",
+      "description1": "ناخشا، تىل ئۆگىنىش مەشىقلىرى،",
+      "description2": "ۋە تەرجىمە، مەنىسى، گىرامماتىكىسى بار ناخشا تېكىستى."
+    },
+    "karaoke": {
+      "start": "ناخشا باشلاش (1 ئاۋاز نومۇرى)",
+      "starting": "باشلىنىۋاتىدۇ...",
+      "selectLine": "بىر قۇر تاللاڭ"
+    },
+    "lyricsMeaning": {
+      "meaning": "مەنىسى",
+      "grammar": "گىرامماتىكا"
+    },
+    "priceInfo": {
+      "song": "1 ناخشا نومۇرى = {{price}} USDC",
+      "voice": "1 ئاۋاز نومۇرى = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "ناخشا نومۇرى يوق",
+      "voice": "ئاۋاز نومۇرى يوق"
+    }
+  },
+  "account": {
+    "title": "ھېسابات",
+    "walletAddress": "سىزنىڭ ھەمياننىڭ ئادرېسى",
+    "crowns": "تاج",
+    "crownsComingSoon": "(يېقىندا)",
+    "dayStreak": "ئۇدا كۈن",
+    "syncStatus": {
+      "title": "ماسقەدەملەش ھالىتى",
+      "synced": "ماسقەدەملەندى",
+      "ago": "بۇرۇن",
+      "saveProgress": "ئىلگىرىلەشنى ساقلاش",
+      "recoverFromCloud": "بۇلۇتتىن ئەسلىگە كەلتۈرۈش"
+    },
+    "credits": {
+      "title": "نومۇر",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "ئاۋاز",
+      "songs": "ناخشا",
+      "pricing": "باھا"
+    },
+    "network": {
+      "currentNetwork": "تور",
+      "pleaseConnect": "ئۇلىنىڭ",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base"
+    }
+  }
+}

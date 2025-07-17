@@ -1,59 +1,163 @@
-# Karaoke Turbo Web App
+# Karaoke Language Learning Web App
 
-A decentralized karaoke application powered by Lit Protocol PKP for secure voice grading.
+The frontend application for the decentralized karaoke language learning platform.
 
-## Setup
+## 🚀 Quick Start
 
-1. Install dependencies:
-   ```bash
-   cd apps/web
-   bun install
-   ```
+```bash
+# Install dependencies
+bun install
 
-2. Configure environment:
-   - Update `LIT_RPC_URL` in `src/constants.ts` with your Infura/Alchemy key
-   - Update `CAPACITY_DELEGATION_AUTH_SIG` in `src/App.tsx` with your delegation
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your configuration
 
-3. Run development server:
-   ```bash
-   bun run dev
-   ```
+# Start development server
+bun run dev
+```
 
-## Architecture
+## 🏗️ Architecture
 
-### State Management
-Uses XState for predictable state management with the following flow:
-1. **Disconnected** → Connect wallet
-2. **Loading Data** → Fetch user credits and balances
-3. **Signup/Buy Credits** → Purchase initial credits with USDC
-4. **Song Selection** → Choose and unlock songs
-5. **Karaoke Session** → Record, grade with Lit Protocol, claim refunds
-
-### Lit Protocol Integration
-- Connects to Yellowstone network
-- Uses the secure voiceGrader Lit Action
-- Verifies on-chain session before grading
-- Returns PKP-signed results for contract verification
+### Technology Stack
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **TailwindCSS** for styling
+- **Web3Auth** for authentication
+- **wagmi** for Web3 interactions
+- **i18next** for internationalization
+- **IndexedDB** for offline storage
 
 ### Key Features
-- **Secure Sessions**: On-chain session verification prevents abuse
-- **Voice Grading**: Lit Action grades recordings and signs results
-- **Credit System**: Escrow and refund unused credits
-- **Song Unlocking**: Permanent song access with song credits
 
-## Components
+#### 🌐 Multilingual Support
+- English, Mandarin (中文), Uyghur (ئۇيغۇرچە), and Tibetan (བོད་སྐད)
+- Automatic language detection
+- Persistent language preferences
 
-- **ConnectWallet**: Wallet connection interface
-- **CreditPurchase**: USDC approval and credit purchase
-- **SongSelection**: Browse and unlock songs
-- **KaraokeSession**: Recording interface with Lit Protocol grading
+#### 📚 Spaced Repetition System (SRS)
+- FSRS algorithm implementation
+- Progress tracking per line
+- Study mode with individual line practice
+- Review scheduling
 
-## Contract Integration
+#### 🎤 Karaoke Features
+- Real-time MIDI playback
+- Synchronized lyrics display
+- AI-powered pronunciation scoring
+- Voice recording and analysis
 
-Interacts with KaraokeStoreV5 at `0x91B69AC1Ac63C7CB850214d52b2f3d890FED557e` on Base Sepolia.
+#### 💳 Credit System
+- Voice credits for karaoke sessions
+- Song credits for unlocking content
+- USDC payment integration
+- Transparent pricing
 
-## Security
+#### 🔐 Security & Privacy
+- Lit Protocol content encryption
+- Secure API key management
+- PKP-signed scoring results
+- No server-side user data storage
 
-- Sessions must be started on-chain before recording
-- Lit Action verifies session state before grading
-- PKP signatures ensure tamper-proof results
+## 📁 Project Structure
+
+```
+src/
+├── components/         # Reusable UI components
+│   ├── ui/            # Base UI components
+│   ├── Header.tsx     # Main navigation
+│   ├── StudyStats.tsx # SRS statistics
+│   └── ...
+├── pages/             # Route components
+│   ├── HomePage.tsx   # Song catalog
+│   ├── SongPage.tsx   # Song details/karaoke
+│   ├── StudyPage.tsx  # SRS study mode
+│   └── AccountPage.tsx # User account
+├── services/          # Business logic
+│   ├── database/      # Tableland integration
+│   ├── integrations/  # External APIs
+│   └── storage/       # Local storage
+├── hooks/             # Custom React hooks
+├── i18n/              # Translations
+│   └── locales/       # Language files
+└── constants.ts       # Configuration
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Base Sepolia RPC endpoint
+VITE_BASE_SEPOLIA_RPC=https://sepolia.base.org
+
+# Contract addresses
+VITE_KARAOKE_CONTRACT_ADDRESS=0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
+VITE_BASE_SEPOLIA_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
+
+# Optional: Custom IPFS gateway
+VITE_IPFS_GATEWAY=https://gateway.pinata.cloud
+```
+
+## 🧪 Development
+
+### Running Tests
+```bash
+bun test
+```
+
+### Building for Production
+```bash
+bun run build
+```
+
+### Code Quality
+```bash
+# Type checking
+bun run type-check
+
+# Linting
+bun run lint
+```
+
+## 🎨 UI Components
+
+The app uses a custom component library built on top of Radix UI:
+- **Button**: Primary interactive element
+- **BottomSheet**: Mobile-friendly overlays
+- **Tabs**: Content organization
+- **Progress**: Visual feedback
+
+All components follow a consistent neutral theme with proper dark mode support.
+
+## 🌍 Internationalization
+
+Adding new translations:
+1. Add translation keys to all locale files in `src/i18n/locales/`
+2. Use the `useTranslation` hook in components
+3. Follow the existing key structure
+
+## 📱 Mobile Optimization
+
+- Responsive design for all screen sizes
+- Touch-optimized interactions
+- Bottom sheet patterns for mobile
+- Progressive Web App capabilities
+
+## 🚀 Deployment
+
+The app can be deployed to any static hosting service:
+
+```bash
+# Build the app
+bun run build
+
+# Preview locally
+bun run preview
+
+# Deploy (example with Vercel)
+vercel --prod
+```
+
+## 📄 License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPLv3).

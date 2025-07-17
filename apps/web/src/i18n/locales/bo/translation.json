@@ -1,0 +1,84 @@
+{
+  "common": {
+    "connectWallet": "སྒམ་འབྲེལ་མཐུད་",
+    "buyCredits": "སྐར་མ་ཉོ་"
+  },
+  "home": {
+    "yourFlashcards": "ཁྱེད་ཀྱི་སློབ་ཤོག",
+    "songs": "གླུ་གཞས།",
+    "loadingSongs": "གླུ་གཞས་འཇུག་བཞིན་པ།",
+    "noSongs": "གླུ་གཞས་མེད།",
+    "study": {
+      "new": "གསར་པ།",
+      "learning": "སློབ་སྦྱོང་བྱེད་བཞིན་པ།",
+      "due": "བསྐྱར་ཞིབ་བྱ་རྒྱུ།",
+      "studyButton": "སློབ་སྦྱོང་།",
+      "allCaughtUp": "ཚང་མ་གྲུབ་སོང་།"
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "ཐོབ་མཛད་མ་འགྱངས་མ་འོང་།"
+  },
+  "song": {
+    "loading": "གླུ་གཞས་འཇུག་བཞིན་པ།",
+    "loadingContent": "ནང་དོན་འཇུག་བཞིན་པ།",
+    "tabs": {
+      "lyrics": "གླུ་ཚིག",
+      "leaderboard": "ཐོབ་མཛད"
+    },
+    "unlock": {
+      "title": "གླུ་གཞས་འདི་འབྱེད་",
+      "loadContent": "གླུ་ཚིག་བལྟ་ཕྱིར་ནང་དོན་འཇུག་རོགས།",
+      "button": "འབྱེད་ཐེ་གསང་འབྱེད་",
+      "unlocking": "འབྱེད་བཞིན་པ།",
+      "needSongCredit": "འབྱེད་པ་(གླུ་གཞས་སྐར་མ་༡)",
+      "needVoiceCredit": "སྐད་སྒྲ་སྐར་མ་ཉོས་",
+      "description1": "གླུ་གཞས། སྐད་ཡིག་སློབ་སྦྱོང་།",
+      "description2": "དང་ཡིག་སྒྱུར། དོན། བྲད་སྤྲོད་བཅས་པའི་གླུ་ཚིག།"
+    },
+    "karaoke": {
+      "start": "གླུ་གཞས་འགོ་རྩོམ་(སྐད་སྒྲ་སྐར་མ་༡)",
+      "starting": "འགོ་བཞིན་པ།",
+      "selectLine": "འཕྲེང་གཅིག་འདེམས་རོགས།"
+    },
+    "lyricsMeaning": {
+      "meaning": "དོན།",
+      "grammar": "བྲད་སྤྲོད།"
+    },
+    "priceInfo": {
+      "song": "གླུ་གཞས་སྐར་མ་༡ = {{price}} USDC",
+      "voice": "སྐད་སྒྲ་སྐར་མ་༡ = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "གླུ་གཞས་སྐར་མ་མེད།",
+      "voice": "སྐད་སྒྲ་སྐར་མ་མེད།"
+    }
+  },
+  "account": {
+    "title": "རྩིས་ཁྲ།",
+    "walletAddress": "ཁྱེད་ཀྱི་སྒམ་གྱི་ཁ་བྱང་།",
+    "crowns": "ཅོད་པན།",
+    "crownsComingSoon": "(མ་འགྱངས་པར་འབྱོར་རྒྱུ།)",
+    "dayStreak": "རྒྱུན་ཉིན།",
+    "syncStatus": {
+      "title": "མཉམ་བསྒྲིགས་གནས་བབ།",
+      "synced": "མཉམ་བསྒྲིགས་བྱས་ཟིན།",
+      "ago": "སྔོན་ལ།",
+      "saveProgress": "སྔོན་སྐྱོད་ཉར་ཚགས།",
+      "recoverFromCloud": "སྤྲིན་པ་ནས་སླར་གསོ།"
+    },
+    "credits": {
+      "title": "སྐར་མ།",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "སྐད་སྒྲ།",
+      "songs": "གླུ་གཞས།",
+      "pricing": "རིན་གོང་།"
+    },
+    "network": {
+      "currentNetwork": "དྲ་བ།",
+      "pleaseConnect": "འབྲེལ་མཐུད་བྱེད་རོགས།",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base"
+    }
+  }
+}

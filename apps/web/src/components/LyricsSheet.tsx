@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { BottomSheet } from './BottomSheet'
 import { Translate, Lightbulb, BookOpen } from '@phosphor-icons/react'
 
@@ -21,6 +22,8 @@ export function LyricsSheet({
   open,
   onOpenChange,
 }: LyricsSheetProps) {
+  const { t } = useTranslation()
+  
   return (
     <BottomSheet
       trigger={trigger}
@@ -33,7 +36,7 @@ export function LyricsSheet({
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Lightbulb weight="duotone" size={28} color="#9CA3AF" />
-            <h3 className="text-lg font-semibold text-white">含义</h3>
+            <h3 className="text-lg font-semibold text-white">{t('song.lyricsMeaning.meaning')}</h3>
           </div>
           <p className="text-neutral-300 leading-relaxed">
             {meaning || <span className="text-neutral-400 italic">即将推出</span>}
@@ -44,7 +47,7 @@ export function LyricsSheet({
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <BookOpen weight="duotone" size={28} color="#9CA3AF" />
-            <h3 className="text-lg font-semibold text-white">语法</h3>
+            <h3 className="text-lg font-semibold text-white">{t('song.lyricsMeaning.grammar')}</h3>
           </div>
           <p className="text-neutral-300 leading-relaxed">
             {grammar || <span className="text-neutral-400 italic">即将推出</span>}

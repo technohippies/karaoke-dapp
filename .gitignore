@@ -18,6 +18,8 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # dotenv environment variable files
 .env
+.env.*
+!.env.example
 .env.development.local
 .env.test.local
 .env.production.local
@@ -43,3 +45,26 @@ apps/web/.vite
 
 *storybook.log
 storybook-static
+
+# API keys and secrets
+**/encrypted-api-keys.json
+**/*-api-keys.json
+**/secrets/
+**/private/
+
+# Contract deployment artifacts with private keys
+**/broadcast/
+**/cache_hardhat/
+**/artifacts/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# OS files
+Thumbs.db
+
+# Data directory (contains encrypted content and keys)
+/data/

@@ -1,0 +1,84 @@
+{
+  "common": {
+    "connectWallet": "Connect Wallet",
+    "buyCredits": "Buy Credits"
+  },
+  "home": {
+    "yourFlashcards": "Your Flashcards",
+    "songs": "Songs",
+    "loadingSongs": "Loading songs...",
+    "noSongs": "No songs available",
+    "study": {
+      "new": "NEW",
+      "learning": "LEARNING",
+      "due": "DUE",
+      "studyButton": "Study",
+      "allCaughtUp": "All Caught Up!"
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "Leaderboards coming soon!"
+  },
+  "song": {
+    "loading": "Loading song...",
+    "loadingContent": "Loading Content...",
+    "tabs": {
+      "lyrics": "Lyrics",
+      "leaderboard": "Leaderboard"
+    },
+    "unlock": {
+      "title": "Unlock this song",
+      "loadContent": "Load content to view lyrics",
+      "button": "Unlock and Decrypt",
+      "unlocking": "Unlocking...",
+      "needSongCredit": "Unlock (1 song credit)",
+      "needVoiceCredit": "Buy Voice Credits",
+      "description1": "Karaoke, language learning exercises,",
+      "description2": "and lyrics with translations, meaning, and grammar."
+    },
+    "karaoke": {
+      "start": "Start Karaoke (1 voice credit)",
+      "starting": "Starting...",
+      "selectLine": "Select a line"
+    },
+    "lyricsMeaning": {
+      "meaning": "Meaning",
+      "grammar": "Grammar"
+    },
+    "priceInfo": {
+      "song": "1 Song Credit = {{price}} USDC",
+      "voice": "1 Voice Credit = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "No song credits",
+      "voice": "No voice credits"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "walletAddress": "Your Wallet Address",
+    "crowns": "Crowns",
+    "crownsComingSoon": "(Coming Soon)",
+    "dayStreak": "Day Streak",
+    "syncStatus": {
+      "title": "Sync Status",
+      "synced": "Synced",
+      "ago": "ago",
+      "saveProgress": "Save Progress",
+      "recoverFromCloud": "Recover from Cloud"
+    },
+    "credits": {
+      "title": "Credits",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "Voice",
+      "songs": "Songs",
+      "pricing": "Pricing"
+    },
+    "network": {
+      "currentNetwork": "Network",
+      "pleaseConnect": "Please connect to",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base"
+    }
+  }
+}

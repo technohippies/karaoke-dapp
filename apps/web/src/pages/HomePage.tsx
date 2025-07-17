@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAccount } from 'wagmi'
+import { useTranslation } from 'react-i18next'
+import { useWeb3AuthConnect } from '@web3auth/modal/react'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
@@ -14,6 +16,17 @@ export function HomePage() {
   const navigate = useNavigate()
   const { getUserStats, isReady: isDBReady } = useDirectIDB()
   const [srsStats, setSrsStats] = useState({ new: 0, learning: 0, due: 0 })
+  const { t, i18n } = useTranslation()
+  const { connect } = useWeb3AuthConnect()
+  
+  // Log current language for debugging
+  useEffect(() => {
+    console.log('Current language:', i18n.language)
+    console.log('Browser language:', navigator.language)
+    console.log('Available languages:', i18n.languages)
+    console.log('Translation test - Songs:', t('home.songs'))
+    console.log('Translation test - NEW:', t('home.study.new'))
+  }, [i18n.language, t])
 
   useEffect(() => {
     loadSongs()
@@ -67,9 +80,12 @@ export function HomePage() {
     return null
   }
 
-  const handleLogin = () => {
-    // Handle wallet connection logic
-    console.log('Connect wallet clicked')
+  const handleLogin = async () => {
+    try {
+      await connect()
+    } catch (error) {
+      console.error('Failed to connect wallet:', error)
+    }
   }
 
   const handleAccount = () => {
@@ -98,12 +114,12 @@ export function HomePage() {
           }}
         />
         
-        <h1 className="text-2xl font-bold text-white mb-6 mt-8">Songs</h1>
+        <h1 className="text-2xl font-bold text-white mb-6 mt-8">{t('home.songs')}</h1>
         
         {loading ? (
-          <div className="text-center text-white">Loading songs...</div>
+          <div className="text-center text-white">{t('home.loadingSongs')}</div>
         ) : songs.length === 0 ? (
-          <div className="text-center text-neutral-400">No songs available</div>
+          <div className="text-center text-neutral-400">{t('home.noSongs')}</div>
         ) : (
           <div className="space-y-3">
             {songs.map((song) => (

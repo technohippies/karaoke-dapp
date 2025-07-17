@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
+import { useTranslation } from 'react-i18next'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
@@ -25,6 +26,7 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
@@ -386,7 +388,7 @@ export function SongPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading song...</div>
+        <div className="text-white text-xl">{t('song.loading')}</div>
       </div>
     )
   }
@@ -498,8 +500,8 @@ export function SongPage() {
             <div className="mb-8">
               <Tabs defaultValue="lyrics">
                 <TabsList>
-                  <TabsTrigger value="lyrics">Lyrics</TabsTrigger>
-                  <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+                  <TabsTrigger value="lyrics">{t('song.tabs.lyrics')}</TabsTrigger>
+                  <TabsTrigger value="leaderboard">{t('song.tabs.leaderboard')}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="lyrics">
                   {/* Check if content is loaded - show lock if not */}
@@ -512,10 +514,10 @@ export function SongPage() {
                         </div>
                       </div>
                       <h3 className="text-2xl font-bold text-white mb-4">
-                        {songIsUnlocked ? 'Load content to view lyrics' : 'Unlock this song'}
+                        {songIsUnlocked ? t('song.unlock.loadContent') : t('song.unlock.title')}
                       </h3>
-                      <p className="text-lg text-neutral-300 mb-2">Karaoke, language learning exercises,</p>
-                      <p className="text-lg text-neutral-300 mb-8">and lyrics with translations, meaning, and grammar.</p>
+                      <p className="text-lg text-neutral-300 mb-2">{t('song.unlock.description1')}</p>
+                      <p className="text-lg text-neutral-300 mb-8">{t('song.unlock.description2')}</p>
                     </div>
                   ) : (
                     /* Content loaded - show actual lyrics */
@@ -553,27 +555,7 @@ export function SongPage() {
                 </TabsContent>
                 <TabsContent value="leaderboard">
                   <div className="mt-4">
-                    <Leaderboard
-                      entries={[
-                      {
-                        rank: 1,
-                        address: "0x742d35Cc6634C0532925a3b8D",
-                        username: "singer.eth",
-                        score: 9850,
-                      },
-                      {
-                        rank: 2,
-                        address: "0x8ba1f109551bD432803012645Hac136c",
-                        username: "vocals.eth",
-                        score: 9720,
-                      },
-                      {
-                        rank: 3,
-                        address: "0x9c58512395baf906e3cdcfb2bbba563d",
-                        score: 9680,
-                      },
-                    ]}
-                  />
+                    <Leaderboard entries={[]} />
                   </div>
                 </TabsContent>
               </Tabs>
@@ -610,7 +592,7 @@ export function SongPage() {
                     onClick={() => navigate('/pricing')}
                     className="w-full px-6 py-3"
                   >
-                    Buy Credits
+                    {t('common.buyCredits')}
                   </Button>
                 )}
                 
@@ -624,10 +606,10 @@ export function SongPage() {
                     {isUnlocking ? (
                       <>
                         <CircleNotch size={20} className="animate-spin" />
-                        Unlocking...
+                        {t('song.unlock.unlocking')}
                       </>
                     ) : (
-                      'Unlock and Decrypt'
+                      t('song.unlock.button')
                     )}
                   </Button>
                 )}
@@ -638,7 +620,7 @@ export function SongPage() {
                     onClick={() => navigate('/pricing')}
                     className="w-full px-6 py-3 bg-orange-600 hover:bg-orange-700"
                   >
-                    Buy Voice Credits for Karaoke
+                    {t('song.unlock.needVoiceCredit')}
                   </Button>
                 )}
                 
@@ -667,7 +649,7 @@ export function SongPage() {
                           {isContentLoading ? (
                             <>
                               <CircleNotch size={20} className="animate-spin" />
-                              Loading Content...
+                              {t('song.loadingContent')}
                             </>
                           ) : (
                             'Download & Decrypt'
@@ -694,7 +676,7 @@ export function SongPage() {
                               {karaokeStartStep === 'idle' && 'Starting...'}
                             </>
                           ) : (
-                            'Start Karaoke (1 voice credit)'
+                            t('song.karaoke.start')
                           )}
                         </Button>
                       </>

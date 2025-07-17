@@ -1,0 +1,84 @@
+{
+  "common": {
+    "connectWallet": "连接钱包",
+    "buyCredits": "购买积分"
+  },
+  "home": {
+    "yourFlashcards": "你的学习卡",
+    "songs": "歌曲",
+    "loadingSongs": "正在加载歌曲...",
+    "noSongs": "暂无歌曲",
+    "study": {
+      "new": "新的",
+      "learning": "学习中",
+      "due": "待复习",
+      "studyButton": "学习",
+      "allCaughtUp": "全部完成！"
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "排行榜即将推出！"
+  },
+  "song": {
+    "loading": "歌曲加载中...",
+    "loadingContent": "内容加载中...",
+    "tabs": {
+      "lyrics": "歌词",
+      "leaderboard": "排行榜"
+    },
+    "unlock": {
+      "title": "解锁这首歌",
+      "loadContent": "加载内容以查看歌词",
+      "button": "解锁并解密",
+      "unlocking": "解锁中...",
+      "needSongCredit": "解锁（1个歌曲积分）",
+      "needVoiceCredit": "购买语音积分",
+      "description1": "K歌、语言学习练习、",
+      "description2": "以及带有翻译、含义和语法的歌词。"
+    },
+    "karaoke": {
+      "start": "开始K歌（1个语音积分）",
+      "starting": "启动中...",
+      "selectLine": "选择一行"
+    },
+    "lyricsMeaning": {
+      "meaning": "含义",
+      "grammar": "语法"
+    },
+    "priceInfo": {
+      "song": "1个歌曲积分 = {{price}} USDC",
+      "voice": "1个语音积分 = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "没有歌曲积分",
+      "voice": "没有语音积分"
+    }
+  },
+  "account": {
+    "title": "账户",
+    "walletAddress": "您的钱包地址",
+    "crowns": "皇冠",
+    "crownsComingSoon": "(即将推出)",
+    "dayStreak": "连续天数",
+    "syncStatus": {
+      "title": "同步状态",
+      "synced": "已同步",
+      "ago": "前",
+      "saveProgress": "保存进度",
+      "recoverFromCloud": "从云端恢复"
+    },
+    "credits": {
+      "title": "积分",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "语音",
+      "songs": "歌曲",
+      "pricing": "价格"
+    },
+    "network": {
+      "currentNetwork": "网络",
+      "pleaseConnect": "请连接到",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base"
+    }
+  }
+}

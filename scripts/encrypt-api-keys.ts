@@ -2,9 +2,13 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { LitNetwork } from '@lit-protocol/constants'
 import { ethers } from 'ethers'
 
-// Your API keys (replace with your actual keys)
-const DEEPGRAM_API_KEY = '07fc2edeb24dc6eec157b3ea427254fef01dc2df'
-const OPENROUTER_API_KEY = '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'
+// Get API keys from environment variables
+const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
+
+if (!DEEPGRAM_API_KEY || !OPENROUTER_API_KEY) {
+  throw new Error('Missing required environment variables: DEEPGRAM_API_KEY, OPENROUTER_API_KEY')
+}
 
 async function encryptApiKeys() {
   console.log('🔐 Encrypting API keys...')
