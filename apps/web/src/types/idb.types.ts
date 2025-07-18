@@ -41,6 +41,19 @@ export interface StreakCache {
   lastActivityDate: number // YYYYMMDD format
 }
 
+export interface UserSettings {
+  key: string
+  value: any
+  updatedAt: number
+}
+
+export interface CountrySettings {
+  key: 'country'
+  value: string // 2-letter ISO country code
+  confirmedAt: number
+  updatedAt: number
+}
+
 // IndexedDB Schema
 export interface KaraokeSRSDB extends DBSchema {
   karaoke_sessions: {
@@ -71,6 +84,10 @@ export interface KaraokeSRSDB extends DBSchema {
   sync_metadata: {
     key: string
     value: SyncMetadata | StreakCache
+  }
+  user_settings: {
+    key: string
+    value: UserSettings | CountrySettings
   }
 }
 

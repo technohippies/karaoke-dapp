@@ -117,20 +117,20 @@ export function AccountPage() {
           <div className="flex gap-4 mb-8">
             {/* Crown Count */}
             <div className="flex-1 bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-              <div className="flex items-center gap-3">
-                <CrownCross size={40} weight="fill" className="text-yellow-500" />
-                <div>
+              <div className="flex items-start gap-3">
+                <CrownCross size={24} weight="fill" className="text-yellow-500 flex-shrink-0 mt-1" />
+                <div className="min-w-0">
                   <div className="text-3xl font-bold text-white">0</div>
-                  <div className="text-neutral-400">{t('account.crowns')} <span className="text-neutral-500 text-sm">{t('account.crownsComingSoon')}</span></div>
+                  <div className="text-neutral-400">{t('account.crowns')}</div>
                 </div>
               </div>
             </div>
             
             {/* Streak */}
             <div className="flex-1 bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-              <div className="flex items-center gap-3">
-                <Fire size={40} weight="fill" className="text-orange-500" />
-                <div>
+              <div className="flex items-start gap-3">
+                <Fire size={24} weight="fill" className="text-orange-500 flex-shrink-0 mt-1" />
+                <div className="min-w-0">
                   <div className="text-3xl font-bold text-white">{localStreak}</div>
                   <div className="text-neutral-400">{t('account.dayStreak')}</div>
                 </div>

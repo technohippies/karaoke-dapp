@@ -22,9 +22,9 @@ export function CreditsWidget({ balance, voiceCredits, songCredits }: CreditsWid
       <div className="flex gap-4 mb-6">
         {/* Voice Credits */}
         <div className="flex-1 bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-          <div className="flex items-center gap-3">
-            <MicrophoneStage size={40} weight="regular" className="text-neutral-400" />
-            <div>
+          <div className="flex items-start gap-3">
+            <MicrophoneStage size={24} weight="regular" className="text-neutral-400 flex-shrink-0 mt-1" />
+            <div className="min-w-0">
               <div className="text-3xl font-bold text-white">{voiceCredits}</div>
               <div className="text-neutral-400">{t('account.credits.voice')}</div>
             </div>
@@ -33,9 +33,9 @@ export function CreditsWidget({ balance, voiceCredits, songCredits }: CreditsWid
         
         {/* Song Credits */}
         <div className="flex-1 bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-          <div className="flex items-center gap-3">
-            <MusicNotes size={40} weight="regular" className="text-neutral-400" />
-            <div>
+          <div className="flex items-start gap-3">
+            <MusicNotes size={24} weight="regular" className="text-neutral-400 flex-shrink-0 mt-1" />
+            <div className="min-w-0">
               <div className="text-3xl font-bold text-white">{songCredits}</div>
               <div className="text-neutral-400">{t('account.credits.songs')}</div>
             </div>

@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
+import { PurchaseSuccessBanner } from '../components/PurchaseSuccessBanner'
 import { BASE_SEPOLIA_CHAIN_ID, BASE_MAINNET_CHAIN_ID } from '../constants'
 import { useTranslation } from 'react-i18next'
 
@@ -16,10 +17,12 @@ export function PricingPage() {
     address,
     isApproving,
     isPurchasing,
+    hasCountry,
     balance,
     voiceCredits,
     songCredits,
     isFirstPurchase,
+    lastPurchase,
     handleBuyCombo,
     handleBuyVoice,
     handleBuySong,
@@ -40,6 +43,13 @@ export function PricingPage() {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="w-full max-w-2xl mx-auto px-6 pt-8 pb-24">
+      
+      {/* Purchase Success Banner */}
+      <PurchaseSuccessBanner 
+        lastPurchase={lastPurchase}
+        voiceCredits={voiceCredits}
+        songCredits={songCredits}
+      />
       
       {/* Purchase Options */}
       {isFirstPurchase ? (
@@ -83,8 +93,20 @@ export function PricingPage() {
           </div>
         </div>
       ) : (
-        // Additional packs for existing users
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <>
+          {/* Credits Widget - shown above purchase options for existing users */}
+          {isConnected && (
+            <div className="mb-8">
+              <CreditsWidget 
+                balance={balance}
+                voiceCredits={voiceCredits}
+                songCredits={songCredits}
+              />
+            </div>
+          )}
+          
+          {/* Additional packs for existing users */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Voice Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">Voice Pack</h3>
@@ -147,10 +169,11 @@ export function PricingPage() {
             </ChainSwitcher>
           </div>
         </div>
+        </>
       )}
 
-      {/* Credits Widget */}
-      {isConnected && (
+      {/* Credits Widget - shown below starter pack for first time users */}
+      {isFirstPurchase && isConnected && (
         <CreditsWidget 
           balance={balance}
           voiceCredits={voiceCredits}

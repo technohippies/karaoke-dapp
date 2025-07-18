@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 import { Button } from './button'
 
 const meta: Meta<typeof Tabs> = {
-  title: 'UI/Atoms/Tabs',
+  title: 'UI/Tabs',
   component: Tabs,
   parameters: {
     layout: 'padded',

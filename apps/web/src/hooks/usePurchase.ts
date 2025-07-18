@@ -3,12 +3,15 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { KARAOKE_CONTRACT_ADDRESS, USDC_ADDRESS, USDC_ABI } from '../constants'
 import { COMBO_PRICE, VOICE_PACK_PRICE, SONG_PACK_PRICE } from '../constants/pricing'
 import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
+import { useCountry } from './useCountry'
 
 export function usePurchase() {
   const { address, isConnected } = useAccount()
+  const { country, hasCountry } = useCountry()
   const [isApproving, setIsApproving] = useState(false)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [pendingPurchase, setPendingPurchase] = useState<'combo' | 'voice' | 'song' | null>(null)
+  const [lastPurchase, setLastPurchase] = useState<{ type: 'combo' | 'voice' | 'song', timestamp: number } | null>(null)
 
   // Read contract data
   const { data: usdcBalance, refetch: refetchBalance } = useReadContract({
@@ -93,8 +96,18 @@ export function usePurchase() {
   // Handle purchase success
   useEffect(() => {
     if (isBuySuccess || isBuyVoiceSuccess || isBuySongSuccess) {
-      console.log('✅ Purchase successful!')
+      const packType = isBuySuccess ? 'combo' : isBuyVoiceSuccess ? 'voice' : 'song'
+      const txHash = isBuySuccess ? buyHash : isBuyVoiceSuccess ? buyVoiceHash : buySongHash
+      
+      console.log('✅ Purchase successful!', {
+        packType,
+        country: country || 'Unknown',
+        txHash,
+        timestamp: new Date().toISOString()
+      })
+      
       setIsPurchasing(false)
+      setLastPurchase({ type: packType, timestamp: Date.now() })
       
       // Add delay before refetching to ensure blockchain state is updated
       setTimeout(() => {
@@ -105,7 +118,7 @@ export function usePurchase() {
         refetchAllowance()
       }, 2000) // 2 second delay
     }
-  }, [isBuySuccess, isBuyVoiceSuccess, isBuySongSuccess, refetchBalance, refetchVoiceCredits, refetchSongCredits, refetchAllowance])
+  }, [isBuySuccess, isBuyVoiceSuccess, isBuySongSuccess, buyHash, buyVoiceHash, buySongHash, country, refetchBalance, refetchVoiceCredits, refetchSongCredits, refetchAllowance])
 
   const handleApprove = (amount: bigint) => {
     if (!address) return
@@ -154,6 +167,10 @@ export function usePurchase() {
 
   // Single-click purchase functions
   const handleBuyCombo = () => {
+    if (!hasCountry) {
+      console.warn('❌ Cannot purchase without country selection')
+      return
+    }
     if (!hasComboAllowance) {
       setPendingPurchase('combo')
       handleApprove(COMBO_PRICE)
@@ -163,6 +180,10 @@ export function usePurchase() {
   }
 
   const handleBuyVoice = () => {
+    if (!hasCountry) {
+      console.warn('❌ Cannot purchase without country selection')
+      return
+    }
     if (!hasVoiceAllowance) {
       setPendingPurchase('voice')
       handleApprove(VOICE_PACK_PRICE)
@@ -172,6 +193,10 @@ export function usePurchase() {
   }
 
   const handleBuySong = () => {
+    if (!hasCountry) {
+      console.warn('❌ Cannot purchase without country selection')
+      return
+    }
     if (!hasSongAllowance) {
       setPendingPurchase('song')
       handleApprove(SONG_PACK_PRICE)
@@ -186,6 +211,8 @@ export function usePurchase() {
     address,
     isApproving,
     isPurchasing,
+    hasCountry,
+    lastPurchase,
     
     // Data
     balance,

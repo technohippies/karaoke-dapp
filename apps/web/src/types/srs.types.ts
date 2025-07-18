@@ -4,6 +4,17 @@ export interface UserTableInfo {
   karaokeSessionsTable: string
   karaokeLinesTable: string
   exerciseSessionsTable: string
+  purchasesTable?: string // Optional for backward compatibility
+}
+
+// Purchase tracking for royalties
+export interface PurchaseData {
+  userAddress: string
+  packType: 'combo' | 'voice' | 'song'
+  country: string // 2-letter ISO country code
+  timestamp: number
+  transactionHash: string
+  amount: number // USD amount
 }
 
 // Karaoke Session Types

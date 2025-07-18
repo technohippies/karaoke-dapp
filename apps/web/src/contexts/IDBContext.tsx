@@ -38,7 +38,7 @@ export function IDBProvider({ children }: IDBProviderProps) {
       try {
         console.log('🔗 IDBProvider: Opening database...')
         
-        const database = await openDB<KaraokeSRSDB>('KaraokeSRS', 1, {
+        const database = await openDB<KaraokeSRSDB>('KaraokeSRS', 2, {
           upgrade(db) {
             // Create karaoke_sessions store
             if (!db.objectStoreNames.contains('karaoke_sessions')) {
@@ -74,6 +74,11 @@ export function IDBProvider({ children }: IDBProviderProps) {
             // Create sync_metadata store
             if (!db.objectStoreNames.contains('sync_metadata')) {
               db.createObjectStore('sync_metadata', { keyPath: 'id' })
+            }
+
+            // Create user_settings store
+            if (!db.objectStoreNames.contains('user_settings')) {
+              db.createObjectStore('user_settings', { keyPath: 'key' })
             }
           }
         })

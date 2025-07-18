@@ -507,17 +507,17 @@ export function SongPage() {
                   {/* Check if content is loaded - show lock if not */}
                   {!content ? (
                     /* Content not loaded - show lock */
-                    <div className="mt-8 text-center py-16">
-                      <div className="flex justify-center mb-6">
-                        <div className="w-24 h-24 bg-neutral-800 rounded-full flex items-center justify-center">
-                          <Lock size={40} className="text-neutral-400" />
+                    <div className="mt-4 text-center py-8">
+                      <div className="flex justify-center mb-4">
+                        <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
+                          <Lock size={28} className="text-neutral-400" />
                         </div>
                       </div>
-                      <h3 className="text-2xl font-bold text-white mb-4">
+                      <h3 className="text-xl font-bold text-white mb-3">
                         {songIsUnlocked ? t('song.unlock.loadContent') : t('song.unlock.title')}
                       </h3>
-                      <p className="text-lg text-neutral-300 mb-2">{t('song.unlock.description1')}</p>
-                      <p className="text-lg text-neutral-300 mb-8">{t('song.unlock.description2')}</p>
+                      <p className="text-base text-neutral-300 mb-1">{t('song.unlock.description1')}</p>
+                      <p className="text-base text-neutral-300 mb-4">{t('song.unlock.description2')}</p>
                     </div>
                   ) : (
                     /* Content loaded - show actual lyrics */
@@ -600,13 +600,13 @@ export function SongPage() {
                 {hasSongCredits && !songIsUnlocked && (
                   <Button
                     onClick={handleUnlockSong}
-                    disabled={isUnlocking}
+                    disabled={isUnlocking || isUnlockSuccess}
                     className="w-full px-6 py-3 flex items-center justify-center gap-2"
                   >
-                    {isUnlocking ? (
+                    {isUnlocking || isUnlockSuccess ? (
                       <>
                         <CircleNotch size={20} className="animate-spin" />
-                        {t('song.unlock.unlocking')}
+                        {isUnlockSuccess ? t('song.unlock.loading') : t('song.unlock.unlocking')}
                       </>
                     ) : (
                       t('song.unlock.button')

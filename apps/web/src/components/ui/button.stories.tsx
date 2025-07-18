@@ -4,7 +4,7 @@ import { Spinner } from './spinner'
 import { ChevronRight, Download, Plus } from 'lucide-react'
 
 const meta: Meta<typeof Button> = {
-  title: 'UI/Atoms/Button',
+  title: 'UI/Button',
   component: Button,
   parameters: {
     layout: 'centered',
