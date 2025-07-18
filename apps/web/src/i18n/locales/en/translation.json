@@ -4,6 +4,8 @@
     "buyCredits": "Buy Credits"
   },
   "home": {
+    "heroTitle": "Karaoke to Learn English",
+    "heroSubtitle": "with Scarlett",
     "yourFlashcards": "Your Flashcards",
     "songs": "Songs",
     "loadingSongs": "Loading songs...",
@@ -84,9 +86,9 @@
   },
   "pricing": {
     "title": "Pricing",
-    "starterPack": "Starter Pack",
-    "voicePack": "Voice Pack",
-    "songPack": "Song Pack",
+    "starterPack": "Karaoke Starter Pack",
+    "voicePack": "Karaoke Voice Pack",
+    "songPack": "Karaoke Song Pack",
     "voiceCredits": "Voice Credits",
     "songCredits": "Song Credits",
     "buy": "Buy",
@@ -132,5 +134,27 @@
       "question": "Is this code open source?",
       "answer": "Yes, all of our code is fully open source (AGPLv3) on"
     }
+  },
+  "exercise": {
+    "sayThis": "Say this:",
+    "loadingCards": "Loading study cards...",
+    "processing": "Processing...",
+    "stopRecording": "Stop Recording",
+    "next": "Next",
+    "tryAgain": "Try Again",
+    "startRecording": "Start Recording",
+    "youSaid": "You said:"
+  },
+  "countryDialog": {
+    "title": "Karaoke English School",
+    "nonprofit": "Non-profit",
+    "ownData": "You own your data, we host nothing",
+    "donation": "50% of song revenue donated to Doctors Without Borders",
+    "donationShort": "50% to Doctors Without Borders",
+    "yourCountry": "Your Country",
+    "selectCountry": "Select your country",
+    "detecting": "Detecting your location...",
+    "ipMismatch": "Your IP address appears to be from {{country}}. Please confirm your actual country of residence.",
+    "confirm": "Confirm"
   }
 }

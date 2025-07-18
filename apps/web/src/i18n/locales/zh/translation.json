@@ -4,6 +4,8 @@
     "buyCredits": "购买积分"
   },
   "home": {
+    "heroTitle": "卡拉OK学英语",
+    "heroSubtitle": "与Scarlett一起",
     "yourFlashcards": "你的学习卡",
     "songs": "歌曲",
     "loadingSongs": "正在加载歌曲...",
@@ -84,9 +86,9 @@
   },
   "pricing": {
     "title": "价格",
-    "starterPack": "新手包",
-    "voicePack": "语音包",
-    "songPack": "歌曲包",
+    "starterPack": "卡拉OK新手包",
+    "voicePack": "卡拉OK语音包",
+    "songPack": "卡拉OK歌曲包",
     "voiceCredits": "语音积分",
     "songCredits": "歌曲积分",
     "buy": "购买",
@@ -132,5 +134,27 @@
       "question": "这个代码是开源的吗？",
       "answer": "是的，我们所有的代码都是完全开源的（AGPLv3），在"
     }
+  },
+  "exercise": {
+    "sayThis": "说这句：",
+    "loadingCards": "加载学习卡片中...",
+    "processing": "处理中...",
+    "stopRecording": "停止录音",
+    "next": "下一个",
+    "tryAgain": "再试一次",
+    "startRecording": "开始录音",
+    "youSaid": "你说的是："
+  },
+  "countryDialog": {
+    "title": "卡拉OK英语学校",
+    "nonprofit": "非营利组织",
+    "ownData": "您拥有自己的数据，我们不托管任何内容",
+    "donation": "歌曲收入的50%捐赠给无国界医生",
+    "donationShort": "50%捐赠给无国界医生",
+    "yourCountry": "您的国家",
+    "selectCountry": "选择您的国家",
+    "detecting": "正在检测您的位置...",
+    "ipMismatch": "您的IP地址显示来自{{country}}。请确认您的实际居住国家。",
+    "confirm": "确认"
   }
 }

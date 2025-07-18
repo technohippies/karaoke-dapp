@@ -56,16 +56,16 @@ export function PricingPage() {
         // Starter Pack for new users
         <div className="mb-8">
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
-            <h3 className="text-2xl font-bold mb-2 text-white">Starter Pack</h3>
-            <div className="text-4xl font-bold text-blue-400 mb-2">$3</div>
+            <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.starterPack')}</h3>
+            <div className="text-4xl font-bold text-blue-400 mb-2">$3 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>100 Voice Credits</li>
-              <li>10 Song Credits</li>
+              <li>100 {t('pricing.voiceCredits')}</li>
+              <li>10 {t('pricing.songCredits')}</li>
             </ul>
             
             {!isConnected ? (
               <Button className="w-full bg-white text-black py-3 px-6" disabled>
-                Connect Wallet to Purchase
+                {t('pricing.connectToPurchase')}
               </Button>
             ) : (
               <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
@@ -77,15 +77,15 @@ export function PricingPage() {
                   {isApproving ? (
                     <>
                       <Spinner size="sm" />
-                      <span>Approving...</span>
+                      <span>{t('pricing.approving')}</span>
                     </>
                   ) : isPurchasing ? (
                     <>
                       <Spinner size="sm" />
-                      <span>Purchasing...</span>
+                      <span>{t('pricing.purchasing')}</span>
                     </>
                   ) : (
-                    'Buy'
+                    t('pricing.buy')
                   )}
                 </Button>
               </ChainSwitcher>
@@ -110,10 +110,10 @@ export function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Voice Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
-            <h3 className="text-2xl font-bold mb-2 text-white">Voice Pack</h3>
-            <div className="text-4xl font-bold text-green-400 mb-2">$1</div>
+            <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.voicePack')}</h3>
+            <div className="text-4xl font-bold text-green-400 mb-2">$1 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>50 Voice Credits</li>
+              <li>50 {t('pricing.voiceCredits')}</li>
             </ul>
             
             <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
@@ -141,10 +141,10 @@ export function PricingPage() {
 
           {/* Song Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
-            <h3 className="text-2xl font-bold mb-2 text-white">Song Pack</h3>
-            <div className="text-4xl font-bold text-purple-400 mb-2">$2</div>
+            <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.songPack')}</h3>
+            <div className="text-4xl font-bold text-purple-400 mb-2">$2 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>5 Song Credits</li>
+              <li>5 {t('pricing.songCredits')}</li>
             </ul>
             
             <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">

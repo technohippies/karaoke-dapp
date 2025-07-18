@@ -1,20 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAccount } from 'wagmi'
 import { useWalletClient } from 'wagmi'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
-import { SimpleHeader } from '../components/SimpleHeader'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
 import { Spinner } from '../components/ui/spinner'
 import { Button } from '../components/ui/button'
-import { Microphone, StopCircle } from '@phosphor-icons/react'
+import { IconButton } from '../components/IconButton'
+import { Microphone, StopCircle, X } from '@phosphor-icons/react'
 import { lineScoringScoringService } from '../services/integrations/lit/LineScoringService'
 import { useSimpleAudioRecorder } from '../hooks/useSimpleAudioRecorder'
 import { useStreak } from '../hooks/useStreak'
+import { StudyCompletion } from '../components/StudyCompletion'
 import type { DueCard } from '../types/srs.types'
 
 interface StudyStats {
@@ -26,13 +28,14 @@ interface StudyStats {
 
 export function StudyPageV2() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { address, isConnected } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { updateCardReview, saveExerciseSession } = useIDBSRS()
   const { sessionSigs, isReady: isLitReady } = useLitSession()
   const { getDueCards, getUserStats, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
-  const { invalidateCache: invalidateStreakCache } = useStreak()
+  const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
   
   const [dueCards, setDueCards] = useState<DueCard[]>([])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
@@ -43,6 +46,8 @@ export function StudyPageV2() {
   const [transcript, setTranscript] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
   const [aiFeedback, setAiFeedback] = useState<string | null>(null)
+  const [showCompletion, setShowCompletion] = useState(false)
+  const [previousStreak, setPreviousStreak] = useState(0)
   
   const [studyStats, setStudyStats] = useState<StudyStats>({
     totalCards: 0,
@@ -58,6 +63,11 @@ export function StudyPageV2() {
       loadDueCards()
     }
   }, [address, isDBReady])
+  
+  // Store the streak when component mounts
+  useEffect(() => {
+    setPreviousStreak(currentStreak)
+  }, [])
   
   const loadDueCards = async () => {
     if (!address) return
@@ -195,11 +205,17 @@ export function StudyPageV2() {
       
       // Invalidate streak cache so it recalculates with new session
       await invalidateStreakCache()
+      
+      // Force refresh the streak to get the updated value
+      await refreshStreak()
+      
+      // Show completion screen instead of navigating away
+      setShowCompletion(true)
     } catch (error) {
       console.error('Failed to save exercise session:', error)
+      // Still show completion even if save fails
+      setShowCompletion(true)
     }
-    
-    navigate('/')
   }
   
   const handleButtonClick = () => {
@@ -224,11 +240,11 @@ export function StudyPageV2() {
   const getButtonText = () => {
     const state = getButtonState()
     switch (state) {
-      case 'processing': return 'Processing...'
-      case 'recording': return 'Stop Recording'
-      case 'next': return 'Next'
-      case 'try-again': return 'Try Again'
-      default: return 'Start Recording'
+      case 'processing': return t('exercise.processing')
+      case 'recording': return t('exercise.stopRecording')
+      case 'next': return t('exercise.next')
+      case 'try-again': return t('exercise.tryAgain')
+      default: return t('exercise.startRecording')
     }
   }
   
@@ -241,11 +257,20 @@ export function StudyPageV2() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" className="mb-4" />
-          <p className="text-white/60">Loading study cards...</p>
-        </div>
+        <Spinner size="lg" />
       </div>
+    )
+  }
+  
+  // Show completion screen
+  if (showCompletion) {
+    return (
+      <StudyCompletion
+        currentStreak={currentStreak}
+        previousStreak={previousStreak}
+        cardsCompleted={studyStats.reviewedCards}
+        onClose={() => navigate('/')}
+      />
     )
   }
   
@@ -255,24 +280,31 @@ export function StudyPageV2() {
   
   return (
     <div className="min-h-screen bg-neutral-900 flex flex-col">
-      <SimpleHeader />
-      
-      {/* Progress bar */}
-      <div className="fixed top-16 left-0 right-0 z-10 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-700 px-4 py-2">
-        <Progress value={progress} className="h-2" />
+      {/* Custom header with progress bar */}
+      <div className="fixed top-0 left-0 right-0 z-10 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-700">
+        <div className="w-full max-w-2xl mx-auto px-6 py-4">
+          <div className="flex items-center gap-4">
+            <IconButton variant="ghost" onClick={() => navigate('/')}>
+              <X size={24} weight="bold" />
+            </IconButton>
+            <div className="flex-1">
+              <Progress value={progress} className="h-2" />
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* Main content */}
-      <div className="flex-1 flex items-center justify-center px-4 pt-28 pb-32">
-        <div className="max-w-2xl w-full space-y-8">
+      <div className="flex-1 pt-24 pb-32">
+        <div className="w-full max-w-2xl mx-auto px-6 space-y-8">
           {/* Instruction */}
           <h2 className="text-2xl font-semibold text-white">
-            Say this line:
+            {t('exercise.sayThis')}
           </h2>
           
           {/* Card */}
           <Card className="bg-neutral-800 border-neutral-700 p-8">
-            <p className="text-3xl font-medium text-white text-center leading-relaxed">
+            <p className="text-3xl font-medium text-white leading-relaxed">
               {currentCard.lineText}
             </p>
           </Card>
@@ -295,7 +327,7 @@ export function StudyPageV2() {
                   <>
                     {transcript && (
                       <div>
-                        <p className="text-sm text-white/60 mb-1">You said:</p>
+                        <p className="text-sm text-white/60 mb-1">{t('exercise.youSaid')}</p>
                         <p className="text-white">{transcript}</p>
                       </div>
                     )}

@@ -5,9 +5,10 @@ import { LanguageSelector } from './LanguageSelector'
 
 interface SimpleHeaderProps {
   onBack?: () => void
+  hideLanguageSelector?: boolean
 }
 
-export function SimpleHeader({ onBack }: SimpleHeaderProps) {
+export function SimpleHeader({ onBack, hideLanguageSelector = false }: SimpleHeaderProps) {
   const navigate = useNavigate()
   
   const handleBack = () => {
@@ -20,11 +21,13 @@ export function SimpleHeader({ onBack }: SimpleHeaderProps) {
   
   return (
     <div className="fixed top-0 left-0 right-0 z-10 bg-neutral-900/95 backdrop-blur-sm border-b border-neutral-700">
-      <div className="flex items-center justify-between p-4">
-        <IconButton variant="ghost" onClick={handleBack}>
-          <X size={24} weight="bold" />
-        </IconButton>
-        <LanguageSelector />
+      <div className="w-full max-w-2xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between">
+          <IconButton variant="ghost" onClick={handleBack}>
+            <X size={24} weight="bold" />
+          </IconButton>
+          {!hideLanguageSelector && <LanguageSelector />}
+        </div>
       </div>
     </div>
   )

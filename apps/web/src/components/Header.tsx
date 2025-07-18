@@ -4,6 +4,7 @@ import { Button } from './ui/button'
 import { IconButton } from './IconButton'
 import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
 import { useAccount } from 'wagmi'
+import { LanguageSelector } from './LanguageSelector'
 
 interface HeaderProps {
   isLoggedIn?: boolean
@@ -68,7 +69,7 @@ export function Header({
             </div>
           </div>
           
-          <div>
+          <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <Button 
                 variant="outline" 
@@ -81,6 +82,7 @@ export function Header({
                 {t('common.connectWallet')}
               </Button>
             )}
+            <LanguageSelector />
           </div>
         </div>
       </div>

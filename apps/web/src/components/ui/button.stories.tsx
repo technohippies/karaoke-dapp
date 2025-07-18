@@ -136,9 +136,8 @@ export const Loading: Story = {
         <span>Purchasing...</span>
       </Button>
       
-      <Button disabled className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2">
+      <Button disabled className="w-full bg-purple-500 text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center">
         <Spinner size="sm" />
-        <span>Loading...</span>
       </Button>
     </div>
   ),

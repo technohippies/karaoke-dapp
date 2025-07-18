@@ -6,4 +6,11 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx}",
     "./src/stories/**/*.{js,ts,jsx,tsx}"
   ],
+  theme: {
+    extend: {
+      animation: {
+        scroll: 'scroll 30s linear infinite',
+      },
+    },
+  },
 }

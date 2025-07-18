@@ -19,7 +19,7 @@ import { idbWriteService } from './IDBWriteService'
 export class IDBSyncService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
   private DB_NAME = 'KaraokeSRS'
-  private DB_VERSION = 1
+  private DB_VERSION = 2
 
   async initialize(): Promise<void> {
     if (this.db) return

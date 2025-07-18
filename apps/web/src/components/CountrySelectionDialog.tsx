@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -79,6 +80,7 @@ interface CountrySelectionDialogProps {
 }
 
 export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelectionDialogProps) {
+  const { t } = useTranslation()
   const [selectedCountry, setSelectedCountry] = useState<string>('')
   const [ipCountry, setIpCountry] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -135,12 +137,12 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-left">
-          <DialogTitle className="text-xl text-left">Karaoke English School</DialogTitle>
+          <DialogTitle className="text-xl text-left">{t('countryDialog.title')}</DialogTitle>
           <DialogDescription className="text-neutral-300 text-md text-left">
             <ul className="list-disc list-inside space-y-1">
-              <li>Non-profit</li>
-              <li>You own your data, we host nothing</li>
-              <li>50% of song revenue donated to Doctors Without Borders</li>
+              <li>{t('countryDialog.nonprofit')}</li>
+              <li>{t('countryDialog.ownData')}</li>
+              <li>{t('countryDialog.donation')}</li>
             </ul>
           </DialogDescription>
         </DialogHeader>
@@ -148,14 +150,14 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="country" className="text-neutral-200 text-md">
-              Your Country
+              {t('countryDialog.yourCountry')}
             </Label>
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
               <SelectTrigger 
                 id="country"
                 className="bg-neutral-800 border-neutral-700 text-white text-md"
               >
-                <SelectValue placeholder="Select your country" />
+                <SelectValue placeholder={t('countryDialog.selectCountry')} />
               </SelectTrigger>
               <SelectContent 
                 className="bg-neutral-800 border-neutral-700" 
@@ -175,15 +177,14 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
           </div>
 
           {loading && (
-            <p className="text-md text-neutral-400">Detecting your location...</p>
+            <p className="text-md text-neutral-400">{t('countryDialog.detecting')}</p>
           )}
 
           {showMismatchWarning && ipCountryName && (
             <Alert className="bg-yellow-900/20 border-yellow-700/50">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-200 text-md">
-                Your IP address appears to be from {ipCountryName}. 
-                Please confirm your actual country of residence.
+                {t('countryDialog.ipMismatch', { country: ipCountryName })}
               </AlertDescription>
             </Alert>
           )}
@@ -195,7 +196,7 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
             disabled={!selectedCountry}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
-            Confirm
+            {t('countryDialog.confirm')}
           </Button>
         </DialogFooter>
       </DialogContent>

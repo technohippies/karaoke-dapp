@@ -67,7 +67,11 @@ export interface ExerciseSessionData {
   cardsCorrect: number
   startedAt: number
   completedAt: number
+  sessionDate: number  // YYYYMMDD format
 }
+
+// Alias for compatibility
+export type ExerciseSession = ExerciseSessionData
 
 // Review Session Result
 export interface ReviewResult {

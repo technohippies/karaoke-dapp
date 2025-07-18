@@ -186,8 +186,13 @@ class IDBWriteService {
 
     try {
       const sessionStore = tx.objectStore('exercise_sessions')
+      
+      // Calculate sessionDate in YYYYMMDD format
+      const sessionDate = parseInt(new Date(now).toISOString().slice(0, 10).replace(/-/g, ''))
+      
       const idbSession: IDBExerciseSession = {
         ...exerciseData,
+        sessionDate,
         synced: false,
         lastModified: now
       }

@@ -1,4 +1,4 @@
-import type { ExerciseSession } from '../types/srs.types'
+import type { ExerciseSessionData } from '../types/srs.types'
 
 /**
  * Calculate streak from exercise sessions
@@ -8,7 +8,7 @@ import type { ExerciseSession } from '../types/srs.types'
  * 3. Today counts if there's activity today
  * 4. Use user's local timezone for day boundaries
  */
-export function calculateStreakFromSessions(sessions: ExerciseSession[]): number {
+export function calculateStreakFromSessions(sessions: ExerciseSessionData[]): number {
   if (!sessions || sessions.length === 0) return 0
   
   // Get unique dates from sessions (deduplicate same-day sessions)

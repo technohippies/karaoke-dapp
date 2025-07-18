@@ -5,6 +5,7 @@ import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from '@web
 import { useAccount } from 'wagmi'
 import { useNavigate } from 'react-router-dom'
 import { useStreak } from '../hooks/useStreak'
+import { LanguageSelector } from './LanguageSelector'
 
 interface HeaderWithAuthProps {
   crownCount?: number
@@ -74,7 +75,7 @@ export function HeaderWithAuth({
             </div>
           </div>
           
-          <div>
+          <div className="flex items-center gap-2">
             <Button 
               variant="outline" 
               onClick={handleAuth}
@@ -90,6 +91,7 @@ export function HeaderWithAuth({
                 'Connect'
               )}
             </Button>
+            <LanguageSelector />
           </div>
         </div>
       </div>

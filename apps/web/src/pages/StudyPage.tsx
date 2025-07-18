@@ -152,10 +152,7 @@ export function StudyPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" className="mb-4" />
-          <p className="text-white/60">Loading study cards...</p>
-        </div>
+        <Spinner size="lg" />
       </div>
     )
   }

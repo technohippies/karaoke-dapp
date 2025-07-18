@@ -8,6 +8,10 @@ import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
 import { StudyStats } from '../components/StudyStats'
 import { useDirectIDB } from '../hooks/useDirectIDB'
+import { useStreak } from '../hooks/useStreak'
+import { Spinner } from '../components/ui/spinner'
+import scarlettWelcome from '../assets/scarlett-welcome.png'
+import doctorsWithoutBorders from '../assets/doctors-without-borders.png'
 
 export function HomePage() {
   const [songs, setSongs] = useState<Song[]>([])
@@ -15,6 +19,7 @@ export function HomePage() {
   const { isConnected, address } = useAccount()
   const navigate = useNavigate()
   const { getUserStats, isReady: isDBReady } = useDirectIDB()
+  const { currentStreak } = useStreak()
   const [srsStats, setSrsStats] = useState({ new: 0, learning: 0, due: 0 })
   const { t, i18n } = useTranslation()
   const { connect } = useWeb3AuthConnect()
@@ -100,9 +105,66 @@ export function HomePage() {
         onLogin={handleLogin}
         onAccount={handleAccount}
         crownCount={0}
-        fireCount={0}
+        fireCount={currentStreak}
       />
-      <div className="w-full max-w-2xl mx-auto px-6 py-8">
+      
+      {/* Hero Section */}
+      <div className="relative w-full">
+        {/* 16:9 Aspect Ratio Container */}
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${scarlettWelcome})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/50 via-neutral-900/30 to-neutral-900" />
+          <div className="absolute inset-0 flex items-center justify-center px-6">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white text-center drop-shadow-2xl">
+              {t('home.heroTitle')}
+            </h1>
+          </div>
+        </div>
+      </div>
+      
+      {/* Donation Banner */}
+      <div className="bg-[#CC0000] py-3 overflow-hidden">
+        <style>{`
+          @keyframes bannerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .donation-slider {
+            display: flex;
+            animation: bannerScroll 30s linear infinite;
+            width: fit-content;
+          }
+          .donation-item {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            padding: 0 30px;
+            white-space: nowrap;
+          }
+        `}</style>
+        <div className="donation-slider">
+          {/* Create two sets for seamless loop */}
+          {[...Array(2)].map((_, setIndex) => (
+            [...Array(6)].map((_, i) => (
+              <div key={`${setIndex}-${i}`} className="donation-item">
+                <span className="text-sm font-semibold text-white tracking-wide">
+                  {t('countryDialog.donationShort')}
+                </span>
+                <img 
+                  src={doctorsWithoutBorders}
+                  alt="Doctors Without Borders"
+                  className="h-5 w-auto"
+                />
+              </div>
+            ))
+          )).flat()}
+        </div>
+      </div>
+      
+      <div className="w-full max-w-2xl mx-auto px-6 py-4">
         <StudyStats
           newCount={srsStats.new}
           learningCount={srsStats.learning}
@@ -114,10 +176,12 @@ export function HomePage() {
           }}
         />
         
-        <h1 className="text-2xl font-bold text-white mb-6 mt-8">{t('home.songs')}</h1>
+        <h1 className="text-2xl font-bold text-white mb-4 mt-4">{t('home.songs')}</h1>
         
         {loading ? (
-          <div className="text-center text-white">{t('home.loadingSongs')}</div>
+          <div className="flex justify-center">
+            <Spinner size="lg" />
+          </div>
         ) : songs.length === 0 ? (
           <div className="text-center text-neutral-400">{t('home.noSongs')}</div>
         ) : (

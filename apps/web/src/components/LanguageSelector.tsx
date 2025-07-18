@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
-import { Globe } from '@phosphor-icons/react'
+import { Translate } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
-import { IconButton } from './IconButton'
+import { Button } from './ui/button'
 
 const languages = [
   { code: 'en', name: 'English' },
@@ -33,12 +33,14 @@ export function LanguageSelector() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <IconButton 
-        variant="ghost" 
+      <Button 
+        variant="outline"
+        size="icon"
         onClick={() => setIsOpen(!isOpen)}
+        className="w-10 h-10"
       >
-        <Globe size={20} />
-      </IconButton>
+        <Translate size={20} />
+      </Button>
       
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg z-50">

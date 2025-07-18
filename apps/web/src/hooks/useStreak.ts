@@ -23,13 +23,19 @@ export function useStreak() {
   }, [isReady, db, address])
 
   const loadStreak = async () => {
-    if (!db || !address) return
+    if (!db || !address) {
+      console.log('🔥 useStreak: No db or address', { db: !!db, address })
+      return
+    }
 
     try {
       // Check cache first
       const cached = await db.get('sync_metadata', 'streak') as StreakCache | undefined
+      console.log('🔥 useStreak: Cache check', cached)
       
-      if (cached && (Date.now() - cached.lastCalculated < CACHE_DURATION)) {
+      // Skip cache if lastActivityDate is NaN (invalid cache)
+      if (cached && !isNaN(cached.lastActivityDate) && (Date.now() - cached.lastCalculated < CACHE_DURATION)) {
+        console.log('🔥 useStreak: Using cached streak', cached.currentStreak)
         setCurrentStreak(cached.currentStreak)
         setIsLoading(false)
         return
@@ -37,7 +43,9 @@ export function useStreak() {
 
       // Calculate fresh streak
       const sessions = await db.getAllFromIndex('exercise_sessions', 'by-session-id')
+      console.log('🔥 useStreak: Found sessions', sessions.length)
       const streak = calculateStreakFromSessions(sessions)
+      console.log('🔥 useStreak: Calculated streak', streak)
       
       // Update cache
       const today = getLocalDateInt(new Date())

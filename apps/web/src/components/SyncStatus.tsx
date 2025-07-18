@@ -32,7 +32,7 @@ export function SyncStatus({
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-semibold text-white">{t('account.syncStatus.synced')}</h3>
           <div className="flex items-center gap-2 text-neutral-400">
-            <span>{formatDistanceToNow(lastSyncTimestamp || Date.now())} {t('account.syncStatus.ago')}</span>
+            <span>{formatDistanceToNow(lastSyncTimestamp || Date.now(), true)}</span>
             <CheckCircle size={20} weight="fill" className="text-green-500" />
           </div>
         </div>

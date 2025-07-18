@@ -23,6 +23,7 @@ import { KaraokeSession } from '../components/KaraokeSession'
 import { Button } from '../components/ui/button'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
+import { Spinner } from '../components/ui/spinner'
 
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
@@ -390,7 +391,7 @@ export function SongPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <div className="text-white text-xl">{t('song.loading')}</div>
+        <Spinner size="lg" />
       </div>
     )
   }

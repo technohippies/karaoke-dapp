@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { CloseHeader } from './CloseHeader'
 import { Spinner } from './ui/spinner'
 import { Button } from './ui/button'
@@ -7,6 +8,7 @@ import coachImage from '../assets/scarlett-right-128x128.png'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { ChainSwitcher } from './ChainSwitcher'
 import { useAccount } from 'wagmi'
+import { useDirectIDB } from '../hooks/useDirectIDB'
 
 interface LineScore {
   lineIndex: number
@@ -43,6 +45,7 @@ export function KaraokeCompletion({
   onClose
 }: KaraokeCompletionProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved' | 'syncing' | 'synced'>(initialProgressState)
   const [localSaveComplete, setLocalSaveComplete] = useState(false)
   const { 
@@ -54,8 +57,10 @@ export function KaraokeCompletion({
     syncStatus,
     isSyncing 
   } = useIDBSRS()
+  const { getDueCards } = useDirectIDB()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [dueCardsCount, setDueCardsCount] = useState<number | null>(null)
   const { chain } = useAccount()
   
   // Auto-save to IDB when component mounts with scoring data
@@ -78,6 +83,10 @@ export function KaraokeCompletion({
         if (sessionHash) {
           setLocalSaveComplete(true)
           console.log('✅ Auto-saved to IDB:', sessionHash)
+          
+          // Check for due cards after saving
+          const cards = await getDueCards(1) // Just need to know if there are any
+          setDueCardsCount(cards.length)
         }
       } catch (err) {
         console.error('❌ Auto-save to IDB failed:', err)
@@ -85,7 +94,7 @@ export function KaraokeCompletion({
     }
     
     autoSaveToIDB()
-  }, [isInitialized, songId, scoringDetails, score, transcript, startedAt, saveKaraokeSession, localSaveComplete])
+  }, [isInitialized, songId, scoringDetails, score, transcript, startedAt, saveKaraokeSession, localSaveComplete, getDueCards])
   
   // Monitor chain changes
   useEffect(() => {
@@ -161,9 +170,10 @@ export function KaraokeCompletion({
         <Button
           variant="secondary"
           onClick={handlePractice}
+          disabled={dueCardsCount === 0}
           className="w-full"
         >
-          Study
+          {dueCardsCount === 0 ? t('home.study.allCaughtUp') : t('home.study.studyButton')}
         </Button>
         
         {/* Sync button - always on the right */}
