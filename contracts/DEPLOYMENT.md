@@ -1,21 +1,24 @@
 # KaraokeSchool Contract Deployment
 
 ## Latest Deployment
-- **Contract**: KaraokeSchool (with country tracking)
-- **Address**: `0x07AaCA2D82f6bD352461df7F57130212210c2C74`
+- **Contract**: KaraokeSchool (Ownable + Direct Splits)
+- **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
 - **Network**: Base Sepolia
 - **Deployer**: `0x0C6433789d14050aF47198B2751f6689731Ca79C`
-- **Block**: Latest deployment
+- **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0xc7D24B90C69c6F389fbC673987239f62F0869e3a)
 - **Status**: ✅ ACTIVE
 
-## Previous Deployment
-- **Contract**: SimpleKaraoke
-- **Address**: `0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`
-- **Status**: ⚠️ DEPRECATED
+## Previous Deployments
+1. **Address**: `0x07AaCA2D82f6bD352461df7F57130212210c2C74`
+   - **Status**: ⚠️ DEPRECATED (country tracking version)
+   
+2. **Address**: `0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`
+   - **Status**: ⚠️ DEPRECATED (SimpleKaraoke)
 
 ## Constructor Parameters
 - **USDC Token**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
 - **PKP Address**: `0xe7674fe5EAfdDb2590462E58B821DcD17052F76D`
+- **Splits Contract**: `0x862405bD3380EF10e41291e8db5aB630c28bD523`
 
 ## Contract Functions
 - `voiceCredits(address)` - Get voice credits for user

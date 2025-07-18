@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract KaraokeSchool {
+contract KaraokeSchool is Ownable {
     IERC20 public immutable usdcToken;
-    address public owner;
+    address public immutable splitsContract;
     address public pkpAddress;
     
     uint256 public constant COMBO_PRICE = 3_000_000; // 3 USDC (6 decimals)
@@ -32,20 +34,21 @@ contract KaraokeSchool {
     error Unauthorized();
     error InvalidCountryCode();
     
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
-    }
-    
-    constructor(address _usdcToken, address _pkpAddress) {
+    constructor(
+        address _usdcToken, 
+        address _pkpAddress,
+        address _splitsContract
+    ) Ownable(msg.sender) {
         usdcToken = IERC20(_usdcToken);
         pkpAddress = _pkpAddress;
-        owner = msg.sender;
+        splitsContract = _splitsContract;
     }
     
     function buyCombopack(string calldata country) external {
         if (bytes(country).length != 2) revert InvalidCountryCode();
-        require(usdcToken.transferFrom(msg.sender, address(this), COMBO_PRICE), "Transfer failed");
+        
+        // Transfer directly to splits contract
+        require(usdcToken.transferFrom(msg.sender, splitsContract, COMBO_PRICE), "Transfer failed");
         
         // Store country if first purchase
         if (bytes(userCountry[msg.sender]).length == 0) {
@@ -61,7 +64,9 @@ contract KaraokeSchool {
     
     function buyVoicePack(string calldata country) external {
         if (bytes(country).length != 2) revert InvalidCountryCode();
-        require(usdcToken.transferFrom(msg.sender, address(this), VOICE_PACK_PRICE), "Transfer failed");
+        
+        // Transfer directly to splits contract
+        require(usdcToken.transferFrom(msg.sender, splitsContract, VOICE_PACK_PRICE), "Transfer failed");
         
         // Store country if first purchase
         if (bytes(userCountry[msg.sender]).length == 0) {
@@ -76,7 +81,9 @@ contract KaraokeSchool {
     
     function buySongPack(string calldata country) external {
         if (bytes(country).length != 2) revert InvalidCountryCode();
-        require(usdcToken.transferFrom(msg.sender, address(this), SONG_PACK_PRICE), "Transfer failed");
+        
+        // Transfer directly to splits contract
+        require(usdcToken.transferFrom(msg.sender, splitsContract, SONG_PACK_PRICE), "Transfer failed");
         
         // Store country if first purchase
         if (bytes(userCountry[msg.sender]).length == 0) {
@@ -90,19 +97,21 @@ contract KaraokeSchool {
     }
     
     function unlockSong(uint256 songId) external {
-        if (songCredits[msg.sender] == 0) revert InsufficientCredits();
+        if (songCredits[msg.sender] < 1) revert InsufficientCredits();
         if (hasUnlockedSong[msg.sender][songId]) revert AlreadyUnlocked();
         
-        songCredits[msg.sender]--;
+        songCredits[msg.sender] -= 1;
         hasUnlockedSong[msg.sender][songId] = true;
+        
         emit SongUnlocked(msg.sender, songId);
     }
     
     function startKaraoke(uint256 songId) external {
+        if (voiceCredits[msg.sender] < 1) revert InsufficientCredits();
         if (!hasUnlockedSong[msg.sender][songId]) revert SongNotUnlocked();
-        if (voiceCredits[msg.sender] == 0) revert InsufficientCredits();
         
-        voiceCredits[msg.sender]--;
+        voiceCredits[msg.sender] -= 1;
+        
         emit KaraokeStarted(msg.sender, songId);
     }
     
@@ -110,7 +119,9 @@ contract KaraokeSchool {
         pkpAddress = _pkpAddress;
     }
     
-    function withdrawUSDC(uint256 amount) external onlyOwner {
-        require(usdcToken.transfer(owner, amount), "Transfer failed");
+    // Emergency function to recover any stuck tokens (not USDC from purchases)
+    function recoverToken(address token, uint256 amount) external onlyOwner {
+        require(token != address(usdcToken) || IERC20(token).balanceOf(address(this)) == 0, "Cannot withdraw purchase funds");
+        IERC20(token).transfer(owner(), amount);
     }
 }

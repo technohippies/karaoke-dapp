@@ -84,6 +84,37 @@ Songs table includes:
 3. **Index**: CIDs stored in Optimism Sepolia Tableland for metadata
 4. **Access**: Web app queries Tableland → fetches from IPFS → decrypts with Lit
 
+## Workflow After Contract Update
+
+When the smart contract is updated and content is re-encrypted:
+
+1. **Get new IPFS CIDs** from re-encryption output:
+   ```bash
+   # After running scripts/re-encrypt-songs.sh, you'll see:
+   # Song 1: MIDI CID: QmU6BW8DHL8Ack54Pmtu18mjPFhGYmQy3V45br5dJN8WSL
+   # Song 1: Lyrics CID: QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW
+   ```
+
+2. **Update each song** with new CIDs:
+   ```bash
+   # Update Song 1
+   npx tsx update-encrypted-content.ts 1 '{
+     "stems": {
+       "piano": "QmU6BW8DHL8Ack54Pmtu18mjPFhGYmQy3V45br5dJN8WSL"
+     },
+     "translations": {
+       "zh": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW",
+       "ug": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW",
+       "bo": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW"
+     }
+   }'
+   ```
+
+3. **Verify updates**:
+   ```bash
+   npx tsx query.ts "SELECT id, title, stems, translations FROM {table}"
+   ```
+
 ## Anti-Bloat Rules
 
 - ✅ Use existing tools for updates/queries

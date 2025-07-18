@@ -1,95 +1,180 @@
-# Contract Update Guide
+# Complete Contract Update Guide
 
-This guide explains how to update the smart contract without breaking the Lit Protocol integration.
+This guide provides a **step-by-step process** for updating the smart contract without breaking any functionality.
 
-## Important: API Keys and Lit Actions
+## Overview of What Needs Updating
 
-The Lit Actions contain embedded API keys that are encrypted with simple conditions (always true). When updating the contract, these MUST be preserved or re-encrypted with valid keys.
+When you deploy a new contract, you must update:
+1. ✅ Contract deployment & verification
+2. ✅ Frontend contract references & ABI
+3. ✅ Re-encrypt songs with new contract address
+4. ✅ Update Tableland with new IPFS CIDs
+5. ❌ Lit Actions (DO NOT touch unless API keys changed)
 
-## Step-by-Step Contract Update Process
-
-### 1. Update the Smart Contract
+## Step 1: Deploy & Verify Contract
 
 ```bash
-# Edit the contract
-vim contracts/src/KaraokeSchool.sol
-
-# Deploy the new contract
+# 1. Navigate to contracts directory
 cd contracts
-forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --private-key $PRIVATE_KEY --broadcast
+
+# 2. Deploy the contract
+forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --broadcast
+
+# 3. Note the deployed address from output
+# Look for: Contract deployed at: 0x...
+
+# 4. Verify on Basescan (usually automatic, but if it fails):
+forge verify-contract <CONTRACT_ADDRESS> KaraokeSchool \
+  --chain base-sepolia \
+  --constructor-args $(cast abi-encode "constructor(address,address,address)" \
+    0x036CbD53842c5426634e7929541eC2318f3dCF7e \
+    0xe7674fe5EAfdDb2590462E58B821DcD17052F76D \
+    0x862405bD3380EF10e41291e8db5aB630c28bD523)
 ```
 
-### 2. Update Frontend References
+## Step 2: Update Frontend
 
-Update the contract address in:
-- `apps/web/src/constants/contracts.ts`
-- `.env` (both KARAOKE_CONTRACT and VITE_KARAOKE_CONTRACT)
+### 2.1 Update Contract Address
 
-Extract and update the ABI:
+Edit `apps/web/src/constants/contracts.ts`:
+```typescript
+export const KARAOKE_CONTRACT_ADDRESS = '0xYOUR_NEW_ADDRESS' as const
+```
+
+### 2.2 Update Environment Variables
+
+Edit `.env` in project root:
 ```bash
-cd contracts
-cat out/KaraokeSchool.sol/KaraokeSchool.json | python3 -c "import json, sys; print(json.dumps(json.load(sys.stdin)['abi'], indent=2))" > ../apps/web/src/constants/abi/KaraokeSchool.json
+KARAOKE_CONTRACT=0xYOUR_NEW_ADDRESS
+VITE_KARAOKE_CONTRACT=0xYOUR_NEW_ADDRESS
 ```
 
-### 3. Re-encrypt Content (If Access Control Changed)
+### 2.3 Extract & Copy ABI
 
-If the contract's access control logic changed:
 ```bash
-./scripts/re-encrypt-songs.sh
+# From contracts directory
+python3 -c "import json; print(json.dumps(json.load(open('out/KaraokeSchool.sol/KaraokeSchool.json'))['abi'], indent=2))" > ../apps/web/src/constants/abi/KaraokeSchool.json
 ```
 
-### 4. CRITICAL: Preserve or Re-encrypt API Keys
+## Step 3: Re-encrypt Content
 
-The Lit Actions use embedded API keys. These are NOT affected by contract changes, but can be corrupted if re-uploaded incorrectly.
+```bash
+# Navigate to scripts directory
+cd scripts
 
-**Option A: Keep Existing Lit Action (Recommended)**
-- If the Lit Action is working, DO NOT re-upload it
-- The embedded keys use simple conditions and work regardless of contract
+# Run re-encryption for all songs
+bash re-encrypt-songs.sh
+```
 
-**Option B: Re-encrypt API Keys (If Needed)**
-1. Ensure API keys are in `.env`:
-   ```
-   DEEPGRAM_API_KEY=your_key_here
-   OPENROUTER_API_KEY=your_key_here
-   ```
+This will output new IPFS CIDs like:
+```
+Song 1: Royals by Lorde
+  MIDI CID: QmU6BW8DHL8Ack54Pmtu18mjPFhGYmQy3V45br5dJN8WSL
+  Lyrics CID: QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW
+```
 
-2. Create a new encryption script:
-   ```typescript
-   // This will encrypt keys with simple conditions and generate a new Lit Action
-   ```
+## Step 4: Update Tableland
 
-3. Deploy the new Lit Action:
-   ```bash
-   npm run upload-action -- ./lit-actions/karaokeScorer.js --name "Karaoke Scorer VXX"
-   ```
+```bash
+# Navigate to tableland directory
+cd ../tableland
 
-4. Update references:
-   - `apps/web/src/services/integrations/lit/KaraokeScoringService.ts`
-   - `.env` (LIT_ACTION_CID)
+# Update each song with new CIDs from Step 3
+npx tsx update-encrypted-content.ts 1 '{
+  "stems": {
+    "piano": "QmU6BW8DHL8Ack54Pmtu18mjPFhGYmQy3V45br5dJN8WSL"
+  },
+  "translations": {
+    "zh": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW",
+    "ug": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW",
+    "bo": "QmPQRRJcnnsLEg59kEtHSoPeAe9rWfa7PwYYWtWUniXHCW"
+  }
+}'
 
-## Common Issues
+# Repeat for each song...
+```
 
-### "OpenRouter 401: No auth credentials found"
-This means the Lit Action has invalid API keys embedded. You need to:
-1. Add valid API keys to `.env`
-2. Re-encrypt and redeploy the Lit Action (see Step 4B above)
+## Step 5: Update Documentation
 
-### Keys Still Not Working After Contract Update
-The Lit Action uses simple conditions (always true), so contract updates shouldn't affect it. If it stops working:
-- The API keys themselves may be invalid/expired
-- The Lit Action was accidentally re-uploaded with test keys
+```bash
+# Update deployment history
+vim contracts/DEPLOYMENT.md
 
-## Testing After Update
+# Commit all changes
+git add -A
+git commit -m "Deploy contract 0xYOUR_NEW_ADDRESS with [feature description]"
+```
 
-1. Purchase credits with the new contract
-2. Unlock a song
-3. Test karaoke scoring
-4. Verify the console shows successful scoring (not 401 errors)
+## Critical: What NOT to Do
 
-## Key Files Reference
+### ❌ DO NOT Re-upload Lit Actions
+The Lit Actions contain API keys encrypted with simple conditions (always true). They work regardless of contract changes. Re-uploading often breaks them.
 
+### ❌ DO NOT Modify API Key Encryption
+Unless the API keys themselves have changed, leave the Lit Actions alone.
+
+### ❌ DO NOT Skip Verification
+Always verify the contract on Basescan for transparency.
+
+## Troubleshooting
+
+### Contract Verification Fails
+- Ensure ETHERSCAN_API_KEY is in .env
+- Check constructor args match exactly
+- Try manual verification on Basescan UI
+
+### Re-encryption Fails
+- Check KARAOKE_CONTRACT in .env is updated
+- Ensure you have PINATA_JWT configured
+- Verify scripts/node_modules are installed
+
+### Tableland Update Fails
+- Ensure PRIVATE_KEY in .env has funds on Optimism Sepolia
+- Check table name matches in .env
+- Verify you're using correct song IDs
+
+### Lit Action Stops Working (OpenRouter 401)
+This is rare but if it happens:
+1. Check if API keys in .env are valid
+2. Test keys directly with curl
+3. Only if keys are confirmed working but Lit Action fails, then re-deploy
+
+## Complete Checklist
+
+Before deployment:
+- [ ] Contract code reviewed and tested
+- [ ] Environment variables prepared
+- [ ] Etherscan API key configured
+
+During deployment:
+- [ ] Contract deployed successfully
+- [ ] Contract verified on Basescan
+- [ ] New address noted
+
+After deployment:
+- [ ] Frontend contract address updated
+- [ ] Frontend ABI updated
+- [ ] Environment variables updated
+- [ ] Content re-encrypted
+- [ ] Tableland updated with new CIDs
+- [ ] Documentation updated
+- [ ] Changes committed to git
+- [ ] Frontend tested with new contract
+
+## Quick Reference
+
+### Key Addresses
+- **USDC (Base Sepolia)**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
+- **PKP Address**: `0xe7674fe5EAfdDb2590462E58B821DcD17052F76D`
+- **Splits Contract**: `0x862405bD3380EF10e41291e8db5aB630c28bD523`
+
+### Current Active Contract
+- **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
+- **Lit Action CID**: `Qma1dWbGf1NWNP1TSWR6UERTZAaxVr8bbVGD89f2WHFiMq`
+
+### File Locations
 - **Contract**: `contracts/src/KaraokeSchool.sol`
-- **Frontend Contract Ref**: `apps/web/src/constants/contracts.ts`
-- **Lit Action**: `lit-actions/karaokeScorer.js`
-- **Lit Service**: `apps/web/src/services/integrations/lit/KaraokeScoringService.ts`
-- **Environment**: `.env`
+- **Frontend Constants**: `apps/web/src/constants/contracts.ts`
+- **Environment**: `.env` (project root)
+- **Re-encryption Script**: `scripts/re-encrypt-songs.sh`
+- **Tableland Update**: `tableland/update-encrypted-content.ts`

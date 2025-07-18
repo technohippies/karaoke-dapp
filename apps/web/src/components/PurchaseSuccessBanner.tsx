@@ -23,11 +23,11 @@ export function PurchaseSuccessBanner({ lastPurchase, voiceCredits, songCredits 
   const getMessage = () => {
     switch (lastPurchase.type) {
       case 'combo':
-        return `🎉 Purchase successful! You now have ${voiceCredits} voice credits and ${songCredits} song credits`
+        return `🎉 Starter pack purchased! Added 100 voice credits and 10 song credits to your account`
       case 'voice':
-        return `🎉 Voice pack purchased! You now have ${voiceCredits} voice credits`
+        return `🎉 Voice pack purchased! Added 20 voice credits to your account`
       case 'song':
-        return `🎉 Song pack purchased! You now have ${songCredits} song credits`
+        return `🎉 Song pack purchased! Added 5 song credits to your account`
     }
   }
   

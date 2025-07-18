@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { CloseHeader } from './CloseHeader'
 import { Spinner } from './ui/spinner'
 import { Button } from './ui/button'
@@ -41,6 +42,7 @@ export function KaraokeCompletion({
   startedAt = Date.now(),
   onClose
 }: KaraokeCompletionProps) {
+  const navigate = useNavigate()
   const [progressState, setProgressState] = useState<'idle' | 'saving' | 'saved' | 'syncing' | 'synced'>(initialProgressState)
   const [localSaveComplete, setLocalSaveComplete] = useState(false)
   const { 
@@ -146,8 +148,7 @@ export function KaraokeCompletion({
   }
 
   const handlePractice = () => {
-    // TODO: Navigate to exercises or call parent handler
-    console.log('Navigate to exercises')
+    navigate('/study')
   }
 
   const getProgressContent = () => {

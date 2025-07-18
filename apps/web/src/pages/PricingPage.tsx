@@ -101,6 +101,7 @@ export function PricingPage() {
                 balance={balance}
                 voiceCredits={voiceCredits}
                 songCredits={songCredits}
+                hidePricingButton={true}
               />
             </div>
           )}
@@ -178,6 +179,7 @@ export function PricingPage() {
           balance={balance}
           voiceCredits={voiceCredits}
           songCredits={songCredits}
+          hidePricingButton={true}
         />
       )}
 

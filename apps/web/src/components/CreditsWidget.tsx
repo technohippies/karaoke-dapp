@@ -7,9 +7,10 @@ interface CreditsWidgetProps {
   balance: string
   voiceCredits: number
   songCredits: number
+  hidePricingButton?: boolean
 }
 
-export function CreditsWidget({ balance, voiceCredits, songCredits }: CreditsWidgetProps) {
+export function CreditsWidget({ balance, voiceCredits, songCredits, hidePricingButton = false }: CreditsWidgetProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   
@@ -44,12 +45,14 @@ export function CreditsWidget({ balance, voiceCredits, songCredits }: CreditsWid
       </div>
       
       {/* Pricing Button */}
-      <Button 
-        onClick={() => navigate('/pricing')}
-        className="w-full bg-blue-600 hover:bg-blue-700"
-      >
-        {t('account.credits.pricing')}
-      </Button>
+      {!hidePricingButton && (
+        <Button 
+          onClick={() => navigate('/pricing')}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+        >
+          {t('account.credits.pricing')}
+        </Button>
+      )}
     </div>
   )
 }

@@ -90,8 +90,8 @@ src/
 # Base Sepolia RPC endpoint
 VITE_BASE_SEPOLIA_RPC=https://sepolia.base.org
 
-# Contract addresses
-VITE_KARAOKE_CONTRACT_ADDRESS=0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
+# Contract addresses (MUST match encryption contract)
+VITE_KARAOKE_CONTRACT_ADDRESS=0xc7D24B90C69c6F389fbC673987239f62F0869e3a
 VITE_BASE_SEPOLIA_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 
 # Optional: Custom IPFS gateway
@@ -157,6 +157,27 @@ bun run preview
 # Deploy (example with Vercel)
 vercel --prod
 ```
+
+## 🔄 After Contract Update
+
+When the smart contract is updated:
+
+1. **Update contract address** in `src/constants/contracts.ts`:
+   ```typescript
+   export const KARAOKE_CONTRACT_ADDRESS = '0xNEW_ADDRESS' as const
+   ```
+
+2. **Update ABI** if contract interface changed:
+   ```bash
+   # Copy from contracts/out/KaraokeSchool.sol/KaraokeSchool.json
+   cp ../../contracts/out/KaraokeSchool.sol/KaraokeSchool.json src/constants/abi/
+   ```
+
+3. **Update environment variables**:
+   - `.env`: `VITE_KARAOKE_CONTRACT_ADDRESS=0xNEW_ADDRESS`
+   - `.env.example`: Update for other developers
+
+4. **Clear browser cache** and IndexedDB to ensure fresh data
 
 ## 📄 License
 
