@@ -123,17 +123,6 @@ export function KaraokeDisplay({
                   }`}>
                     {lyric.text}
                   </div>
-                  {lyric.translation && (
-                    <div className={`text-xl mt-2 leading-relaxed ${
-                      isCurrent 
-                        ? 'text-neutral-300' 
-                        : isPast 
-                          ? 'text-neutral-700'
-                          : 'text-neutral-600'
-                    }`}>
-                      {lyric.translation}
-                    </div>
-                  )}
                 </div>
               )
             })}

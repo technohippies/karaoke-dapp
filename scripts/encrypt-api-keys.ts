@@ -24,7 +24,7 @@ async function encryptApiKeys() {
   // EVM contract conditions - must have unlocked a song in our contract
   const evmContractConditions = [
     {
-      contractAddress: '0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d', // KaraokeSchool contract
+      contractAddress: '0x07AaCA2D82f6bD352461df7F57130212210c2C74', // KaraokeSchool contract
       functionName: 'hasUnlockedSong',
       functionParams: [':userAddress', '1'], // Must have unlocked at least song 1
       functionAbi: {

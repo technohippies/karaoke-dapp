@@ -190,5 +190,35 @@
     "fileName": "Single-Line-Scorer-V3.js",
     "uploadDate": "2025-07-17T08:03:13.058Z",
     "filePath": "./lit-actions/singleLineScorer.js"
+  },
+  "karaokeScorer": {
+    "cid": "QmePqHXsmuZvyi8z33y3ynsDH3aVPkFhTzMkFUZwj7iBPK",
+    "fileName": "karaokeScorer.js",
+    "uploadDate": "2025-07-18T08:43:11.481Z",
+    "filePath": "lit-actions/karaokeScorer.js"
+  },
+  "singleLineScorer": {
+    "cid": "QmV9Lw8BD57Fbd5v8QGYJFfJoasiKdisTq6EbACRrnSQPg",
+    "fileName": "singleLineScorer.js",
+    "uploadDate": "2025-07-18T08:43:23.816Z",
+    "filePath": "lit-actions/singleLineScorer.js"
+  },
+  "Karaoke Scorer V16-ReDeployed": {
+    "cid": "QmePqHXsmuZvyi8z33y3ynsDH3aVPkFhTzMkFUZwj7iBPK",
+    "fileName": "Karaoke-Scorer-V16-ReDeployed.js",
+    "uploadDate": "2025-07-18T09:51:01.451Z",
+    "filePath": "./lit-actions/karaokeScorer.js"
+  },
+  "Karaoke Scorer V17-Debug": {
+    "cid": "QmNU2ihFq5MvDiU1cbdtvVKy4rTQBdpAzEk4g7uzVeVjJ1",
+    "fileName": "Karaoke-Scorer-V17-Debug.js",
+    "uploadDate": "2025-07-18T09:57:53.293Z",
+    "filePath": "./lit-actions/karaokeScorerV17.js"
+  },
+  "Karaoke Scorer V18-Valid Keys": {
+    "cid": "Qma1dWbGf1NWNP1TSWR6UERTZAaxVr8bbVGD89f2WHFiMq",
+    "fileName": "Karaoke-Scorer-V18-Valid-Keys.js",
+    "uploadDate": "2025-07-18T10:23:47.832Z",
+    "filePath": "./lit-actions/karaokeScorerV18.js"
   }
 }

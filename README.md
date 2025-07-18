@@ -48,8 +48,8 @@ VITE_BASE_SEPOLIA_RPC=https://sepolia.base.org
 VITE_KARAOKE_CONTRACT_ADDRESS=0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
 
 # Required for content encryption (scripts)
-DEEPGRAM_API_KEY=your_deepgram_api_key
-OPENROUTER_API_KEY=your_openrouter_api_key
+DEEPGRAM_API_KEY=your_deepgram_api_key  # For speech-to-text in Lit Actions
+OPENROUTER_API_KEY=your_openrouter_api_key  # For LLM scoring in Lit Actions
 PINATA_API_KEY=your_pinata_api_key
 PINATA_SECRET_KEY=your_pinata_secret
 PRIVATE_KEY=your_deployer_private_key
@@ -93,8 +93,10 @@ karaoke-dapp/
 - **Access Control**: Only users who have unlocked songs can decrypt content
 - **PKP Scoring**: Secure, tamper-proof scoring using Programmable Key Pairs
 - **Lit Actions**: 
-  - Karaoke Scorer: `QmPZ6pKXgLnJ5rVMXPYdBEg8iBC5eDNmTC8p2vGJjfQEUi`
-  - Single Line Scorer: `QmV9Lw8BD57Fbd5v8QGYJFfJoasiKdisTq6EbACRrnSQPg`
+  - Karaoke Scorer: Contains embedded API keys for Deepgram (STT) and OpenRouter (LLM)
+  - Single Line Scorer: For Study Mode pronunciation practice
+  
+**Note**: Lit Actions use simple access conditions (always true) for API key decryption, making them independent of contract changes.
 
 ### Database
 
@@ -142,7 +144,15 @@ bun run build
 
 # Deploy contracts
 cd contracts
-forge script script/Deploy.s.sol --rpc-url base-sepolia --broadcast
+forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --private-key $PRIVATE_KEY --broadcast
+
+# After deployment, update references:
+# 1. Update contract address in apps/web/src/constants/contracts.ts
+# 2. Update .env (KARAOKE_CONTRACT and VITE_KARAOKE_CONTRACT)
+# 3. Extract and update ABI:
+cat out/KaraokeSchool.sol/KaraokeSchool.json | python3 -c "import json, sys; print(json.dumps(json.load(sys.stdin)['abi'], indent=2))" > ../apps/web/src/constants/abi/KaraokeSchool.json
+
+# ⚠️ IMPORTANT: See CONTRACT_UPDATE_GUIDE.md for full update process including Lit Protocol considerations
 ```
 
 ### Adding New Songs

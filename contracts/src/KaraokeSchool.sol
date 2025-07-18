@@ -19,15 +19,18 @@ contract KaraokeSchool {
     mapping(address => uint256) public voiceCredits;
     mapping(address => uint256) public songCredits;
     mapping(address => mapping(uint256 => bool)) public hasUnlockedSong;
+    mapping(address => string) public userCountry;
     
     event CreditsPurchased(address indexed user, uint256 voiceAmount, uint256 songAmount);
     event SongUnlocked(address indexed user, uint256 indexed songId);
     event KaraokeStarted(address indexed user, uint256 indexed songId);
+    event PurchaseWithCountry(address indexed user, string country, uint256 usdcAmount, string packType);
     
     error InsufficientCredits();
     error AlreadyUnlocked();
     error SongNotUnlocked();
     error Unauthorized();
+    error InvalidCountryCode();
     
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -40,23 +43,50 @@ contract KaraokeSchool {
         owner = msg.sender;
     }
     
-    function buyCombopack() external {
+    function buyCombopack(string calldata country) external {
+        if (bytes(country).length != 2) revert InvalidCountryCode();
         require(usdcToken.transferFrom(msg.sender, address(this), COMBO_PRICE), "Transfer failed");
+        
+        // Store country if first purchase
+        if (bytes(userCountry[msg.sender]).length == 0) {
+            userCountry[msg.sender] = country;
+        }
+        
         voiceCredits[msg.sender] += 100;
         songCredits[msg.sender] += 10;
+        
         emit CreditsPurchased(msg.sender, 100, 10);
+        emit PurchaseWithCountry(msg.sender, country, COMBO_PRICE, "combo");
     }
     
-    function buyVoicePack() external {
+    function buyVoicePack(string calldata country) external {
+        if (bytes(country).length != 2) revert InvalidCountryCode();
         require(usdcToken.transferFrom(msg.sender, address(this), VOICE_PACK_PRICE), "Transfer failed");
+        
+        // Store country if first purchase
+        if (bytes(userCountry[msg.sender]).length == 0) {
+            userCountry[msg.sender] = country;
+        }
+        
         voiceCredits[msg.sender] += 50;
+        
         emit CreditsPurchased(msg.sender, 50, 0);
+        emit PurchaseWithCountry(msg.sender, country, VOICE_PACK_PRICE, "voice");
     }
     
-    function buySongPack() external {
+    function buySongPack(string calldata country) external {
+        if (bytes(country).length != 2) revert InvalidCountryCode();
         require(usdcToken.transferFrom(msg.sender, address(this), SONG_PACK_PRICE), "Transfer failed");
+        
+        // Store country if first purchase
+        if (bytes(userCountry[msg.sender]).length == 0) {
+            userCountry[msg.sender] = country;
+        }
+        
         songCredits[msg.sender] += 5;
+        
         emit CreditsPurchased(msg.sender, 0, 5);
+        emit PurchaseWithCountry(msg.sender, country, SONG_PACK_PRICE, "song");
     }
     
     function unlockSong(uint256 songId) external {

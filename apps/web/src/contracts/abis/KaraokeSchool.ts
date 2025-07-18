@@ -57,21 +57,39 @@ export const KARAOKE_SCHOOL_ABI = [
   {
     "type": "function",
     "name": "buyCombopack",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "country",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
     "name": "buySongPack",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "country",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
     "name": "buyVoicePack",
-    "inputs": [],
+    "inputs": [
+      {
+        "name": "country",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -198,6 +216,25 @@ export const KARAOKE_SCHOOL_ABI = [
   },
   {
     "type": "function",
+    "name": "userCountry",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "voiceCredits",
     "inputs": [
       {
@@ -274,6 +311,37 @@ export const KARAOKE_SCHOOL_ABI = [
   },
   {
     "type": "event",
+    "name": "PurchaseWithCountry",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "country",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "usdcAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "packType",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "SongUnlocked",
     "inputs": [
       {
@@ -299,6 +367,11 @@ export const KARAOKE_SCHOOL_ABI = [
   {
     "type": "error",
     "name": "InsufficientCredits",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCountryCode",
     "inputs": []
   },
   {

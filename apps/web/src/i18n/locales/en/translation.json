@@ -27,17 +27,18 @@
       "leaderboard": "Leaderboard"
     },
     "unlock": {
-      "title": "Unlock this song",
+      "title": "Unlock Song",
       "loadContent": "Load content to view lyrics",
-      "button": "Unlock and Decrypt",
+      "button": "Unlock",
       "unlocking": "Unlocking...",
+      "loading": "Loading...",
       "needSongCredit": "Unlock (1 song credit)",
       "needVoiceCredit": "Buy Voice Credits",
-      "description1": "Karaoke, language learning exercises,",
-      "description2": "and lyrics with translations, meaning, and grammar."
+      "description1": "",
+      "description2": ""
     },
     "karaoke": {
-      "start": "Start Karaoke (1 voice credit)",
+      "start": "Start Karaoke",
       "starting": "Starting...",
       "selectLine": "Select a line"
     },

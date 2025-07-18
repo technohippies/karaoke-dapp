@@ -25,7 +25,9 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
   const [transcript, setTranscript] = useState<string>('')
   const [isScoring, setIsScoring] = useState(false)
   const hasProcessedRef = useRef(false)
+  const hasStartedRef = useRef(false)
   const [sessionStartTime] = useState(Date.now())
+  const stopKaraokeRef = useRef<(() => void) | null>(null)
   
   // Use ref to capture current wallet client
   const walletClientRef = useRef(walletClient)
@@ -103,6 +105,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
       } finally {
         setIsScoring(false)
         setShowCompletion(true)
+        // Stop any remaining music playback
+        stopKaraokeRef.current?.()
       }
   }, [address])
   
@@ -117,16 +121,35 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
     onComplete: handleKaraokeComplete
   })
   
+  // Store stopKaraoke in ref for use in callbacks
+  useEffect(() => {
+    stopKaraokeRef.current = stopKaraoke
+  }, [stopKaraoke])
+  
   // Start karaoke only after payment verification
   useEffect(() => {
-    if (paymentTxHash) {
-      console.log('💰 Starting karaoke with payment proof:', paymentTxHash)
-      startKaraoke()
-    } else {
+    if (!paymentTxHash) {
       console.error('❌ No payment proof provided - cannot start karaoke')
       onClose()
+      return
     }
-  }, [paymentTxHash])
+    
+    // Only start once and only if not already started
+    if (!hasStartedRef.current && !isPlaying) {
+      console.log('💰 Starting karaoke with payment proof:', paymentTxHash)
+      hasStartedRef.current = true
+      
+      // Call startKaraoke directly without timeout
+      // The 3-second countdown is handled inside startKaraoke
+      startKaraoke()
+    }
+  }, [paymentTxHash, isPlaying, startKaraoke])
+  
+  // Handle close with cleanup
+  const handleClose = useCallback(() => {
+    stopKaraoke()
+    onClose()
+  }, [stopKaraoke, onClose])
   
   // Detect network changes and close session
   // TEMPORARILY DISABLED: Allowing chain switching for testing Tableland on Optimism Sepolia
@@ -176,7 +199,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
         hasTable={false}
         songId={songId.toString()}
         startedAt={sessionStartTime}
-        onClose={onClose}
+        onClose={handleClose}
       />
     )
   }
@@ -184,7 +207,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
   return (
     <KaraokeDisplay
       lyrics={testLyrics}
-      onClose={onClose}
+      onClose={handleClose}
       autoStart={true} // Let KaraokeDisplay handle countdown
       currentLineIndex={currentLineIndex} // Pass synchronized line index
       isPlaying={isPlaying} // Pass playing state

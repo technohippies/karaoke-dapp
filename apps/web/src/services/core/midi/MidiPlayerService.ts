@@ -6,6 +6,7 @@ export class MidiPlayerService {
   private isPlaying = false
   private usePiano = true // Toggle between piano and synth
   private synth: Tone.PolySynth | null = null
+  private progressInterval: number | null = null
 
   constructor() {
     // console.log('🎵 MidiPlayerService constructor - usePiano:', this.usePiano);
@@ -34,6 +35,14 @@ export class MidiPlayerService {
   }
 
   async loadAndPlayMidi(midiData: Uint8Array, onProgress?: (time: number) => void) {
+    // Prevent multiple concurrent plays
+    if (this.isPlaying) {
+      console.log('⚠️ MIDI is already playing, stopping previous playback')
+      this.stop()
+      // Add a small delay to ensure clean stop
+      await new Promise(resolve => setTimeout(resolve, 100))
+    }
+    
     try {
       // Parse MIDI data
       const midi = new Midi(midiData)
@@ -106,13 +115,20 @@ export class MidiPlayerService {
       this.isPlaying = true
       
       // Progress callback
-      let progressInterval: number | null = null
       if (onProgress) {
-        progressInterval = setInterval(() => {
+        // Clear any existing interval
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval)
+        }
+        
+        this.progressInterval = setInterval(() => {
           if (this.isPlaying) {
             onProgress(Tone.Transport.seconds)
           } else {
-            if (progressInterval) clearInterval(progressInterval)
+            if (this.progressInterval) {
+              clearInterval(this.progressInterval)
+              this.progressInterval = null
+            }
           }
         }, 100) as unknown as number
       }
@@ -123,7 +139,6 @@ export class MidiPlayerService {
       
       Tone.Transport.schedule(() => {
         this.stop()
-        if (progressInterval) clearInterval(progressInterval)
       }, totalDuration)
       
     } catch (error) {
@@ -138,6 +153,12 @@ export class MidiPlayerService {
     Tone.Transport.cancel()
     Tone.Transport.position = 0
     
+    // Clear progress interval
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval)
+      this.progressInterval = null
+    }
+    
     this.isPlaying = false
   }
 
@@ -151,4 +172,5 @@ export class MidiPlayerService {
   }
 }
 
+// Singleton instance
 export const midiPlayerService = new MidiPlayerService()

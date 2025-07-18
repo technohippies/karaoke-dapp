@@ -27,17 +27,18 @@
       "leaderboard": "排行榜"
     },
     "unlock": {
-      "title": "解锁这首歌",
+      "title": "解锁歌曲",
       "loadContent": "加载内容以查看歌词",
-      "button": "解锁并解密",
+      "button": "解锁",
       "unlocking": "解锁中...",
+      "loading": "加载中...",
       "needSongCredit": "解锁（1个歌曲积分）",
       "needVoiceCredit": "购买语音积分",
-      "description1": "K歌、语言学习练习、",
-      "description2": "以及带有翻译、含义和语法的歌词。"
+      "description1": "",
+      "description2": ""
     },
     "karaoke": {
-      "start": "开始K歌（1个语音积分）",
+      "start": "开始K歌",
       "starting": "启动中...",
       "selectLine": "选择一行"
     },

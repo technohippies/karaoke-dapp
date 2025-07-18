@@ -133,35 +133,38 @@ export function usePurchase() {
   }
 
   const handlePurchaseCombo = () => {
-    if (!address) return
+    if (!address || !country) return
     console.log('💳 Purchasing combo...')
     setIsPurchasing(true)
     buyCombo({
       address: KARAOKE_CONTRACT_ADDRESS,
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buyCombopack',
+      args: [country],
     })
   }
 
   const handlePurchaseVoice = () => {
-    if (!address) return
+    if (!address || !country) return
     console.log('💳 Purchasing voice pack...')
     setIsPurchasing(true)
     buyVoice({
       address: KARAOKE_CONTRACT_ADDRESS,
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buyVoicePack',
+      args: [country],
     })
   }
 
   const handlePurchaseSong = () => {
-    if (!address) return
+    if (!address || !country) return
     console.log('💳 Purchasing song pack...')
     setIsPurchasing(true)
     buySong({
       address: KARAOKE_CONTRACT_ADDRESS,
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buySongPack',
+      args: [country],
     })
   }
 

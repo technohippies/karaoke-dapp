@@ -3,60 +3,8 @@ import { LIT_ABILITY, LIT_NETWORK } from '@lit-protocol/constants'
 import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers'
 import { ethers } from 'ethers'
 
-// Load encrypted API keys
-const encryptedKeysData = {
-  "deepgram": {
-    "ciphertext": "mMcFcjoPtboMnqG+7nCs3VhaWagv/98DsVz0fV+eIeQcnIG/A6+X5o87HMH8M7mAYIYshxzygA7Au/3S5WyGEyC7qXYgZ256CQmQxNq8Lvcpbszsp73dn3n9636cEPy7gc56KpBGHhmjwIgUbxs3U5CukfkCQETUFJUC",
-    "dataToEncryptHash": "991f82ee2a7055854de5d0ff7e35bc2b205aaebf72105620de2fdb112969d292"
-  },
-  "openrouter": {
-    "ciphertext": "hNcg6LhwJJfetly6hT54Iw1W7+fpPfXHgiwqmZ5uDSYrpli5iu37oWMm0TH+X8NCj9gk9UfnmW8x1O/eZk4QOei9CZKhpFLKhApHNQn6NRlKqyMg9T+QfytJ6k17IpWe6UlUR+JzvrEyNS6guN3ETDYz5D0HcfKfU+BDZ9R11rFxCaTYkhdAaVrh/R8Vf/UOpib3p4JGD1W+NLEC",
-    "dataToEncryptHash": "938d660ab40a343df60ad16e264e6efae012a21b23a2bb19d901cb96d296f747"
-  },
-  "evmContractConditions": [
-    {
-      "contractAddress": "0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d",
-      "functionName": "hasUnlockedSong",
-      "functionParams": [
-        ":userAddress",
-        "1"
-      ],
-      "functionAbi": {
-        "type": "function",
-        "name": "hasUnlockedSong",
-        "inputs": [
-          {
-            "name": "",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ],
-        "outputs": [
-          {
-            "name": "",
-            "type": "bool",
-            "internalType": "bool"
-          }
-        ],
-        "stateMutability": "view"
-      },
-      "chain": "baseSepolia",
-      "returnValueTest": {
-        "key": "",
-        "comparator": "=",
-        "value": "true"
-      }
-    }
-  ]
-}
-
-// Deployed Lit Action CID - V22 simplified for SRS integration
-const LIT_ACTION_CID = 'QmePqHXsmuZvyi8z33y3ynsDH3aVPkFhTzMkFUZwj7iBPK'
+// Deployed Lit Action CID - V18 with valid API keys
+const LIT_ACTION_CID = 'Qma1dWbGf1NWNP1TSWR6UERTZAaxVr8bbVGD89f2WHFiMq'
 
 interface LineScore {
   lineIndex: number
@@ -130,25 +78,7 @@ export class KaraokeScoringService {
       console.log('🎤 Executing karaoke scoring Lit Action...')
       console.log('🎵 Expected lyrics:', expectedLyrics.substring(0, 100) + '...')
       console.log('🎧 Audio data size:', audioData.length, 'bytes')
-      console.log('📋 Lit Action parameters:', {
-        audioDataSize: audioData.length,
-        expectedLyricsLength: expectedLyrics.length,
-        evmContractConditions: encryptedKeysData.evmContractConditions,
-        deepgramCiphertext: encryptedKeysData.deepgram.ciphertext,
-        deepgramDataHash: encryptedKeysData.deepgram.dataToEncryptHash,
-        openrouterCiphertext: encryptedKeysData.openrouter.ciphertext,
-        openrouterDataHash: encryptedKeysData.openrouter.dataToEncryptHash
-      })
-      
-      console.log('🔍 Parameter types:', {
-        audioData: typeof audioData,
-        expectedLyrics: typeof expectedLyrics,
-        evmContractConditions: typeof encryptedKeysData.evmContractConditions,
-        deepgramCiphertext: typeof encryptedKeysData.deepgram.ciphertext,
-        deepgramDataHash: typeof encryptedKeysData.deepgram.dataToEncryptHash,
-        openrouterCiphertext: typeof encryptedKeysData.openrouter.ciphertext,
-        openrouterDataHash: typeof encryptedKeysData.openrouter.dataToEncryptHash
-      })
+      console.log('📋 Lit Action CID:', LIT_ACTION_CID)
 
       // Get session signatures with correct format
       console.log('🔐 Generating session signatures...')
@@ -200,8 +130,7 @@ export class KaraokeScoringService {
       console.log('🔐 jsParams types:', {
         audioDataBase64: typeof jsParams.audioDataBase64,
         expectedLyrics: typeof jsParams.expectedLyrics,
-        userAddress: typeof jsParams.userAddress,
-        deepgramCiphertext: typeof jsParams.deepgramCiphertext
+        userAddress: typeof jsParams.userAddress
       })
       
       // Log all parameter names being sent

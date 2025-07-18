@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
+import { useWeb3AuthConnect } from '@web3auth/modal/react'
 import { useTranslation } from 'react-i18next'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
@@ -29,6 +30,7 @@ export function SongPage() {
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const { connect: connectWallet, loading: connectLoading } = useWeb3AuthConnect()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
@@ -513,11 +515,9 @@ export function SongPage() {
                           <Lock size={28} className="text-neutral-400" />
                         </div>
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-3">
+                      <h3 className="text-xl font-bold text-white">
                         {songIsUnlocked ? t('song.unlock.loadContent') : t('song.unlock.title')}
                       </h3>
-                      <p className="text-base text-neutral-300 mb-1">{t('song.unlock.description1')}</p>
-                      <p className="text-base text-neutral-300 mb-4">{t('song.unlock.description2')}</p>
                     </div>
                   ) : (
                     /* Content loaded - show actual lyrics */
@@ -577,10 +577,11 @@ export function SongPage() {
               </Button>
             ) : !isConnected ? (
               <Button
-                disabled
+                onClick={connectWallet}
+                disabled={connectLoading}
                 className="w-full px-6 py-3"
               >
-                Connect Wallet
+                {connectLoading ? 'Connecting...' : 'Connect Wallet'}
               </Button>
             ) : chain?.id !== DEFAULT_CHAIN_ID ? (
               <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full" />
