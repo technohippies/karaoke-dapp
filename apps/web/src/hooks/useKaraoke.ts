@@ -48,7 +48,7 @@ export function useKaraoke({ lyrics, midiData, onComplete }: UseKaraokeProps) {
     
     // Encode to MP3
     const mp3encoder = new lame.Mp3Encoder(1, 48000, 128)
-    const mp3Data: Int8Array[] = []
+    const mp3Data: Uint8Array[] = []
     
     let remaining = samples.length
     for (let i = 0; remaining >= 1152; i += 1152) {

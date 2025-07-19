@@ -5,6 +5,10 @@ export async function walletClientToSigner(walletClient: WalletClient): Promise<
   console.log('🔄 Converting wallet client to signer:', walletClient)
   const { account, chain, transport } = walletClient
   
+  if (!account || !chain) {
+    throw new Error('Wallet client must have account and chain')
+  }
+  
   console.log('📊 Wallet client details:', {
     account: account.address,
     chainId: chain.id,
@@ -14,7 +18,7 @@ export async function walletClientToSigner(walletClient: WalletClient): Promise<
   
   try {
     // For ethers v5, use providers.Web3Provider
-    const provider = new ethers.providers.Web3Provider(
+    const provider = new (ethers as any).providers.Web3Provider(
       {
         request: async ({ method, params }: { method: string; params?: any[] }) => {
           console.log('Provider request:', method, params)

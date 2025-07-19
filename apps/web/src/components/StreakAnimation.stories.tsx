@@ -76,6 +76,12 @@ export const LargeStreak: Story = {
 }
 
 export const ManualTrigger: Story = {
+  args: {
+    initialStreak: 3,
+    targetStreak: 4,
+    autoAnimate: true,
+    animationDelay: 500
+  },
   render: () => {
     const [key, setKey] = useState(0)
     const [currentStreak, setCurrentStreak] = useState(3)
@@ -114,6 +120,12 @@ export const DelayedAnimation: Story = {
 }
 
 export const MultipleIncreases: Story = {
+  args: {
+    initialStreak: 0,
+    targetStreak: 1,
+    autoAnimate: true,
+    animationDelay: 1000
+  },
   render: () => {
     const [streaks] = useState([
       { initial: 0, target: 1 },

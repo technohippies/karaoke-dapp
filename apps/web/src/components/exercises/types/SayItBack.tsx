@@ -5,7 +5,7 @@ export interface SayItBackProps {
   isCorrect: boolean | null
 }
 
-export function SayItBack({ line, transcript, isCorrect }: SayItBackProps) {
+export function SayItBack({ line, transcript }: SayItBackProps) {
   return (
     <div className="space-y-6">
       {/* Target text to repeat */}

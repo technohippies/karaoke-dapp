@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { useDirectIDB } from './useDirectIDB'
-import { calculateStreakFromSessions, getLocalDateInt } from '../services/streakService'
+import { calculateStreakFromSessions } from '../services/streakService'
 import type { StreakCache } from '../types/idb.types'
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
@@ -44,11 +44,16 @@ export function useStreak() {
       // Calculate fresh streak
       const sessions = await db.getAllFromIndex('exercise_sessions', 'by-session-id')
       console.log('🔥 useStreak: Found sessions', sessions.length)
-      const streak = calculateStreakFromSessions(sessions)
+      // Map IDBExerciseSession to ExerciseSessionData by adding userAddress
+      const sessionsWithAddress = sessions.map(s => ({
+        ...s,
+        userAddress: address
+      }))
+      const streak = calculateStreakFromSessions(sessionsWithAddress)
       console.log('🔥 useStreak: Calculated streak', streak)
       
       // Update cache
-      const today = getLocalDateInt(new Date())
+      // const today = getLocalDateInt(new Date())
       const lastActivityDate = sessions.length > 0 
         ? Math.max(...sessions.map(s => s.sessionDate))
         : 0

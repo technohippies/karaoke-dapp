@@ -45,7 +45,7 @@ const SpeechBubble = React.forwardRef<HTMLDivElement, SpeechBubbleProps>(
       primary: "rgb(37 99 235)",
       secondary: "rgb(64 64 64)",
       accent: "rgb(236 72 153)",
-    }[variant];
+    }[variant || "default"];
 
     if (tailSide === "bottom") {
       // Bottom triangle

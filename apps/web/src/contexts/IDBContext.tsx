@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { openDB, type IDBPDatabase } from 'idb'
 import type { KaraokeSRSDB } from '../types/idb.types'
 

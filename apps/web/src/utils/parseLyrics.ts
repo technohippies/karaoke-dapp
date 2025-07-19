@@ -119,7 +119,7 @@ export function combineLyricsWithTranslation(
       // Look for exact or close timestamp match
       if (translationMap.has(timestamp)) {
         translation = translationMap.get(timestamp) || ''
-      } else if (index < translations.lines.length) {
+      } else if (translations.lines && index < translations.lines.length) {
         // Fallback to index-based matching
         translation = translations.lines[index].translation || ''
       }

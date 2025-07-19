@@ -1,4 +1,4 @@
-import { CheckCircle, Warning, CloudArrowUp, CloudArrowDown } from '@phosphor-icons/react'
+import { CheckCircle, CloudArrowUp, CloudArrowDown } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { formatDistanceToNow } from '../utils/formatTime'
 import { useTranslation } from 'react-i18next'

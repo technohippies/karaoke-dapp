@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAccount } from 'wagmi'
 import { useWalletClient } from 'wagmi'
-import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
@@ -23,10 +22,10 @@ interface StudyStats {
 
 export function StudyPage() {
   const navigate = useNavigate()
-  const { address, isConnected } = useAccount()
+  const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { updateCardReview, saveExerciseSession } = useIDBSRS()
-  const { sessionSigs, isReady: isLitReady } = useLitSession()
+  const { sessionSigs } = useLitSession()
   const { getDueCards, getUserStats, isReady: isDBReady } = useDirectIDB()
   
   const [dueCards, setDueCards] = useState<DueCard[]>([])
@@ -80,7 +79,7 @@ export function StudyPage() {
     }
   }
   
-  const handleCardComplete = async (score: number, transcript: string) => {
+  const handleCardComplete = async (score: number) => {
     if (!dueCards[currentCardIndex] || !address) return
     
     setIsProcessing(true)
@@ -120,13 +119,18 @@ export function StudyPage() {
     if (!address) return
     
     try {
+      const now = new Date()
+      const sessionDate = parseInt(
+        `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+      )
+      
       await saveExerciseSession({
         sessionId,
-        userAddress: address,
         cardsReviewed: studyStats.reviewedCards,
         cardsCorrect: studyStats.correctCards,
         startedAt: studyStats.startTime,
-        completedAt: Date.now()
+        completedAt: Date.now(),
+        sessionDate
       })
       console.log('✅ Exercise session saved')
     } catch (error) {
@@ -144,7 +148,7 @@ export function StudyPage() {
   }
   
   // Check if ready
-  const isReady = isConnected && walletClient && isLitReady && isDBReady && !isLoading
+  // const isReady = isConnected && walletClient && isLitReady && isDBReady && !isLoading
   const currentCard = dueCards[currentCardIndex]
   const isComplete = studyStats.reviewedCards > 0 && currentCardIndex >= dueCards.length - 1
   

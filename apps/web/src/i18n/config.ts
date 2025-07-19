@@ -32,7 +32,6 @@ i18n
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
-      lookupFromNavigator: true,
       lookupLocalStorage: 'i18nextLng',
       // Convert zh-CN to zh
       convertDetectedLanguage: (lng) => {

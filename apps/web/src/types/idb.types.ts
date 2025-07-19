@@ -56,12 +56,15 @@ export interface CountrySettings {
 
 // IndexedDB Schema
 export interface KaraokeSRSDB extends DBSchema {
+  [key: string]: any // Add index signature to satisfy DBSchema
   karaoke_sessions: {
     key: number
     value: IDBKaraokeSession
     indexes: { 
       'by-session-id': string
       'by-sync-status': boolean 
+      'by-date': number
+      'by-song': number
     }
   }
   karaoke_lines: {
@@ -71,6 +74,7 @@ export interface KaraokeSRSDB extends DBSchema {
       'by-song-line': [number, number]  // [songId, lineIndex]
       'by-due-date': number
       'by-sync-status': boolean 
+      'by-state': number
     }
   }
   exercise_sessions: {
@@ -79,6 +83,7 @@ export interface KaraokeSRSDB extends DBSchema {
     indexes: { 
       'by-session-id': string
       'by-sync-status': boolean 
+      'by-date': number
     }
   }
   sync_metadata: {
@@ -88,6 +93,19 @@ export interface KaraokeSRSDB extends DBSchema {
   user_settings: {
     key: string
     value: UserSettings | CountrySettings
+  }
+  sync_queue: {
+    key: number
+    value: {
+      id?: number
+      type: string
+      timestamp: number
+      data: any
+    }
+    indexes: {
+      'by-type': string
+      'by-timestamp': number
+    }
   }
 }
 

@@ -4,12 +4,10 @@ import { fsrs, generatorParameters, Rating, createEmptyCard, type Card } from 't
 import type { 
   UserTableInfo, 
   KaraokeSessionData, 
-  SRSCardState,
   ExerciseSessionData,
   DueCard
 } from '../../../types/srs.types'
 import {
-  SRS_CORRECT_THRESHOLD,
   toStoredDifficulty,
   toStoredStability,
   fromStoredDifficulty,
@@ -21,7 +19,7 @@ export class TablelandWriteService {
   private registry: Registry | null = null
   private fsrs = fsrs(generatorParameters({ enable_fuzz: false }))
   private STORAGE_KEY = 'karaoke_srs_tables_v1' // Versioned for SRS schema
-  private CHAIN_ID = 11155420 // Optimism Sepolia
+  // private CHAIN_ID = 11155420 // Optimism Sepolia
   private TABLE_VERSION = 'srs_v1' // Version suffix for table names
 
   async initialize(signer: ethers.Signer, forceReinit = false) {
@@ -29,10 +27,10 @@ export class TablelandWriteService {
       try {
         // Configure for Optimism Sepolia
         this.db = new Database({ 
-          signer,
+          signer: signer as any, // Type mismatch between ethers v5 and Tableland v7 expectations
           baseUrl: 'https://testnets.tableland.network/api/v1'
         })
-        this.registry = new Registry({ signer })
+        this.registry = new Registry({ signer: signer as any })
         console.log('✅ Tableland Database and Registry initialized')
       } catch (error) {
         console.error('❌ Failed to create Database/Registry instance:', error)
@@ -371,7 +369,7 @@ export class TablelandWriteService {
       .bind(now, limit)
       .all()
 
-    return results as DueCard[]
+    return results as unknown as DueCard[]
   }
 
   /**
@@ -408,15 +406,16 @@ export class TablelandWriteService {
 
     // Reconstruct FSRS card
     const card: Card = {
-      due: new Date(existing.due_date),
-      stability: fromStoredStability(existing.stability),
-      difficulty: fromStoredDifficulty(existing.difficulty),
-      elapsed_days: existing.elapsed_days,
-      scheduled_days: existing.scheduled_days,
-      reps: existing.reps,
-      lapses: existing.lapses,
-      state: existing.state,
-      last_review: existing.last_review ? new Date(existing.last_review) : undefined
+      due: new Date(existing.due_date as string | number),
+      stability: fromStoredStability(existing.stability as number),
+      difficulty: fromStoredDifficulty(existing.difficulty as number),
+      elapsed_days: existing.elapsed_days as number,
+      scheduled_days: existing.scheduled_days as number,
+      reps: existing.reps as number,
+      lapses: existing.lapses as number,
+      state: existing.state as any,
+      last_review: existing.last_review ? new Date(existing.last_review as string | number) : undefined,
+      learning_steps: 0
     }
 
     // Apply FSRS algorithm
@@ -498,15 +497,15 @@ export class TablelandWriteService {
         ORDER BY session_date DESC`)
       .all()
 
-    return results.map(row => ({
-      sessionId: row.session_id,
+    return results.map((row: any) => ({
+      sessionId: row.session_id as string,
       userAddress, // Add back the user address
-      sessionDate: row.session_date,
-      cardsReviewed: row.cards_reviewed,
-      cardsCorrect: row.cards_correct,
-      startedAt: row.started_at,
-      completedAt: row.completed_at
-    }))
+      sessionDate: row.session_date as number,
+      cardsReviewed: row.cards_reviewed as number,
+      cardsCorrect: row.cards_correct as number,
+      startedAt: row.started_at as number,
+      completedAt: row.completed_at as number
+    })) as ExerciseSessionData[]
   }
 
   /**
@@ -549,10 +548,10 @@ export class TablelandWriteService {
       .all()
 
     return {
-      totalSessions: sessionStats[0]?.count || 0,
-      totalCards: cardStats[0]?.total || 0,
-      cardsToReview: cardStats[0]?.due || 0,
-      averageScore: sessionStats[0]?.avg_score || 0
+      totalSessions: (sessionStats[0]?.count as number) || 0,
+      totalCards: (cardStats[0]?.total as number) || 0,
+      cardsToReview: (cardStats[0]?.due as number) || 0,
+      averageScore: (sessionStats[0]?.avg_score as number) || 0
     }
   }
 

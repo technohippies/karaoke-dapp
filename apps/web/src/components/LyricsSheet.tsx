@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { BottomSheet } from './BottomSheet'
-import { Translate, Lightbulb, BookOpen } from '@phosphor-icons/react'
+import { Lightbulb, BookOpen } from '@phosphor-icons/react'
 
 interface LyricsSheetProps {
   trigger: React.ReactNode
@@ -16,7 +16,6 @@ interface LyricsSheetProps {
 export function LyricsSheet({
   trigger,
   englishLyric,
-  translation,
   meaning,
   grammar,
   open,

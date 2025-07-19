@@ -9,7 +9,7 @@ export { idbReadService } from './database/idb/IDBReadService'
 export { idbSyncService } from './database/idb/IDBSyncService'
 
 // Storage Services
-export type { IStorageService, StorageFile } from './storage/types/StorageService'
+export type { IStorageService } from './storage/types/StorageService'
 // Note: PinataStorageService is available but not instantiated by default
 // Use createPinataStorageService from './storage/ipfs/PinataStorageService' if needed
 

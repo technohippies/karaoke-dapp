@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { CloseHeader } from './CloseHeader'
 import { Button } from './ui/button'
 import { StreakAnimation } from './StreakAnimation'
@@ -15,11 +14,9 @@ interface StudyCompletionProps {
 export function StudyCompletion({ 
   currentStreak,
   previousStreak,
-  cardsCompleted,
   onClose
 }: StudyCompletionProps) {
   const navigate = useNavigate()
-  const { t } = useTranslation()
   
   const handleBack = () => {
     navigate('/')

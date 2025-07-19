@@ -113,7 +113,7 @@ export class PinataStorageService implements IStorageService {
         console.log('📌 Pinata storage service initialized')
       }
     } catch (error) {
-      throw new StorageConfigError('Failed to initialize Pinata service', error)
+      throw new StorageConfigError('Failed to initialize Pinata service', error as Error)
     }
   }
 
@@ -193,7 +193,7 @@ export class PinataStorageService implements IStorageService {
       if (error instanceof StorageUploadError) {
         throw error
       }
-      throw new StorageUploadError('Failed to upload to Pinata', error)
+      throw new StorageUploadError('Failed to upload to Pinata', error as Error)
     }
   }
 
@@ -230,7 +230,7 @@ export class PinataStorageService implements IStorageService {
       if (error instanceof StorageNotFoundError || error instanceof StorageRetrievalError) {
         throw error
       }
-      throw new StorageRetrievalError('Failed to retrieve from Pinata', error)
+      throw new StorageRetrievalError('Failed to retrieve from Pinata', error as Error)
     }
   }
 
@@ -302,7 +302,7 @@ export class PinataStorageService implements IStorageService {
       if (error instanceof StorageRetrievalError) {
         throw error
       }
-      throw new StorageRetrievalError('Failed to list content from Pinata', error)
+      throw new StorageRetrievalError('Failed to list content from Pinata', error as Error)
     }
   }
 
@@ -353,7 +353,7 @@ export class PinataStorageService implements IStorageService {
       if (error instanceof StorageNotFoundError) {
         throw error
       }
-      throw new StorageRetrievalError('Failed to get metadata from Pinata', error)
+      throw new StorageRetrievalError('Failed to get metadata from Pinata', error as Error)
     }
   }
 
@@ -422,7 +422,7 @@ export class PinataStorageService implements IStorageService {
       if (error instanceof StorageRetrievalError) {
         throw error
       }
-      throw new StorageRetrievalError('Failed to get usage from Pinata', error)
+      throw new StorageRetrievalError('Failed to get usage from Pinata', error as Error)
     }
   }
 

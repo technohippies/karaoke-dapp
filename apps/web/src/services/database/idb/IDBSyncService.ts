@@ -3,14 +3,11 @@ import { ethers } from 'ethers'
 import type { 
   KaraokeSRSDB,
   IDBKaraokeSession,
-  IDBKaraokeLine,
-  IDBExerciseSession,
   SyncResult
 } from '../../../types/idb.types'
 import type { 
   KaraokeSessionData,
-  ExerciseSessionData,
-  UserTableInfo
+  ExerciseSessionData
 } from '../../../types/srs.types'
 import { tablelandWriteService } from '../tableland/TablelandWriteService'
 import { idbReadService } from './IDBReadService'
@@ -86,7 +83,8 @@ export class IDBSyncService {
         cardsReviewed: exercise.cardsReviewed,
         cardsCorrect: exercise.cardsCorrect,
         startedAt: exercise.startedAt,
-        completedAt: exercise.completedAt
+        completedAt: exercise.completedAt,
+        sessionDate: exercise.sessionDate
       }))
 
       // Execute everything in ONE transaction!
@@ -170,7 +168,7 @@ export class IDBSyncService {
 
       // Get all data from Tableland
       const history = await tablelandWriteService.getUserHistory(userAddress)
-      const stats = await tablelandWriteService.getUserStats(userAddress)
+      // const stats = await tablelandWriteService.getUserStats(userAddress)
 
       // For now, we'll import the history sessions
       // In a full implementation, we'd need to query all three tables

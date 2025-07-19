@@ -14,10 +14,8 @@ export function PricingPage() {
   const { t } = useTranslation()
   const {
     isConnected,
-    address,
     isApproving,
     isPurchasing,
-    hasCountry,
     balance,
     voiceCredits,
     songCredits,
@@ -124,12 +122,12 @@ export function PricingPage() {
               >
                 {isApproving ? (
                   <>
-                    <Spinner size="sm" />
+                    <SpinnerWithScarlett size="sm" />
                     <span>Approving...</span>
                   </>
                 ) : isPurchasing ? (
                   <>
-                    <Spinner size="sm" />
+                    <SpinnerWithScarlett size="sm" />
                     <span>Purchasing...</span>
                   </>
                 ) : (
@@ -155,12 +153,12 @@ export function PricingPage() {
               >
                 {isApproving ? (
                   <>
-                    <Spinner size="sm" />
+                    <SpinnerWithScarlett size="sm" />
                     <span>Approving...</span>
                   </>
                 ) : isPurchasing ? (
                   <>
-                    <Spinner size="sm" />
+                    <SpinnerWithScarlett size="sm" />
                     <span>Purchasing...</span>
                   </>
                 ) : (

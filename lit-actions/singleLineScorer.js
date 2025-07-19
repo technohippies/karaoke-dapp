@@ -1,19 +1,20 @@
 /**
- * Single Line Scorer Lit Action V1
+ * Single Line Scorer Lit Action V4
  * For Study Mode - provides AI feedback for scores below 80%
+ * Updated with valid API keys from karaoke scorer V18
  */
 
-console.log('🎯 Single Line Scorer V1 Starting');
+console.log('🎯 Single Line Scorer V4 Starting');
 
-// Embedded encrypted API keys (same as karaoke scorer)
+// Embedded encrypted API keys (same as karaoke scorer V18 - with valid keys)
 const ENCRYPTED_KEYS = {
   deepgram: {
-    ciphertext: "tbuEBTPXRv9XOZi3zUwK5k4/LSWJTTIg2r8+t+94Z0jalEr01v8xmNKuV8vjRC+a9+gze8gjLInUMYMiRaO/w0VDrHqv+LqyRlOUJ201zhYp6/0fsSGmaP3lNqgKeov//vL004kG99xuLMhYO4yDusiXBQPoRK2BEGMC",
-    dataToEncryptHash: "991f82ee2a7055854de5d0ff7e35bc2b205aaebf72105620de2fdb112969d292"
+    ciphertext: "lCsaNyPci+nap2AwhuH8ikioT9wCoRWjBxlQaPP1+crGaVvVNmCjMMDRqhIhkcvPvwVT4P64eUnwuVLrDr3Xh9YlD61zFr7g7pGL8Lhw1b0pWm5e0urWe/pwt9c8F6w0ZsgaOYMqKM1JBuweR5mlu/+adoOGGnM+FxsC",
+    dataToEncryptHash: "212328ecb3b3fd0d6e7057465e88639498c4a64f7ceb81c5192f6cf96d9ec70a"
   },
   openrouter: {
-    ciphertext: "rnLwTGrNUyrvo4CeVMN1gjFT9wbO4QteueyOmsKTtCZWzICPYf4Y4oN/IbfJAQZjOzeTWQAg6vrV8ka4Wdh2hdKZm3HoqixhyeEh40VxgLFKQ28sdlRvT40ejh1Zb+vWMdjMtHYFboc0+0Bfpnax9AqiL9rXwZx9lSeCoLJvYTqHVgRFOpmHsz3CIaCO5b/3XuSfz0KgxUhkemgC",
-    dataToEncryptHash: "938d660ab40a343df60ad16e264e6efae012a21b23a2bb19d901cb96d296f747"
+    ciphertext: "hDSTqoMLqRD//6ZOIjg/t+6qbgNy7G1a/I0nEy8Sd9NXFjg3m6HOaMOiozeW5oIQ+ayvwGelSdMSD36WXralvQ/deq/AY6SW62C/zr3S94NK7BDOiJ1WJaTQgTISKWCfodZ1eumUNuz82Eyf0nqOloBELGax56X3QV57J2J2OuiyqPU6CwL91/ma+wNg1AycMW8CTBe59u8MY6gC",
+    dataToEncryptHash: "c64474e0cec7c75d0111017919c39603af002db74c4b93697a2ba5af5b9e2873"
   }
 };
 

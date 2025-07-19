@@ -220,5 +220,11 @@
     "fileName": "Karaoke-Scorer-V18-Valid-Keys.js",
     "uploadDate": "2025-07-18T10:23:47.832Z",
     "filePath": "./lit-actions/karaokeScorerV18.js"
+  },
+  "Single Line Scorer V4 - Valid Keys": {
+    "cid": "QmPutELyCw8HcxbvhRV9PAopK1YiBY7cQU7UtNn9nvGUT1",
+    "fileName": "Single-Line-Scorer-V4---Valid-Keys.js",
+    "uploadDate": "2025-07-19T11:13:51.219Z",
+    "filePath": "./lit-actions/singleLineScorer.js"
   }
 }

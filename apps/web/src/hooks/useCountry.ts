@@ -61,7 +61,7 @@ export function useCountry(): UseCountryReturn {
       const tx = db.transaction('user_settings', 'readwrite')
       const store = tx.objectStore('user_settings')
       await store.put(countryData)
-      await tx.complete
+      await tx.done
       
       setCountryState(countryCode)
       setHasCountry(true)

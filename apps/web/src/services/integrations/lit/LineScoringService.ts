@@ -4,8 +4,8 @@ import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-prot
 import { ethers } from 'ethers'
 import { getDetectedLanguage } from '../../../i18n'
 
-// Single Line Scorer V3 deployed to IPFS - uses base64 audio like karaoke scorer
-const SINGLE_LINE_SCORER_CID = 'QmV9Lw8BD57Fbd5v8QGYJFfJoasiKdisTq6EbACRrnSQPg'
+// Single Line Scorer V4 deployed to IPFS - updated with valid API keys from karaoke scorer V18
+const SINGLE_LINE_SCORER_CID = 'QmPutELyCw8HcxbvhRV9PAopK1YiBY7cQU7UtNn9nvGUT1'
 
 interface LineScoreResult {
   success: boolean
@@ -58,7 +58,7 @@ export class LineScoringService {
 
     try {
       // Get user address from signer
-      const userAddress = await this.signer!.getAddress()
+      await this.signer!.getAddress()
       
       console.log('🎯 Scoring line with Lit Protocol')
       console.log('📝 Expected text:', expectedText)
@@ -121,7 +121,7 @@ export class LineScoringService {
       })
       
       console.log('📊 Lit Action result:', result.response)
-      return JSON.parse(result.response)
+      return JSON.parse(result.response as string)
       
     } catch (error) {
       console.error('❌ Line scoring error:', error)

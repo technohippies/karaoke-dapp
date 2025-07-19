@@ -48,7 +48,9 @@ export function SongPage() {
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'hasUnlockedSong',
     args: address && validSongId ? [address, BigInt(validSongId)] : undefined,
-    enabled: !!address && !!validSongId,
+    query: {
+      enabled: !!address && !!validSongId,
+    },
   })
   
   const { data: voiceCredits } = useReadContract({
@@ -56,7 +58,9 @@ export function SongPage() {
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   })
   
   const { data: songCredits } = useReadContract({
@@ -64,23 +68,23 @@ export function SongPage() {
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
-    enabled: !!address,
+    query: {
+      enabled: !!address,
+    },
   })
 
   // Unlock song functionality
   const { 
     writeContract: unlockSong, 
     data: unlockHash,
-    isPending: isUnlockPending,
-    error: unlockError
+    isPending: isUnlockPending
   } = useWriteContract()
   
   // Start karaoke transaction
   const { 
     writeContract: startKaraokeWrite, 
     data: startKaraokeHash,
-    isPending: isStartKaraokePending,
-    error: startKaraokeError
+    isPending: isStartKaraokePending
   } = useWriteContract()
   
   // Wait for start karaoke transaction
@@ -272,13 +276,6 @@ export function SongPage() {
     }
   }
 
-  const handleLogin = () => {
-    // Wallet connection handled by wagmi
-  }
-
-  const handleAccount = () => {
-    // Account management handled by wagmi
-  }
 
   // Parse loaded lyrics with translations
   
@@ -484,8 +481,6 @@ export function SongPage() {
                         <MusicNote size={20} weight="fill" />
                       </IconButton>
                     }
-                    title={song.title}
-                    artist={song.artist}
                     streamingLinks={song.streaming_links || {}}
                   />
                   {song.genius_slug && (
@@ -541,8 +536,8 @@ export function SongPage() {
                           }
                           englishLyric={lyric.english}
                           translation={lyric.translation}
-                          meaning={lyric.meaning}
-                          grammar={lyric.grammar}
+                          meaning={lyric.meaning || ''}
+                          grammar={lyric.grammar || ''}
                         />
                       ))
                       ) : (
@@ -585,7 +580,11 @@ export function SongPage() {
                 {connectLoading ? 'Connecting...' : 'Connect Wallet'}
               </Button>
             ) : chain?.id !== DEFAULT_CHAIN_ID ? (
-              <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full" />
+              <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full">
+                <Button className="w-full" disabled>
+                  {t('common.connectWallet')}
+                </Button>
+              </ChainSwitcher>
             ) : (
               <>
                 {/* No credits at all - show Buy Credits */}
@@ -629,7 +628,7 @@ export function SongPage() {
                 {/* Song unlocked AND has voice credits - content is accessible */}
                 {songIsUnlocked && hasVoiceCredits && (
                   <div className="w-full text-center py-3">
-                    {console.log('🎵 SongPage button logic:', { hasContent: !!content, hasMidiData: !!content?.midiData, showDownloadButton: !content || !content.midiData }) || (!content || !content.midiData) ? (
+                    {(!content || !content.midiData) ? (
                       <>
                         <Button
                           onClick={async () => {

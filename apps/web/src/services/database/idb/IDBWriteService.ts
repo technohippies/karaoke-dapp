@@ -3,8 +3,7 @@ import { getGlobalDB } from './globalDB'
 import { fsrs, generatorParameters, Rating, createEmptyCard, type Card } from 'ts-fsrs'
 import type { 
   KaraokeSessionData,
-  ExerciseSessionData,
-  KaraokeLineResult
+  ExerciseSessionData
 } from '../../../types/srs.types'
 import type { 
   KaraokeSRSDB, 
@@ -13,7 +12,6 @@ import type {
   IDBExerciseSession
 } from '../../../types/idb.types'
 import {
-  SRS_CORRECT_THRESHOLD,
   toStoredDifficulty,
   toStoredStability,
   fromStoredDifficulty,
@@ -23,8 +21,8 @@ import {
 class IDBWriteService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
   private fsrs = fsrs(generatorParameters({ enable_fuzz: false }))
-  private DB_NAME = 'KaraokeSRS'
-  private DB_VERSION = 1
+  // private DB_NAME = 'KaraokeSRS'
+  // private DB_VERSION = 1
 
   async initialize(): Promise<void> {
     if (this.db) {
@@ -107,7 +105,8 @@ class IDBWriteService {
             reps: existing.reps,
             lapses: existing.lapses,
             state: existing.state,
-            last_review: existing.lastReview ? new Date(existing.lastReview) : undefined
+            last_review: existing.lastReview ? new Date(existing.lastReview) : undefined,
+            learning_steps: 0
           }
 
           const scheduling = this.fsrs.repeat(card, new Date())
@@ -162,7 +161,7 @@ class IDBWriteService {
       // Update sync metadata
       const metaStore = tx.objectStore('sync_metadata')
       const metadata = await metaStore.get('status')
-      if (metadata) {
+      if (metadata && 'pendingChanges' in metadata) {
         metadata.pendingChanges += sessionData.lines.length + 1 // lines + session
         await metaStore.put(metadata)
       }
@@ -201,7 +200,7 @@ class IDBWriteService {
       // Update sync metadata
       const metaStore = tx.objectStore('sync_metadata')
       const metadata = await metaStore.get('status')
-      if (metadata) {
+      if (metadata && 'pendingChanges' in metadata) {
         metadata.pendingChanges += 1
         await metaStore.put(metadata)
       }
@@ -246,7 +245,8 @@ class IDBWriteService {
         reps: existing.reps,
         lapses: existing.lapses,
         state: existing.state,
-        last_review: existing.lastReview ? new Date(existing.lastReview) : undefined
+        last_review: existing.lastReview ? new Date(existing.lastReview) : undefined,
+        learning_steps: 0
       }
 
       // Apply FSRS algorithm
@@ -276,7 +276,7 @@ class IDBWriteService {
       // Update sync metadata
       const metaStore = tx.objectStore('sync_metadata')
       const metadata = await metaStore.get('status')
-      if (metadata && existing.synced) {
+      if (metadata && 'pendingChanges' in metadata && existing.synced) {
         metadata.pendingChanges += 1
         await metaStore.put(metadata)
       }
@@ -309,7 +309,7 @@ class IDBWriteService {
     // Update sync metadata
     const metaStore = tx.objectStore('sync_metadata')
     const metadata = await metaStore.get('status')
-    if (metadata) {
+    if (metadata && 'pendingChanges' in metadata && 'lastSyncTimestamp' in metadata) {
       metadata.pendingChanges = Math.max(0, metadata.pendingChanges - ids.length)
       metadata.lastSyncTimestamp = Date.now()
       await metaStore.put(metadata)

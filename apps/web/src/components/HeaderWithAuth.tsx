@@ -17,7 +17,6 @@ interface HeaderWithAuthProps {
 
 export function HeaderWithAuth({ 
   crownCount = 5,
-  fireCount = 12,
   showBack = false,
   onBack,
   pageTitle
@@ -25,7 +24,7 @@ export function HeaderWithAuth({
   const navigate = useNavigate()
   const { address, isConnected } = useAccount()
   const { connect, loading: connectLoading } = useWeb3AuthConnect()
-  const { disconnect, loading: disconnectLoading } = useWeb3AuthDisconnect()
+  const { loading: disconnectLoading } = useWeb3AuthDisconnect()
   const { userInfo } = useWeb3AuthUser()
   const { currentStreak } = useStreak()
   

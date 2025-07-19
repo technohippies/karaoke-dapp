@@ -8,12 +8,12 @@ import type {
   SyncStatus
 } from '../../../types/idb.types'
 import type { DueCard } from '../../../types/srs.types'
-import { fromStoredDifficulty, fromStoredStability } from '../../../types/srs.types'
+// import { fromStoredDifficulty, fromStoredStability } from '../../../types/srs.types'
 
 class IDBReadService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
-  private DB_NAME = 'KaraokeSRS'
-  private DB_VERSION = 1
+  // private DB_NAME = 'KaraokeSRS'
+  // private DB_VERSION = 1
 
   async initialize(): Promise<void> {
     if (this.db) {
@@ -222,11 +222,21 @@ class IDBReadService {
       }
     }
 
+    // Type guard to check if it's SyncMetadata
+    if ('pendingChanges' in metadata && 'lastSyncTimestamp' in metadata) {
+      return {
+        pendingChanges: metadata.pendingChanges,
+        lastSyncTimestamp: metadata.lastSyncTimestamp || null,
+        syncInProgress: metadata.syncInProgress,
+        lastSyncError: metadata.lastSyncError
+      }
+    }
+    
+    // If it's StreakCache, return default sync status
     return {
-      pendingChanges: metadata.pendingChanges,
-      lastSyncTimestamp: metadata.lastSyncTimestamp || null,
-      syncInProgress: metadata.syncInProgress,
-      lastSyncError: metadata.lastSyncError
+      pendingChanges: 0,
+      lastSyncTimestamp: null,
+      syncInProgress: false
     }
   }
 

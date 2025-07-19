@@ -251,7 +251,7 @@ export function useIDBSRS() {
 
   // Import from Tableland (for recovery)
   const importFromTableland = useCallback(async () => {
-    if (!isInitialized || !address) {
+    if (!isInitialized || !address || !walletClient) {
       const msg = 'Wallet not connected or service not initialized'
       console.error('❌', msg)
       setError(msg)
@@ -259,7 +259,8 @@ export function useIDBSRS() {
     }
 
     try {
-      const result = await idbSyncService.importFromTableland(address)
+      const signer = await walletClientToSigner(walletClient)
+      const result = await idbSyncService.importFromTableland(signer, address)
       
       // Update sync status
       const status = await idbReadService.getSyncStatus()
@@ -271,7 +272,7 @@ export function useIDBSRS() {
       setError(err instanceof Error ? err.message : 'Import failed')
       return null
     }
-  }, [address, isInitialized])
+  }, [address, walletClient, isInitialized])
 
   // Check if user has data on Tableland (for recovery flow)
   const hasTablelandData = useCallback(async (): Promise<boolean> => {

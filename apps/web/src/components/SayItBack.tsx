@@ -19,7 +19,6 @@ interface SayItBackProps {
 
 export function SayItBack({ 
   expectedText, 
-  songId, 
   onComplete, 
   isStudyMode = false,
   sessionSigs,
@@ -30,21 +29,22 @@ export function SayItBack({
   const [transcript, setTranscript] = useState('')
   const [score, setScore] = useState<number | null>(null)
   const [showResult, setShowResult] = useState(false)
+  const [audioData, setAudioData] = useState<Uint8Array | null>(null)
   
-  const { startRecording, stopRecording, audioBlob, reset: resetRecorder } = useAudioRecorder()
+  const { startRecording, stopRecording } = useAudioRecorder()
   
   // Process recording when available
   useEffect(() => {
-    if (audioBlob && !isProcessing) {
+    if (audioData && !isProcessing) {
       processRecording()
     }
-  }, [audioBlob])
+  }, [audioData])
   
   const handleStartRecording = async () => {
     setShowResult(false)
     setTranscript('')
     setScore(null)
-    resetRecorder()
+    setAudioData(null)
     
     try {
       await startRecording()
@@ -56,8 +56,11 @@ export function SayItBack({
   
   const handleStopRecording = async () => {
     try {
-      await stopRecording()
+      const result = await stopRecording()
       setIsRecording(false)
+      if (result) {
+        setAudioData(result.audioData)
+      }
     } catch (error) {
       console.error('Failed to stop recording:', error)
       setIsRecording(false)
@@ -65,13 +68,11 @@ export function SayItBack({
   }
   
   const processRecording = async () => {
-    if (!audioBlob || !walletClient) return
+    if (!audioData || !walletClient) return
     
     setIsProcessing(true)
     
     try {
-      // Convert audio blob to Uint8Array
-      const audioData = new Uint8Array(await audioBlob.arrayBuffer())
       console.log('🎤 Processing audio:', audioData.length, 'bytes')
       
       // Convert wallet client to signer

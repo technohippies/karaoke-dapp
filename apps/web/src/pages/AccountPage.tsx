@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAccount, useReadContract, useWalletClient } from 'wagmi'
+import { useAccount, useWalletClient } from 'wagmi'
 import { useTranslation } from 'react-i18next'
 import { CrownCross, Fire } from '@phosphor-icons/react'
 import { SimpleHeader } from '../components/SimpleHeader'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { SyncStatus } from '../components/SyncStatus'
-import { Button } from '../components/ui/button'
-import { KARAOKE_CONTRACT_ADDRESS, DEFAULT_CHAIN_ID, BASE_SEPOLIA_CHAIN_ID } from '../constants'
-import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
+import { DEFAULT_CHAIN_ID, BASE_SEPOLIA_CHAIN_ID } from '../constants'
 import { usePurchase } from '../hooks/usePurchase'
 import { useStreak } from '../hooks/useStreak'
 import { useIDBSync } from '../hooks/useIDBSync'
@@ -18,7 +15,6 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 
 export function AccountPage() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -27,7 +23,6 @@ export function AccountPage() {
   const { syncToTableland, importFromTableland, syncStatus } = useIDBSync()
   
   const [cloudStreak, setCloudStreak] = useState<number | null>(null)
-  const [isLoadingCloudStreak, setIsLoadingCloudStreak] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isRecovering, setIsRecovering] = useState(false)
   
@@ -41,7 +36,7 @@ export function AccountPage() {
   const loadCloudStreak = async () => {
     if (!address || !walletClient) return
     
-    setIsLoadingCloudStreak(true)
+    // setIsLoadingCloudStreak(true)
     try {
       const signer = await walletClientToSigner(walletClient)
       const tablelandService = new TablelandWriteService()
@@ -54,7 +49,7 @@ export function AccountPage() {
       console.error('Failed to load cloud streak:', error)
       setCloudStreak(null)
     } finally {
-      setIsLoadingCloudStreak(false)
+      // setIsLoadingCloudStreak(false)
     }
   }
   

@@ -31,25 +31,18 @@ const web3AuthContextConfig: Web3AuthContextConfig = {
   web3AuthOptions: {
     clientId,
     web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET, // Must match your Web3Auth dashboard setting
-    // Default to Base mainnet
-    chainConfig: {
-      chainNamespace: "eip155",
-      chainId: "0x2105", // Base mainnet in hex (8453)
-      rpcTarget: "https://mainnet.base.org",
-      displayName: "Base",
-      blockExplorerUrl: "https://basescan.org",
-      ticker: "ETH",
-      tickerName: "Ethereum",
-    },
     uiConfig: {
       appName: "Karaoke Quest",
       appUrl: window.location.origin,
-      theme: "dark",
+      theme: {
+        primary: "#768729"
+      },
       loginMethodsOrder: ["google", "twitter", "discord", "github"],
     },
   },
-  // Wagmi configuration - include both mainnet and testnet
-  chains: [baseMainnetFixed, baseSepoliaFixed, optimismSepolia],
 };
 
 export default web3AuthContextConfig;
+
+// Export chains for wagmi configuration separately
+export const supportedChains = [baseMainnetFixed, baseSepoliaFixed, optimismSepolia];

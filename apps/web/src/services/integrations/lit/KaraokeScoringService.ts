@@ -58,7 +58,7 @@ export class KaraokeScoringService {
   async scoreKaraoke(
     audioData: Uint8Array,
     expectedLyrics: string,
-    userAddress: string,
+    _userAddress: string,
     signer?: ethers.Signer
   ): Promise<KaraokeScoringResult> {
     await this.initialize(signer)
@@ -160,7 +160,7 @@ export class KaraokeScoringService {
       }
 
       console.log('📊 Karaoke scoring result:', result.response)
-      return JSON.parse(result.response)
+      return JSON.parse(result.response as string)
 
     } catch (error) {
       console.error('❌ Karaoke scoring failed:', error)

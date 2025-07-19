@@ -44,11 +44,15 @@ export function useLitSession() {
           uri,
           expiration,
           resourceAbilityRequests,
+        }: {
+          uri?: string;
+          expiration?: string;
+          resourceAbilityRequests?: any[];
         }) => {
           const toSign = await createSiweMessageWithRecaps({
             uri: uri || 'https://localhost',
-            expiration,
-            resources: resourceAbilityRequests,
+            expiration: expiration || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            resources: resourceAbilityRequests || [],
             walletAddress: address,
             nonce: await litProtocolService.litNodeClient!.getLatestBlockhash(),
             litNodeClient: litProtocolService.litNodeClient!,

@@ -210,7 +210,7 @@ export class LitProtocolService {
         }
       })
       
-      const result = JSON.parse(response.response)
+      const result = JSON.parse(response.response as string)
       
       if (!result.success) {
         throw new Error(result.error || 'Grading failed')

@@ -22,8 +22,7 @@ export function KaraokeDisplay({
   onClose, 
   autoStart = true,
   lineDelay = 3000, // 3 seconds per line by default
-  currentLineIndex: externalLineIndex,
-  isPlaying: externalIsPlaying
+  currentLineIndex: externalLineIndex
 }: KaraokeDisplayProps) {
   const [internalLineIndex, setInternalLineIndex] = useState(-1) // -1 for countdown
   const [countdown, setCountdown] = useState(3)

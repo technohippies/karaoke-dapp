@@ -7,7 +7,7 @@ export async function getAuthSig(walletAddress: string) {
   // For now, we'll use a simple auth sig without session sigs
   // In production, you'd want to use session sigs for better security
   
-  const provider = new ethers.BrowserProvider(window.ethereum)
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
   const signer = await provider.getSigner()
   
   // Get the latest blockhash
@@ -45,11 +45,11 @@ export async function getSessionSigs(walletAddress: string, chain: string = 'bas
     if (!window.ethereum) {
       throw new Error('No ethereum provider available')
     }
-    const provider = new ethers.BrowserProvider(window.ethereum)
+    const provider = new ethers.providers.Web3Provider(window.ethereum)
     signer = await provider.getSigner()
   }
   
-  const signerAddress = await signer.getAddress()
+  const signerAddress = await signer?.getAddress()
   
   console.log('🔐 Creating session sigs:', {
     requestedAddress: walletAddress,
@@ -84,7 +84,7 @@ export async function getSessionSigs(walletAddress: string, chain: string = 'bas
     
     // Generate the authSig
     const authSig = await generateAuthSig({
-      signer,
+      signer: signer!,
       toSign,
     })
     

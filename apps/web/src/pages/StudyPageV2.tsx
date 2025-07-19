@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAccount } from 'wagmi'
@@ -29,11 +29,11 @@ interface StudyStats {
 export function StudyPageV2() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { address, isConnected } = useAccount()
+  const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { updateCardReview, saveExerciseSession } = useIDBSRS()
-  const { sessionSigs, isReady: isLitReady } = useLitSession()
-  const { getDueCards, getUserStats, isReady: isDBReady } = useDirectIDB()
+  const { sessionSigs } = useLitSession()
+  const { getDueCards, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
   const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
   
@@ -194,13 +194,18 @@ export function StudyPageV2() {
     if (!address) return
     
     try {
+      const now = new Date()
+      const sessionDate = parseInt(
+        `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
+      )
+      
       await saveExerciseSession({
         sessionId,
-        userAddress: address,
         cardsReviewed: studyStats.reviewedCards,
         cardsCorrect: studyStats.correctCards,
         startedAt: studyStats.startTime,
-        completedAt: Date.now()
+        completedAt: Date.now(),
+        sessionDate
       })
       
       // Invalidate streak cache so it recalculates with new session
@@ -249,7 +254,7 @@ export function StudyPageV2() {
   }
   
   // Check if ready
-  const isReady = isConnected && walletClient && isLitReady && isDBReady && !isLoading
+  // const isReady = isConnected && walletClient && isLitReady && isDBReady && !isLoading
   const currentCard = dueCards[currentCardIndex]
   const progress = dueCards.length > 0 ? ((currentCardIndex + 1) / dueCards.length) * 100 : 0
   

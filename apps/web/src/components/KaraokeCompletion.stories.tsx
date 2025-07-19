@@ -26,40 +26,36 @@ export const Default: Story = {}
 
 export const Saving: Story = {
   args: {
-    initialProgressState: 'saving',
-    hasTable: true
+    initialProgressState: 'saving'
   }
 }
 
 export const Saved: Story = {
   args: {
-    initialProgressState: 'saved',
-    hasTable: true
+    initialProgressState: 'saved'
   }
 }
 
-export const HasTable: Story = {
+export const WithHighScore: Story = {
   args: {
-    hasTable: true
+    score: 90
   }
 }
 
-export const NoTable: Story = {
+export const WithLowScore: Story = {
   args: {
-    hasTable: false
+    score: 60
   }
 }
 
 export const ExcellentScore: Story = {
   args: {
-    score: 95,
-    hasTable: true
+    score: 95
   }
 }
 
 export const PoorScore: Story = {
   args: {
-    score: 45,
-    hasTable: false
+    score: 45
   }
 }

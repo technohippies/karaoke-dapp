@@ -19,7 +19,7 @@ interface KaraokeSessionProps {
 
 export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHash }: KaraokeSessionProps) {
   const { t } = useTranslation()
-  const { address, isConnected, chain } = useAccount()
+  const { address, isConnected } = useAccount()
   const { data: walletClient, isLoading: isWalletLoading } = useWalletClient()
   const [showCompletion, setShowCompletion] = useState(false)
   const [karaokeScore, setKaraokeScore] = useState(85) // Default score
@@ -198,7 +198,6 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
         scoringDetails={enhancedScoringDetails}
         transcript={transcript}
         initialProgressState="idle"
-        hasTable={false}
         songId={songId.toString()}
         startedAt={sessionStartTime}
         onClose={handleClose}

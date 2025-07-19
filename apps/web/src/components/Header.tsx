@@ -2,8 +2,6 @@ import { CrownCross, Fire, CaretLeft } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'
-import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
-import { useAccount } from 'wagmi'
 import { LanguageSelector } from './LanguageSelector'
 import { useNavigate } from 'react-router-dom'
 

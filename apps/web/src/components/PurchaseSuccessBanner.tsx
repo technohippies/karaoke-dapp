@@ -7,7 +7,7 @@ interface PurchaseSuccessBannerProps {
   songCredits: number
 }
 
-export function PurchaseSuccessBanner({ lastPurchase, voiceCredits, songCredits }: PurchaseSuccessBannerProps) {
+export function PurchaseSuccessBanner({ lastPurchase }: PurchaseSuccessBannerProps) {
   const [show, setShow] = useState(false)
   
   useEffect(() => {

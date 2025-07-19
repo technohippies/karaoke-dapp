@@ -20,7 +20,6 @@ export class MidiPlayerService {
     // console.log('🎵 Initializing synth (fallback mode)');
     // Simple piano-like synth with increased polyphony
     this.synth = new Tone.PolySynth(Tone.Synth, {
-      maxPolyphony: 32, // Increase from default
       oscillator: {
         type: 'triangle'
       },
@@ -73,7 +72,7 @@ export class MidiPlayerService {
       // Schedule all notes using Transport time
       let noteCount = 0;
       
-      midi.tracks.forEach((track, trackIndex) => {
+      midi.tracks.forEach((track) => {
         track.notes.forEach(note => {
           if (this.usePiano) {
             // Use piano sampler

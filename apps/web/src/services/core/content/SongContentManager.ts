@@ -244,7 +244,7 @@ export class SongContentManager {
       return result
     } catch (error) {
       console.error('❌ Failed to upload song content:', error)
-      throw new Error(`Failed to upload song content: ${error.message}`)
+      throw new Error(`Failed to upload song content: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 

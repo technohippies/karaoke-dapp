@@ -26,7 +26,6 @@ interface ScoringDetails {
 
 export interface KaraokeCompletionProps {
   initialProgressState?: 'idle' | 'saving' | 'saved' | 'syncing' | 'synced'
-  hasTable?: boolean
   score?: number
   scoringDetails?: ScoringDetails
   transcript?: string
@@ -37,7 +36,6 @@ export interface KaraokeCompletionProps {
 
 export function KaraokeCompletion({ 
   initialProgressState = 'idle', 
-  hasTable = false, 
   score = 85,
   scoringDetails,
   transcript,
@@ -55,11 +53,10 @@ export function KaraokeCompletion({
     isReady, 
     currentChainId, 
     isInitialized,
-    syncStatus,
-    isSyncing 
+    syncStatus
   } = useIDBSRS()
   const { getDueCards } = useDirectIDB()
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveError] = useState<string | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [dueCardsCount, setDueCardsCount] = useState<number | null>(null)
   const { chain } = useAccount()
@@ -76,7 +73,15 @@ export function KaraokeCompletion({
         const sessionHash = await saveKaraokeSession({
           songId: parseInt(songId),
           score: score || 0,
-          scoringDetails,
+          scoringDetails: scoringDetails ? {
+            lines: scoringDetails.lines.map(line => ({
+              lineIndex: line.lineIndex,
+              expectedText: line.expectedText || '',
+              transcribedText: line.transcribedText || '',
+              score: line.score,
+              needsPractice: line.needsPractice
+            }))
+          } : { lines: [] },
           transcript: transcript || '',
           startedAt
         })
