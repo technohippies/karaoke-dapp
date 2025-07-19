@@ -162,7 +162,15 @@
     "next": "Next",
     "tryAgain": "Try Again",
     "startRecording": "Start Recording",
-    "youSaid": "You said:"
+    "youSaid": "You said:",
+    "checkingCredits": "Deducting voice credits...",
+    "confirmingTransaction": "Confirming transaction...",
+    "insufficientCredits": "Insufficient Voice Credits",
+    "purchaseMoreCredits": "You need more voice credits to start this exercise session.",
+    "goToPricing": "Purchase Credits",
+    "errorStarting": "Failed to Start Exercise",
+    "tryAgainLater": "There was an error starting your exercise session. Please try again later.",
+    "backToHome": "Back to Home"
   },
   "karaoke": {
     "grading": "Grading",

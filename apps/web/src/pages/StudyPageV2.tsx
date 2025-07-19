@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAccount } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useWalletClient } from 'wagmi'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
+import { usePurchase } from '../hooks/usePurchase'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
 import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
@@ -17,6 +18,8 @@ import { lineScoringScoringService } from '../services/integrations/lit/LineScor
 import { useSimpleAudioRecorder } from '../hooks/useSimpleAudioRecorder'
 import { useStreak } from '../hooks/useStreak'
 import { StudyCompletion } from '../components/StudyCompletion'
+import { KARAOKE_CONTRACT_ADDRESS } from '../constants'
+import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
 import type { DueCard } from '../types/srs.types'
 
 interface StudyStats {
@@ -36,11 +39,25 @@ export function StudyPageV2() {
   const { getDueCards, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
   const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
+  const { voiceCredits } = usePurchase()
+  
+  // Contract hooks for exercises
+  const { 
+    writeContract: startExerciseWrite, 
+    data: startExerciseHash,
+    error: startExerciseError
+  } = useWriteContract()
+  
+  const { isSuccess: isStartExerciseSuccess, isLoading: isTransactionPending } = useWaitForTransactionReceipt({ 
+    hash: startExerciseHash 
+  })
   
   const [dueCards, setDueCards] = useState<DueCard[]>([])
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isCheckingCredits, setIsCheckingCredits] = useState(false)
+  const [hasDeductedCredits, setHasDeductedCredits] = useState(false)
   const [attempts, setAttempts] = useState(0)
   const [lastScore, setLastScore] = useState<number | null>(null)
   const [transcript, setTranscript] = useState('')
@@ -64,6 +81,14 @@ export function StudyPageV2() {
     }
   }, [address, isDBReady])
   
+  // Handle successful credit deduction
+  useEffect(() => {
+    if (isStartExerciseSuccess && !hasDeductedCredits) {
+      setHasDeductedCredits(true)
+      setIsCheckingCredits(false)
+    }
+  }, [isStartExerciseSuccess, hasDeductedCredits])
+  
   // Store the streak when component mounts
   useEffect(() => {
     setPreviousStreak(currentStreak)
@@ -82,8 +107,33 @@ export function StudyPageV2() {
         return
       }
       
+      // Check if user has enough credits
+      if (voiceCredits < cards.length) {
+        alert(`You need ${cards.length} voice credits for ${cards.length} exercises. You have ${voiceCredits}. Please purchase more credits.`)
+        navigate('/pricing')
+        return
+      }
+      
       setDueCards(cards)
       setStudyStats(prev => ({ ...prev, totalCards: cards.length }))
+      
+      // Deduct credits for exercises
+      if (!hasDeductedCredits) {
+        setIsCheckingCredits(true)
+        try {
+          await startExerciseWrite({
+            address: KARAOKE_CONTRACT_ADDRESS,
+            abi: KARAOKE_SCHOOL_ABI,
+            functionName: 'startExercise',
+            args: [BigInt(cards.length)]
+          })
+        } catch (error) {
+          console.error('Failed to deduct credits:', error)
+          setIsCheckingCredits(false)
+          // Error will be handled by the error state from the hook
+          return
+        }
+      }
     } catch (error) {
       console.error('Failed to load due cards:', error)
       navigate('/')
@@ -259,10 +309,47 @@ export function StudyPageV2() {
   const progress = dueCards.length > 0 ? ((currentCardIndex + 1) / dueCards.length) * 100 : 0
   
   // Show loading state
-  if (isLoading) {
+  if (isLoading || isCheckingCredits || isTransactionPending) {
     return (
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <SpinnerWithScarlett size="lg" />
+        <div className="text-center space-y-4">
+          <SpinnerWithScarlett size="lg" />
+          {isCheckingCredits && (
+            <p className="text-white/60">
+              {isTransactionPending ? t('exercise.confirmingTransaction') : t('exercise.checkingCredits')}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+  
+  // Handle contract errors
+  if (startExerciseError) {
+    const errorMessage = startExerciseError.message || ''
+    if (errorMessage.includes('InsufficientCredits')) {
+      return (
+        <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
+          <div className="text-center space-y-4 max-w-md">
+            <h2 className="text-xl font-semibold text-white">{t('exercise.insufficientCredits')}</h2>
+            <p className="text-white/60">{t('exercise.purchaseMoreCredits')}</p>
+            <Button onClick={() => navigate('/pricing')}>
+              {t('exercise.goToPricing')}
+            </Button>
+          </div>
+        </div>
+      )
+    }
+    
+    return (
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md">
+          <h2 className="text-xl font-semibold text-white">{t('exercise.errorStarting')}</h2>
+          <p className="text-white/60">{t('exercise.tryAgainLater')}</p>
+          <Button onClick={() => navigate('/')}>
+            {t('exercise.backToHome')}
+          </Button>
+        </div>
       </div>
     )
   }

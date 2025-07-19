@@ -1,6 +1,7 @@
 import { usePurchase } from '../hooks/usePurchase'
 import { HeaderWithAuth } from '../components/HeaderWithAuth'
 import { Spinner } from '../components/ui/spinner'
+import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'

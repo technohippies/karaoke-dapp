@@ -220,6 +220,19 @@
   },
   {
     "type": "function",
+    "name": "startExercise",
+    "inputs": [
+      {
+        "name": "numExercises",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "startKaraoke",
     "inputs": [
       {
@@ -326,6 +339,25 @@
       },
       {
         "name": "songAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ExerciseStarted",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "exerciseCount",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
