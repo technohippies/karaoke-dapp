@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CloseHeader } from './CloseHeader'
-import { Spinner } from './ui/spinner'
+import { SpinnerWithScarlett } from './ui/spinner-with-scarlett'
 import { Button } from './ui/button'
-import coachImage from '../assets/scarlett-right-128x128.png'
+import { SpeechBubble } from './ui/speech-bubble'
+import scarlettThumbsUp from '../assets/scarlett-thumbs-up.png'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { ChainSwitcher } from './ChainSwitcher'
 import { useAccount } from 'wagmi'
@@ -118,16 +119,16 @@ export function KaraokeCompletion({
   })
 
   const getScoreMessage = () => {
-    if (score >= 90) return "Excellent work!"
-    if (score >= 80) return "Good job!"
-    if (score >= 70) return "Keep practicing!"
-    if (score >= 60) return "You're getting there!"
-    return "Don't give up!"
+    if (score >= 90) return t('karaoke.scoreMessages.excellent')
+    if (score >= 80) return t('karaoke.scoreMessages.good')
+    if (score >= 70) return t('karaoke.scoreMessages.keepPracticing')
+    if (score >= 60) return t('karaoke.scoreMessages.gettingThere')
+    return t('karaoke.scoreMessages.dontGiveUp')
   }
 
   const getActionMessage = () => {
-    if (progressState === 'synced') return "Now you can study with exercises!"
-    return "Your progress is saved locally. Study with exercises anytime!"
+    if (progressState === 'synced') return t('karaoke.completion.readyToStudy')
+    return t('karaoke.completion.savedLocally')
   }
 
   const handleSyncToChain = async () => {
@@ -189,13 +190,13 @@ export function KaraokeCompletion({
             >
               {progressState === 'syncing' ? (
                 <>
-                  <Spinner size="sm" />
-                  Syncing...
+                  <SpinnerWithScarlett size="sm" />
+                  {t('karaoke.completion.syncing')}
                 </>
               ) : progressState === 'synced' ? (
-                'Saved'
+                t('karaoke.completion.saved')
               ) : (
-                'Save Progress'
+                t('karaoke.completion.saveProgress')
               )}
             </Button>
           </ChainSwitcher>
@@ -209,10 +210,11 @@ export function KaraokeCompletion({
       <div className="relative z-10 h-screen flex flex-col">
         <CloseHeader onClose={onClose} />
         
-        <div className="flex-1 overflow-y-auto">
-          <div className="w-full max-w-2xl mx-auto px-6 pt-8 pb-24 flex items-center justify-center min-h-full">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Score section at top */}
+          <div className="w-full max-w-2xl mx-auto px-6 pt-8">
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-white mb-8">Score</h1>
+              <h1 className="text-4xl font-bold text-white mb-8">{t('karaoke.score')}</h1>
               
               <div className="text-6xl font-bold text-white mb-8">
                 {score}
@@ -224,28 +226,41 @@ export function KaraokeCompletion({
                   {saveError}
                 </div>
               )}
-
-              {/* Coach feedback */}
-              <div className="flex gap-4 w-full max-w-lg mb-8">
-                <div className="w-16 h-16 bg-neutral-700 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <img src={coachImage} alt="Coach" className="w-full h-full object-cover" />
-                </div>
-                <div className="bg-neutral-800 px-4 py-3 rounded-lg w-96">
-                  <p className="text-lg text-neutral-300 text-left">
+            </div>
+          </div>
+          
+          {/* Spacer to push content to bottom */}
+          <div className="flex-1"></div>
+          
+          {/* Coach feedback - positioned at bottom */}
+          <div className="flex flex-col items-center pb-[72px] px-6">
+            <div className="mb-3 w-full max-w-lg">
+              <SpeechBubble 
+                variant="default"
+                size="lg"
+                tailSide="bottom"
+                tailPosition="center"
+              >
+                <div className="text-left">
+                  <p className="text-lg text-gray-900">
                     {getScoreMessage()}
                   </p>
                   {getActionMessage() && (
-                    <p className="text-lg text-neutral-400 text-left mt-2">
+                    <p className="text-base text-gray-600 mt-2">
                       {progressState === 'idle' && !isReady ? 
-                        'Connect your wallet to Optimism Sepolia to save progress' : 
+                        t('karaoke.completion.connectWalletToSave') : 
                         getActionMessage()
                       }
                     </p>
                   )}
                 </div>
-              </div>
-
+              </SpeechBubble>
             </div>
+            <img 
+              src={scarlettThumbsUp} 
+              alt="Scarlett giving thumbs up" 
+              className="w-48 h-auto"
+            />
           </div>
         </div>
 

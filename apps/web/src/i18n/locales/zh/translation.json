@@ -15,7 +15,8 @@
       "learning": "学习中",
       "due": "待复习",
       "studyButton": "学习",
-      "allCaughtUp": "全部完成！"
+      "allCaughtUp": "全部完成！",
+      "singKaraokeToAdd": "唱卡拉OK来添加抽认卡！"
     }
   },
   "leaderboard": {
@@ -57,6 +58,22 @@
       "voice": "没有语音积分"
     }
   },
+  "streaming": {
+    "title": "播放",
+    "platforms": {
+      "soundcloud": "SoundCloud",
+      "spotify": "Spotify",
+      "appleMusic": "Apple Music",
+      "youtube": "YouTube",
+      "qqMusic": "QQ音乐",
+      "netease": "网易云音乐"
+    },
+    "noLinks": "没有可用的播放链接",
+    "censored": "被审查？使用",
+    "sentinelDVPN": "Sentinel DVPN",
+    "orUseThis": "或使用这个：",
+    "soundcloudMirror": "SoundCloud 镜像"
+  },
   "account": {
     "title": "账户",
     "walletAddress": "您的钱包地址",
@@ -82,6 +99,10 @@
       "pleaseConnect": "请连接到",
       "baseSepolia": "Base Sepolia",
       "base": "Base"
+    },
+    "errors": {
+      "failedToSave": "保存进度失败。请重试。",
+      "failedToRecover": "恢复数据失败。请重试。"
     }
   },
   "pricing": {
@@ -144,6 +165,25 @@
     "tryAgain": "再试一次",
     "startRecording": "开始录音",
     "youSaid": "你说的是："
+  },
+  "karaoke": {
+    "grading": "评分中",
+    "score": "分数",
+    "scoreMessages": {
+      "excellent": "非常棒！",
+      "good": "做得好！",
+      "keepPracticing": "继续练习！",
+      "gettingThere": "快要成功了！",
+      "dontGiveUp": "不要放弃！"
+    },
+    "completion": {
+      "savedLocally": "您的进度已保存在本地。随时可以通过练习进行学习！",
+      "readyToStudy": "现在您可以通过练习进行学习了！",
+      "connectWalletToSave": "连接您的钱包到 Optimism Sepolia 以保存进度",
+      "syncing": "同步中...",
+      "saved": "已保存",
+      "saveProgress": "保存进度"
+    }
   },
   "countryDialog": {
     "title": "卡拉OK英语学校",

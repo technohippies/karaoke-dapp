@@ -15,7 +15,8 @@
       "learning": "LEARNING",
       "due": "DUE",
       "studyButton": "Study",
-      "allCaughtUp": "All Caught Up!"
+      "allCaughtUp": "All Caught Up!",
+      "singKaraokeToAdd": "Sing Karaoke to Add Flashcards!"
     }
   },
   "leaderboard": {
@@ -57,6 +58,22 @@
       "voice": "No voice credits"
     }
   },
+  "streaming": {
+    "title": "Stream",
+    "platforms": {
+      "soundcloud": "SoundCloud",
+      "spotify": "Spotify",
+      "appleMusic": "Apple Music",
+      "youtube": "YouTube",
+      "qqMusic": "QQ Music",
+      "netease": "NetEase Music"
+    },
+    "noLinks": "No streaming links available",
+    "censored": "Censored? Use",
+    "sentinelDVPN": "Sentinel DVPN",
+    "orUseThis": "or use this:",
+    "soundcloudMirror": "SoundCloud Mirror"
+  },
   "account": {
     "title": "Account",
     "walletAddress": "Your Wallet Address",
@@ -82,6 +99,10 @@
       "pleaseConnect": "Please connect to",
       "baseSepolia": "Base Sepolia",
       "base": "Base"
+    },
+    "errors": {
+      "failedToSave": "Failed to save progress. Please try again.",
+      "failedToRecover": "Failed to recover data. Please try again."
     }
   },
   "pricing": {
@@ -144,6 +165,25 @@
     "tryAgain": "Try Again",
     "startRecording": "Start Recording",
     "youSaid": "You said:"
+  },
+  "karaoke": {
+    "grading": "Grading",
+    "score": "Score",
+    "scoreMessages": {
+      "excellent": "Excellent work!",
+      "good": "Good job!",
+      "keepPracticing": "Keep practicing!",
+      "gettingThere": "You're getting there!",
+      "dontGiveUp": "Don't give up!"
+    },
+    "completion": {
+      "savedLocally": "Your progress is saved locally. Study with exercises anytime!",
+      "readyToStudy": "Now you can study with exercises!",
+      "connectWalletToSave": "Connect your wallet to Optimism Sepolia to save progress",
+      "syncing": "Syncing...",
+      "saved": "Saved",
+      "saveProgress": "Save Progress"
+    }
   },
   "countryDialog": {
     "title": "Karaoke English School",

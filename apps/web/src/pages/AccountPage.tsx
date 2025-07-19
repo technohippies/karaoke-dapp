@@ -15,11 +15,12 @@ import { useIDBSync } from '../hooks/useIDBSync'
 import { calculateStreakFromSessions } from '../services/streakService'
 import { TablelandWriteService } from '../services/database/tableland/TablelandWriteService'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
+import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 
 export function AccountPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const { isConnected, address, chain } = useAccount()
+  const { isConnected, address, chain, isReconnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
   const { balance, voiceCredits, songCredits } = usePurchase()
   const { currentStreak: localStreak, refreshStreak } = useStreak()
@@ -29,12 +30,6 @@ export function AccountPage() {
   const [isLoadingCloudStreak, setIsLoadingCloudStreak] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isRecovering, setIsRecovering] = useState(false)
-  
-  useEffect(() => {
-    if (!isConnected || !address) {
-      navigate('/')
-    }
-  }, [isConnected, address, navigate])
   
   // Load cloud streak from Tableland
   useEffect(() => {
@@ -74,7 +69,7 @@ export function AccountPage() {
       await refreshStreak() // Refresh local streak
     } catch (error) {
       console.error('Failed to save progress:', error)
-      alert('Failed to save progress. Please try again.')
+      alert(t('account.errors.failedToSave'))
     } finally {
       setIsSyncing(false)
     }
@@ -91,22 +86,27 @@ export function AccountPage() {
       await loadCloudStreak() // Reload cloud streak
     } catch (error) {
       console.error('Failed to recover:', error)
-      alert('Failed to recover data. Please try again.')
+      alert(t('account.errors.failedToRecover'))
     } finally {
       setIsRecovering(false)
     }
   }
   
-  if (!isConnected || !address) {
-    return null
+  // Show loading state while reconnecting or not connected yet
+  if (isReconnecting || !isConnected || !address) {
+    return (
+      <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
+        <SpinnerWithScarlett size="lg" />
+      </div>
+    )
   }
   
   return (
     <div className="min-h-screen bg-neutral-900">
       <SimpleHeader />
       
-      <div className="pt-24 px-6 pb-24">
-        <div className="w-full max-w-2xl mx-auto">
+      <div className="pt-24 pb-24">
+        <div className="w-full max-w-2xl mx-auto px-6">
           {/* Wallet Address */}
           <div className="mb-8">
             <p className="text-neutral-400 mb-2">{t('account.walletAddress')}</p>

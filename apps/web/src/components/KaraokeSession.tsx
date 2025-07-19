@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useAccount } from 'wagmi'
 import { useWalletClient } from 'wagmi'
+import { useTranslation } from 'react-i18next'
 import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { KaraokeDisplay } from './KaraokeDisplay'
 import { KaraokeCompletion } from './KaraokeCompletion'
 import { useKaraoke } from '../hooks/useKaraoke'
 import { karaokeScoringService } from '../services/integrations/lit/KaraokeScoringService'
-import { Spinner } from './ui/spinner'
+import { SpinnerWithScarlett } from './ui/spinner-with-scarlett'
 
 interface KaraokeSessionProps {
   songId: number
@@ -17,6 +18,7 @@ interface KaraokeSessionProps {
 }
 
 export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHash }: KaraokeSessionProps) {
+  const { t } = useTranslation()
   const { address, isConnected, chain } = useAccount()
   const { data: walletClient, isLoading: isWalletLoading } = useWalletClient()
   const [showCompletion, setShowCompletion] = useState(false)
@@ -172,8 +174,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
     return (
       <div className="min-h-screen bg-neutral-900">
         <div className="min-h-screen flex flex-col items-center justify-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Grading</h2>
-          <Spinner size="lg" />
+          <h2 className="text-3xl font-bold text-white mb-6">{t('karaoke.grading')}</h2>
+          <SpinnerWithScarlett size="lg" />
         </div>
       </div>
     )

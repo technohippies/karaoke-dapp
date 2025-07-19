@@ -9,7 +9,7 @@ import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
-import { Spinner } from '../components/ui/spinner'
+import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 import { Button } from '../components/ui/button'
 import { IconButton } from '../components/IconButton'
 import { Microphone, StopCircle, X } from '@phosphor-icons/react'
@@ -257,7 +257,7 @@ export function StudyPageV2() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
-        <Spinner size="lg" />
+        <SpinnerWithScarlett size="lg" />
       </div>
     )
   }

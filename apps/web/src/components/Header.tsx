@@ -5,6 +5,7 @@ import { IconButton } from './IconButton'
 import { useWeb3AuthConnect, useWeb3AuthDisconnect } from '@web3auth/modal/react'
 import { useAccount } from 'wagmi'
 import { LanguageSelector } from './LanguageSelector'
+import { useNavigate } from 'react-router-dom'
 
 interface HeaderProps {
   isLoggedIn?: boolean
@@ -30,9 +31,18 @@ export function Header({
   pageTitle
 }: HeaderProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   
   const formatAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-3)}`
+  }
+  
+  const handleAccountClick = () => {
+    if (onAccount) {
+      onAccount()
+    } else {
+      navigate('/account')
+    }
   }
 
   return (
@@ -73,7 +83,7 @@ export function Header({
             {isLoggedIn ? (
               <Button 
                 variant="outline" 
-                onClick={onAccount}
+                onClick={handleAccountClick}
               >
                 {formatAddress(address)}
               </Button>

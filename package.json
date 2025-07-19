@@ -33,6 +33,7 @@
     "upload-action": "npx tsx scripts/upload-lit-action.ts",
     "mint-pkp": "npx tsx scripts/mint-pkp-with-permissions.ts",
     "mint-pkp:self-owned": "npx tsx scripts/mint-pkp-with-permissions.ts --self-owned",
-    "dev": "cd apps/web && npm run dev"
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm install && npm run build"
   }
 }

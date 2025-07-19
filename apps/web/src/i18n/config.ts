@@ -30,9 +30,10 @@ i18n
     },
     
     detection: {
-      order: ['navigator', 'localStorage', 'htmlTag'],
+      order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
       lookupFromNavigator: true,
+      lookupLocalStorage: 'i18nextLng',
       // Convert zh-CN to zh
       convertDetectedLanguage: (lng) => {
         const primaryLang = lng.split('-')[0]

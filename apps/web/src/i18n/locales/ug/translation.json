@@ -15,7 +15,8 @@
       "learning": "ئۆگىنىۋاتقان",
       "due": "تەكرارلاش",
       "studyButton": "ئۆگىنىش",
-      "allCaughtUp": "ھەممىسى تامام!"
+      "allCaughtUp": "ھەممىسى تامام!",
+      "singKaraokeToAdd": "كارائوكې ناخشا ئېيتىپ كارتا قوشۇڭ!"
     }
   },
   "leaderboard": {
@@ -81,6 +82,10 @@
       "pleaseConnect": "ئۇلىنىڭ",
       "baseSepolia": "Base Sepolia",
       "base": "Base"
+    },
+    "errors": {
+      "failedToSave": "ئىلگىرىلەشنى ساقلاش مەغلۇپ بولدى. قايتا سىناڭ.",
+      "failedToRecover": "سانلىق مەلۇماتنى ئەسلىگە كەلتۈرۈش مەغلۇپ بولدى. قايتا سىناڭ."
     }
   },
   "pricing": {
@@ -104,6 +109,25 @@
     "tryAgain": "قايتا سىناڭ",
     "startRecording": "ئاۋاز خاتىرىلەشنى باشلاش",
     "youSaid": "سىز دېگىنىڭىز:"
+  },
+  "karaoke": {
+    "grading": "باھالىنىۋاتىدۇ",
+    "score": "نومۇر",
+    "scoreMessages": {
+      "excellent": "ناھايىتى ياخشى!",
+      "good": "ياخشى قىلدىڭىز!",
+      "keepPracticing": "مەشىق قىلىشنى داۋاملاشتۇرۇڭ!",
+      "gettingThere": "ئىلگىرىلەۋاتىسىز!",
+      "dontGiveUp": "ۋاز كەچمەڭ!"
+    },
+    "completion": {
+      "savedLocally": "ئىلگىرىلىشىڭىز يەرلىكتە ساقلاندى. خالىغان ۋاقىتتا مەشىق ئارقىلىق ئۆگىنەلەيسىز!",
+      "readyToStudy": "ئەمدى مەشىق ئارقىلىق ئۆگىنەلەيسىز!",
+      "connectWalletToSave": "ئىلگىرىلىشىڭىزنى ساقلاش ئۈچۈن Optimism Sepolia غا ھەمياننى ئۇلاڭ",
+      "syncing": "ماسقەدەملىنىۋاتىدۇ...",
+      "saved": "ساقلاندى",
+      "saveProgress": "ئىلگىرىلەشنى ساقلاش"
+    }
   },
   "countryDialog": {
     "title": "كارائوكې ئىنگلىزچە مەكتىپى",

@@ -12,15 +12,35 @@ export async function walletClientToSigner(walletClient: WalletClient): Promise<
     transport: transport.type
   })
   
-  const network = {
-    chainId: chain.id,
-    name: chain.name,
-    ensAddress: chain.contracts?.ensRegistry?.address,
+  try {
+    // For ethers v5, use providers.Web3Provider
+    const provider = new ethers.providers.Web3Provider(
+      {
+        request: async ({ method, params }: { method: string; params?: any[] }) => {
+          console.log('Provider request:', method, params)
+          
+          // Use the wallet client's request method
+          const result = await walletClient.request({
+            method: method as any,
+            params: params as any,
+          })
+          
+          return result
+        },
+      } as any,
+      {
+        chainId: chain.id,
+        name: chain.name,
+      }
+    )
+    
+    // Create a signer from the provider
+    const signer = provider.getSigner(account.address)
+    console.log('✅ Signer created successfully')
+    
+    return signer
+  } catch (error) {
+    console.error('Error creating signer:', error)
+    throw error
   }
-  
-  // Create provider from transport
-  const provider = new ethers.BrowserProvider(transport as any, network)
-  const signer = await provider.getSigner(account.address)
-  console.log('✅ Signer created successfully:', await signer.getAddress())
-  return signer
 }

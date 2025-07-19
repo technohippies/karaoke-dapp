@@ -10,7 +10,7 @@ import { SayItBack } from '../components/SayItBack'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
-import { Spinner } from '../components/ui/spinner'
+import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 import { ArrowLeft, Trophy, Target, AlertCircle } from 'lucide-react'
 import type { DueCard } from '../types/srs.types'
 
@@ -152,7 +152,7 @@ export function StudyPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <Spinner size="lg" />
+        <SpinnerWithScarlett size="lg" />
       </div>
     )
   }

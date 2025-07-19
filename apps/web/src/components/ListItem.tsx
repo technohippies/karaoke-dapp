@@ -16,7 +16,7 @@ export const ListItem = React.forwardRef<HTMLDivElement, ListItemProps>(({
   onClick,
   className = ""
 }, ref) => {
-  const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg transition-colors bg-neutral-800 hover:bg-neutral-700 cursor-pointer"
+  const baseClasses = "w-full flex items-center gap-3 p-4 rounded-lg transition-colors bg-neutral-800 hover:bg-neutral-700 cursor-pointer border border-neutral-700"
   
   return (
     <div 

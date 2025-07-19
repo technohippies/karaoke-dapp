@@ -7,6 +7,9 @@ import {
   SoundcloudLogo,
   Shield
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
+import qqLogo from '../assets/qq.png'
+import neteaseLogo from '../assets/netease.png'
 
 interface StreamingSheetProps {
   trigger: React.ReactNode
@@ -28,6 +31,8 @@ export function StreamingSheet({
   open,
   onOpenChange,
 }: StreamingSheetProps) {
+  const { t } = useTranslation()
+  
   const handleStreamingClick = (platform: string, link: string) => {
     let url = ''
     
@@ -68,9 +73,9 @@ export function StreamingSheet({
       case 'youtube':
         return <YoutubeLogo weight="fill" size={24} color="#FF0000" />
       case 'qq_music':
-        return <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center text-black text-xs font-bold">QQ</div>
+        return <img src={qqLogo} alt="QQ Music" className="w-6 h-6 object-contain" />
       case 'netease':
-        return <div className="w-6 h-6 bg-red-600 rounded-full flex items-center justify-center text-white text-xs font-bold">网</div>
+        return <img src={neteaseLogo} alt="NetEase Music" className="w-6 h-6 object-contain" />
       default:
         return null
     }
@@ -79,17 +84,17 @@ export function StreamingSheet({
   const getPlatformName = (platform: string) => {
     switch (platform) {
       case 'soundcloud':
-        return 'SoundCloud'
+        return t('streaming.platforms.soundcloud')
       case 'spotify':
-        return 'Spotify'
+        return t('streaming.platforms.spotify')
       case 'apple_music':
-        return 'Apple Music'
+        return t('streaming.platforms.appleMusic')
       case 'youtube':
-        return 'YouTube'
+        return t('streaming.platforms.youtube')
       case 'qq_music':
-        return 'QQ Music'
+        return t('streaming.platforms.qqMusic')
       case 'netease':
-        return 'NetEase Music'
+        return t('streaming.platforms.netease')
       default:
         return platform
     }
@@ -100,7 +105,7 @@ export function StreamingSheet({
   return (
     <BottomSheet
       trigger={trigger}
-      title="Stream"
+      title={t('streaming.title')}
       open={open}
       onOpenChange={onOpenChange}
     >
@@ -123,23 +128,23 @@ export function StreamingSheet({
           ))
         ) : (
           <div className="text-center py-8">
-            <p className="text-neutral-400">No streaming links available</p>
+            <p className="text-neutral-400">{t('streaming.noLinks')}</p>
           </div>
         )}
         
         {/* Censorship notice */}
         <div className="pt-4 pb-4">
           <h4 className="text-lg font-semibold text-white mb-3">
-            Censored? Use{' '}
+            {t('streaming.censored')}{' '}
             <a 
               href="https://www.sentinel.co/dapps"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:text-blue-300 underline"
             >
-              Sentinel DVPN
+              {t('streaming.sentinelDVPN')}
             </a>
-            {streamingLinks.soundcloud && ' or use this:'}
+            {streamingLinks.soundcloud && ` ${t('streaming.orUseThis')}`}
           </h4>
           
           {streamingLinks.soundcloud && (
@@ -153,7 +158,7 @@ export function StreamingSheet({
                 <div className="flex items-center gap-3">
                   <Shield size={24} weight="fill" className="text-orange-400" />
                   <div>
-                    <div className="font-medium text-white">SoundCloud Mirror</div>
+                    <div className="font-medium text-white">{t('streaming.soundcloudMirror')}</div>
                     <div className="text-neutral-400 text-sm">sc.maid.zone</div>
                   </div>
                 </div>

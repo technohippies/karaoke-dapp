@@ -9,7 +9,7 @@ import { ListItem } from '../components/ListItem'
 import { StudyStats } from '../components/StudyStats'
 import { useDirectIDB } from '../hooks/useDirectIDB'
 import { useStreak } from '../hooks/useStreak'
-import { Spinner } from '../components/ui/spinner'
+import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 import scarlettWelcome from '../assets/scarlett-welcome.png'
 import doctorsWithoutBorders from '../assets/doctors-without-borders.png'
 
@@ -109,18 +109,20 @@ export function HomePage() {
       />
       
       {/* Hero Section */}
-      <div className="relative w-full">
-        {/* 16:9 Aspect Ratio Container */}
-        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${scarlettWelcome})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/50 via-neutral-900/30 to-neutral-900" />
-          <div className="absolute inset-0 flex items-center justify-center px-6">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white text-center drop-shadow-2xl">
-              {t('home.heroTitle')}
-            </h1>
+      <div className="w-full md:max-w-2xl md:mx-auto md:px-6 md:py-4">
+        <div className="relative w-full md:rounded-lg overflow-hidden">
+          {/* Aspect ratio container that maintains image proportions */}
+          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${scarlettWelcome})` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/50 via-neutral-900/30 to-neutral-900" />
+            <div className="absolute inset-0 flex items-center justify-center px-6">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white text-center drop-shadow-2xl">
+                {t('home.heroTitle')}
+              </h1>
+            </div>
           </div>
         </div>
       </div>
@@ -176,11 +178,11 @@ export function HomePage() {
           }}
         />
         
-        <h1 className="text-2xl font-bold text-white mb-4 mt-4">{t('home.songs')}</h1>
+        <h1 className="text-2xl font-bold text-white mb-4 mt-8">{t('home.songs')}</h1>
         
         {loading ? (
           <div className="flex justify-center">
-            <Spinner size="lg" />
+            <SpinnerWithScarlett size="lg" />
           </div>
         ) : songs.length === 0 ? (
           <div className="text-center text-neutral-400">{t('home.noSongs')}</div>

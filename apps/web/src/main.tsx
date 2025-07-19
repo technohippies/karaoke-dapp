@@ -7,7 +7,7 @@ import web3AuthContextConfig from './config/web3auth.config'
 import App from './App'
 import i18n from './i18n' // Initialize i18n
 import './index.css'
-import { Spinner } from './components/ui/spinner'
+import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
 
 // Clear localStorage language cache for testing (remove this in production)
 // localStorage.removeItem('i18nextLng')
@@ -26,7 +26,7 @@ const queryClient = new QueryClient()
 const root = createRoot(document.getElementById('root')!)
 root.render(
   <React.StrictMode>
-    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-900"><Spinner size="lg" /></div>}>
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-900"><SpinnerWithScarlett size="lg" /></div>}>
       <QueryClientProvider client={queryClient}>
         <Web3AuthProvider config={web3AuthContextConfig}>
           <WagmiProvider>
