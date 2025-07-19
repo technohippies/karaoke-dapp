@@ -56,11 +56,12 @@ export function PricingPage() {
         <div className="mb-8">
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.starterPack')}</h3>
-            <div className="text-4xl font-bold text-blue-400 mb-2">$5 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-blue-400 mb-2">$7 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>4 {t('pricing.songCredits')}</li>
-              <li>100 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 1 {t('pricing.voiceCredit')}</li>
+              <li>3 {t('pricing.songCredits')}</li>
+              <li>2,000 {t('pricing.voiceCredits')}</li>
+              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 30 {t('pricing.voiceCredits')}</li>
+              <li className="text-sm text-gray-400">Exercises: 1 {t('pricing.voiceCredit')} each</li>
             </ul>
             
             {!isConnected ? (
@@ -111,13 +112,14 @@ export function PricingPage() {
           {/* Voice Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.voicePack')}</h3>
-            <div className="text-4xl font-bold text-green-400 mb-2">$1 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-green-400 mb-2">$4 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>20 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 1 {t('pricing.voiceCredit')}</li>
+              <li>2,000 {t('pricing.voiceCredits')}</li>
+              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 30 {t('pricing.voiceCredits')}</li>
+              <li className="text-sm text-gray-400">Exercises: 1 {t('pricing.voiceCredit')} each</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
+            <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
               <Button 
                 onClick={handleBuyVoice}
                 disabled={isApproving || isPurchasing || !isConnected}
@@ -143,12 +145,12 @@ export function PricingPage() {
           {/* Song Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.songPack')}</h3>
-            <div className="text-4xl font-bold text-purple-400 mb-2">$4 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-purple-400 mb-2">$3 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>4 {t('pricing.songCredits')}</li>
+              <li>3 {t('pricing.songCredits')}</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
+            <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
               <Button 
                 onClick={handleBuySong}
                 disabled={isApproving || isPurchasing || !isConnected}

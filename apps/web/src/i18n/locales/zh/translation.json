@@ -131,7 +131,7 @@
     },
     "whatAreVoiceCredits": {
       "question": "什么是语音积分？",
-      "answer": "语音积分用于卡拉OK和语言学习练习。"
+      "answer": "语音积分用于卡拉OK（每次30积分）和语言学习练习（每次1积分）。它们为AI评分系统提供动力。"
     },
     "whyPayGas": {
       "question": "为什么我必须支付gas费？",

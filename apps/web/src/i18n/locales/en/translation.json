@@ -131,7 +131,7 @@
     },
     "whatAreVoiceCredits": {
       "question": "What are voice credits?",
-      "answer": "Voice credits are used for karaoke and language learning exercises."
+      "answer": "Voice credits are used for karaoke sessions (30 credits each) and language learning exercises (1 credit each). They power the AI grading system."
     },
     "whyPayGas": {
       "question": "Why do I have to pay gas?",
