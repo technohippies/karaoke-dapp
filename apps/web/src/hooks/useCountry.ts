@@ -16,34 +16,44 @@ export function useCountry(): UseCountryReturn {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  // Load country from IDB on mount
-  useEffect(() => {
-    const loadCountry = async () => {
-      try {
-        setLoading(true)
-        const db = await getGlobalDB()
-        
-        const tx = db.transaction('user_settings', 'readonly')
-        const store = tx.objectStore('user_settings')
-        const countryData = await store.get('country') as CountrySettings | undefined
-        
-        if (countryData?.value) {
-          setCountryState(countryData.value)
-          setHasCountry(true)
-          console.log('🌍 Loaded country from IDB:', countryData.value)
-        } else {
-          console.log('🌍 No country found in IDB')
-        }
-      } catch (err) {
-        console.error('Failed to load country:', err)
-        setError(err as Error)
-      } finally {
-        setLoading(false)
+  // Load country from IDB
+  const loadCountry = useCallback(async () => {
+    try {
+      setLoading(true)
+      const db = await getGlobalDB()
+      
+      const tx = db.transaction('user_settings', 'readonly')
+      const store = tx.objectStore('user_settings')
+      const countryData = await store.get('country') as CountrySettings | undefined
+      
+      if (countryData?.value) {
+        setCountryState(countryData.value)
+        setHasCountry(true)
+        console.log('🌍 Loaded country from IDB:', countryData.value)
+      } else {
+        console.log('🌍 No country found in IDB')
+        setHasCountry(false)
       }
+    } catch (err) {
+      console.error('Failed to load country:', err)
+      setError(err as Error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // Load country from IDB on mount and on focus
+  useEffect(() => {
+    loadCountry()
+
+    // Reload country when window regains focus
+    const handleFocus = () => {
+      loadCountry()
     }
 
-    loadCountry()
-  }, [])
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [loadCountry])
 
   // Save country to IDB
   const setCountry = useCallback(async (countryCode: string) => {

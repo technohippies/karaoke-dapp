@@ -44,6 +44,13 @@ export function useStreak() {
       // Calculate fresh streak
       const sessions = await db.getAllFromIndex('exercise_sessions', 'by-session-id')
       console.log('🔥 useStreak: Found sessions', sessions.length)
+      
+      // Debug: Check for invalid sessionDates
+      const invalidSessions = sessions.filter(s => !s.sessionDate || isNaN(s.sessionDate))
+      if (invalidSessions.length > 0) {
+        console.warn('🔥 useStreak: Found sessions with invalid dates:', invalidSessions)
+      }
+      
       // Map IDBExerciseSession to ExerciseSessionData by adding userAddress
       const sessionsWithAddress = sessions.map(s => ({
         ...s,
@@ -54,8 +61,9 @@ export function useStreak() {
       
       // Update cache
       // const today = getLocalDateInt(new Date())
-      const lastActivityDate = sessions.length > 0 
-        ? Math.max(...sessions.map(s => s.sessionDate))
+      const validDates = sessions.map(s => s.sessionDate).filter(d => !isNaN(d) && d > 0)
+      const lastActivityDate = validDates.length > 0 
+        ? Math.max(...validDates)
         : 0
 
       await db.put('sync_metadata', {

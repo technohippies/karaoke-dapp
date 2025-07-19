@@ -186,8 +186,8 @@ class IDBWriteService {
     try {
       const sessionStore = tx.objectStore('exercise_sessions')
       
-      // Calculate sessionDate in YYYYMMDD format
-      const sessionDate = parseInt(new Date(now).toISOString().slice(0, 10).replace(/-/g, ''))
+      // Use provided sessionDate or calculate in YYYYMMDD format
+      const sessionDate = exerciseData.sessionDate || parseInt(new Date(now).toISOString().slice(0, 10).replace(/-/g, ''))
       
       const idbSession: IDBExerciseSession = {
         ...exerciseData,

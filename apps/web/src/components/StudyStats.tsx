@@ -35,24 +35,20 @@ export function StudyStats({ newCount, learningCount, dueCount, onStudy }: Study
         </div>
       </div>
       
-      {/* Study button or empty state message */}
-      {hasNoCards ? (
-        <div className="text-center text-neutral-400 py-4">
-          {t('home.study.singKaraokeToAdd')}
-        </div>
-      ) : (
-        <button
-          onClick={onStudy}
-          disabled={dueCount === 0}
-          className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
-            dueCount === 0 
-              ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-          }`}
-        >
-          {dueCount === 0 ? t('home.study.allCaughtUp') : t('home.study.studyButton')}
-        </button>
-      )}
+      {/* Study button */}
+      <button
+        onClick={onStudy}
+        disabled={hasNoCards || dueCount === 0}
+        className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
+          hasNoCards || dueCount === 0 
+            ? 'bg-neutral-700 text-neutral-400 cursor-not-allowed' 
+            : 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+        }`}
+      >
+        {hasNoCards ? t('home.study.singKaraokeToAdd') : 
+         dueCount === 0 ? t('home.study.allCaughtUp') : 
+         t('home.study.studyButton')}
+      </button>
     </div>
   )
 }

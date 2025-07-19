@@ -14,9 +14,9 @@ contract KaraokeSchool is Ownable {
     address public immutable splitsContract;
     address public pkpAddress;
     
-    uint256 public constant COMBO_PRICE = 3_000_000; // 3 USDC (6 decimals)
-    uint256 public constant VOICE_PACK_PRICE = 1_000_000; // 1 USDC
-    uint256 public constant SONG_PACK_PRICE = 2_000_000; // 2 USDC
+    uint256 public constant COMBO_PRICE = 7_000_000; // 7 USDC (6 decimals)
+    uint256 public constant VOICE_PACK_PRICE = 4_000_000; // 4 USDC
+    uint256 public constant SONG_PACK_PRICE = 3_000_000; // 3 USDC
     
     mapping(address => uint256) public voiceCredits;
     mapping(address => uint256) public songCredits;
@@ -26,6 +26,7 @@ contract KaraokeSchool is Ownable {
     event CreditsPurchased(address indexed user, uint256 voiceAmount, uint256 songAmount);
     event SongUnlocked(address indexed user, uint256 indexed songId);
     event KaraokeStarted(address indexed user, uint256 indexed songId);
+    event ExerciseStarted(address indexed user, uint256 exerciseCount);
     event PurchaseWithCountry(address indexed user, string country, uint256 usdcAmount, string packType);
     
     error InsufficientCredits();
@@ -55,10 +56,10 @@ contract KaraokeSchool is Ownable {
             userCountry[msg.sender] = country;
         }
         
-        voiceCredits[msg.sender] += 100;
-        songCredits[msg.sender] += 10;
+        voiceCredits[msg.sender] += 2000;
+        songCredits[msg.sender] += 3;
         
-        emit CreditsPurchased(msg.sender, 100, 10);
+        emit CreditsPurchased(msg.sender, 2000, 3);
         emit PurchaseWithCountry(msg.sender, country, COMBO_PRICE, "combo");
     }
     
@@ -73,9 +74,9 @@ contract KaraokeSchool is Ownable {
             userCountry[msg.sender] = country;
         }
         
-        voiceCredits[msg.sender] += 50;
+        voiceCredits[msg.sender] += 2000;
         
-        emit CreditsPurchased(msg.sender, 50, 0);
+        emit CreditsPurchased(msg.sender, 2000, 0);
         emit PurchaseWithCountry(msg.sender, country, VOICE_PACK_PRICE, "voice");
     }
     
@@ -90,9 +91,9 @@ contract KaraokeSchool is Ownable {
             userCountry[msg.sender] = country;
         }
         
-        songCredits[msg.sender] += 5;
+        songCredits[msg.sender] += 3;
         
-        emit CreditsPurchased(msg.sender, 0, 5);
+        emit CreditsPurchased(msg.sender, 0, 3);
         emit PurchaseWithCountry(msg.sender, country, SONG_PACK_PRICE, "song");
     }
     
@@ -107,12 +108,21 @@ contract KaraokeSchool is Ownable {
     }
     
     function startKaraoke(uint256 songId) external {
-        if (voiceCredits[msg.sender] < 1) revert InsufficientCredits();
+        if (voiceCredits[msg.sender] < 30) revert InsufficientCredits();
         if (!hasUnlockedSong[msg.sender][songId]) revert SongNotUnlocked();
         
-        voiceCredits[msg.sender] -= 1;
+        voiceCredits[msg.sender] -= 30;
         
         emit KaraokeStarted(msg.sender, songId);
+    }
+    
+    function startExercise(uint256 numExercises) external {
+        if (numExercises == 0) revert InsufficientCredits();
+        if (voiceCredits[msg.sender] < numExercises) revert InsufficientCredits();
+        
+        voiceCredits[msg.sender] -= numExercises;
+        
+        emit ExerciseStarted(msg.sender, numExercises);
     }
     
     function setPkpAddress(address _pkpAddress) external onlyOwner {

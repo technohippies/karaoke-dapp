@@ -166,7 +166,7 @@ export function HomePage() {
         </div>
       </div>
       
-      <div className="w-full max-w-2xl mx-auto px-6 py-4">
+      <div className="w-full max-w-2xl mx-auto px-6 py-4 pb-20">
         <StudyStats
           newCount={srsStats.new}
           learningCount={srsStats.learning}

@@ -1,0 +1,37 @@
+{
+  "miniapp": {
+    "version": "1",
+    "name": "卡拉OK英语 Karaoke English",
+    "iconUrl": "https://karaoke.school/app-icon-1024.png",
+    "homeUrl": "https://karaoke.school?miniApp=true",
+    "splashImageUrl": "https://karaoke.school/splash-200.png",
+    "splashBackgroundColor": "#1a1a1a",
+    "subtitle": "唱歌学英语 Sing to Learn",
+    "description": "和AI老师Scarlett一起唱歌学英语。赚取奖励，与朋友竞争，拥有您的数据。Learn English through karaoke with AI tutor.",
+    "screenshotUrls": [
+      "https://karaoke.school/screenshot-1.png",
+      "https://karaoke.school/screenshot-2.png",
+      "https://karaoke.school/screenshot-3.png"
+    ],
+    "primaryCategory": "education",
+    "tags": [
+      "english",
+      "learning",
+      "karaoke",
+      "education",
+      "music"
+    ],
+    "heroImageUrl": "https://karaoke.school/hero-1200x630.png",
+    "tagline": "唱歌学英语",
+    "ogTitle": "卡拉OK英语 - Karaoke English",
+    "ogDescription": "唱歌学英语，AI反馈，Web3奖励 Learn English through karaoke",
+    "ogImageUrl": "https://karaoke.school/og-1200x630.png",
+    "requiredChains": [
+      "eip155:84532"
+    ],
+    "requiredCapabilities": [
+      "actions.signIn",
+      "wallet.getEthereumProvider"
+    ]
+  }
+}

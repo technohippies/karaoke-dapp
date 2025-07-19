@@ -112,6 +112,8 @@
     "songPack": "卡拉OK歌曲包",
     "voiceCredits": "语音积分",
     "songCredits": "歌曲积分",
+    "voiceCredit": "语音积分",
+    "eachKaraokeCosts": "每次卡拉OK消耗",
     "buy": "购买",
     "approving": "批准中...",
     "purchasing": "购买中...",
@@ -138,10 +140,6 @@
     "isThisNew": {
       "question": "这是新的吗？",
       "answer": "是的，这是一个全新的dapp，请报告错误。"
-    },
-    "whereDoesMoneyGo": {
-      "question": "钱都去哪了？",
-      "answer": "每$1歌曲：\n• $0.50捐赠给无国界医生（Médecins Sans Frontières/MSF）\n• $0.20给版权持有人\n• $0.176用于我们的运营费用\n• $0.124给MLC用于歌曲评分\n\n您可以在智能合约中验证这一点（在Base Scout上查看）- 感谢Splits.org！语音积分用于支付我们使用的语音转文本AI和LLM评分服务的费用。"
     },
     "moreComingSoon": {
       "question": "你们会添加更多歌曲吗？",

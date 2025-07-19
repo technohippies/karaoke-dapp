@@ -1,6 +1,6 @@
 import { usePurchase } from '../hooks/usePurchase'
 import { HeaderWithAuth } from '../components/HeaderWithAuth'
-import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
+import { Spinner } from '../components/ui/spinner'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
@@ -55,10 +55,11 @@ export function PricingPage() {
         <div className="mb-8">
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.starterPack')}</h3>
-            <div className="text-4xl font-bold text-blue-400 mb-2">$3 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-blue-400 mb-2">$5 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
+              <li>4 {t('pricing.songCredits')}</li>
               <li>100 {t('pricing.voiceCredits')}</li>
-              <li>10 {t('pricing.songCredits')}</li>
+              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 1 {t('pricing.voiceCredit')}</li>
             </ul>
             
             {!isConnected ? (
@@ -74,12 +75,12 @@ export function PricingPage() {
                 >
                   {isApproving ? (
                     <>
-                      <SpinnerWithScarlett size="sm" />
+                      <Spinner size="sm" />
                       <span>{t('pricing.approving')}</span>
                     </>
                   ) : isPurchasing ? (
                     <>
-                      <SpinnerWithScarlett size="sm" />
+                      <Spinner size="sm" />
                       <span>{t('pricing.purchasing')}</span>
                     </>
                   ) : (
@@ -111,7 +112,8 @@ export function PricingPage() {
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.voicePack')}</h3>
             <div className="text-4xl font-bold text-green-400 mb-2">$1 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>50 {t('pricing.voiceCredits')}</li>
+              <li>20 {t('pricing.voiceCredits')}</li>
+              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 1 {t('pricing.voiceCredit')}</li>
             </ul>
             
             <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
@@ -140,9 +142,9 @@ export function PricingPage() {
           {/* Song Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.songPack')}</h3>
-            <div className="text-4xl font-bold text-purple-400 mb-2">$2 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-purple-400 mb-2">$4 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>5 {t('pricing.songCredits')}</li>
+              <li>4 {t('pricing.songCredits')}</li>
             </ul>
             
             <ChainSwitcher requiredChainId={BASE_MAINNET_CHAIN_ID} className="w-full">
@@ -204,10 +206,6 @@ export function PricingPage() {
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.isThisNew.question')}</h3>
             <p className="text-neutral-50 text-md">{t('faq.isThisNew.answer')}</p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whereDoesMoneyGo.question')}</h3>
-            <p className="text-neutral-50 text-md whitespace-pre-line">{t('faq.whereDoesMoneyGo.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.moreComingSoon.question')}</h3>

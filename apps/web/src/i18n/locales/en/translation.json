@@ -112,6 +112,8 @@
     "songPack": "Karaoke Song Pack",
     "voiceCredits": "Voice Credits",
     "songCredits": "Song Credits",
+    "voiceCredit": "voice credit",
+    "eachKaraokeCosts": "Each karaoke costs",
     "buy": "Buy",
     "approving": "Approving...",
     "purchasing": "Purchasing...",
@@ -138,10 +140,6 @@
     "isThisNew": {
       "question": "Is this new?",
       "answer": "Yes, this is a brand new dapp, so please report bugs."
-    },
-    "whereDoesMoneyGo": {
-      "question": "Where does the money go?",
-      "answer": "For each $1 song:\n• $0.50 is donated to Doctors Without Borders (Médecins Sans Frontières/MSF)\n• $0.20 goes to rights holders\n• $0.176 goes to us for operating expenses\n• $0.124 goes to The MLC for the score of the song\n\nYou can verify this in the smart contract (View on Base Scout) - thank you Splits.org! Voice credits cover the expenses we use to pay for the speech-to-text AI and LLM grading service."
     },
     "moreComingSoon": {
       "question": "Will you be adding more songs?",

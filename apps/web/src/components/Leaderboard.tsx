@@ -26,8 +26,8 @@ export function Leaderboard({ entries, className = "" }: LeaderboardProps) {
   // Show coming soon state
   if (entries.length === 0) {
     return (
-      <div className={`flex flex-col justify-end items-center h-full min-h-[400px] ${className}`}>
-        <div className="mb-3">
+      <div className={`flex flex-col justify-center items-center min-h-[300px] sm:min-h-[400px] relative ${className}`}>
+        <div className="mb-3 px-4 relative z-10">
           <SpeechBubble 
             variant="default"
             size="lg"
@@ -37,11 +37,14 @@ export function Leaderboard({ entries, className = "" }: LeaderboardProps) {
             {t('leaderboard.comingSoon')}
           </SpeechBubble>
         </div>
-        <img 
-          src={scarlettWithCrown} 
-          alt="Scarlett with crown" 
-          className="w-64 h-auto"
-        />
+        <div className="relative w-full flex justify-center">
+          <img 
+            src={scarlettWithCrown} 
+            alt="Scarlett with crown" 
+            className="w-40 sm:w-48 md:w-56 h-auto max-w-full object-contain"
+            style={{ maxHeight: '200px' }}
+          />
+        </div>
       </div>
     )
   }

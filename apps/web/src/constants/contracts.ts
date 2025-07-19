@@ -1,6 +1,6 @@
 // Contract addresses
 // IMPORTANT: This MUST match the KARAOKE_CONTRACT in .env used for encryption
-export const KARAOKE_CONTRACT_ADDRESS = '0xc7D24B90C69c6F389fbC673987239f62F0869e3a' as const
+export const KARAOKE_CONTRACT_ADDRESS = '0xDF23d40F6Ff2649E40501f47061F90a9A02a70AD' as const
 export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const // Base Sepolia USDC
 
 // PKP Details
