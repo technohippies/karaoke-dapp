@@ -7,7 +7,7 @@ export async function getAuthSig(walletAddress: string) {
   // For now, we'll use a simple auth sig without session sigs
   // In production, you'd want to use session sigs for better security
   
-  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  const provider = new ethers.BrowserProvider(window.ethereum)
   const signer = await provider.getSigner()
   
   // Get the latest blockhash
@@ -45,7 +45,7 @@ export async function getSessionSigs(walletAddress: string, chain: string = 'bas
     if (!window.ethereum) {
       throw new Error('No ethereum provider available')
     }
-    const provider = new ethers.providers.Web3Provider(window.ethereum)
+    const provider = new ethers.BrowserProvider(window.ethereum)
     signer = await provider.getSigner()
   }
   
@@ -54,7 +54,7 @@ export async function getSessionSigs(walletAddress: string, chain: string = 'bas
   console.log('🔐 Creating session sigs:', {
     requestedAddress: walletAddress,
     signerAddress: signerAddress,
-    match: walletAddress.toLowerCase() === signerAddress.toLowerCase()
+    match: signerAddress ? walletAddress.toLowerCase() === signerAddress.toLowerCase() : false
   })
   
   const litNodeClient = litProtocolService.getClient()
