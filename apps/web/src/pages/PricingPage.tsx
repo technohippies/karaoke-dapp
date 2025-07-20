@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { PurchaseSuccessBanner } from '../components/PurchaseSuccessBanner'
-import { BASE_SEPOLIA_CHAIN_ID, BASE_MAINNET_CHAIN_ID } from '../constants'
+import { BASE_SEPOLIA_CHAIN_ID } from '../constants'
 import { useTranslation } from 'react-i18next'
 
 export function PricingPage() {
