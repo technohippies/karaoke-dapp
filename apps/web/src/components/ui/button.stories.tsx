@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { Button } from './button'
 import { Spinner } from './spinner'
-import { ChevronRight, Download, Plus } from 'lucide-react'
+import { CaretRight, Download, Plus } from '@phosphor-icons/react'
 
 const meta: Meta<typeof Button> = {
   title: 'UI/Button',
@@ -110,7 +110,7 @@ export const WithRightIcon: Story = {
     children: (
       <>
         Continue
-        <ChevronRight />
+        <CaretRight />
       </>
     ),
   },

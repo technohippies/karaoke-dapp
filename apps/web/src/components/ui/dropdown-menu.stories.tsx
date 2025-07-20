@@ -15,20 +15,20 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu'
 import { 
-  LogOut, 
-  Settings, 
+  SignOut, 
+  Gear, 
   User, 
   CreditCard, 
   Users, 
   UserPlus, 
-  Mail, 
-  MessageSquare,
+  EnvelopeSimple, 
+  ChatCircle,
   PlusCircle,
-  Github,
-  LifeBuoy,
+  GithubLogo,
+  Lifebuoy,
   Cloud,
   Keyboard
-} from 'lucide-react'
+} from '@phosphor-icons/react'
 
 const meta = {
   title: 'UI/DropdownMenu',
@@ -60,7 +60,7 @@ export const Default: Story = {
           <span>Billing</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
+          <Gear className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
@@ -93,7 +93,7 @@ export const WithShortcuts: Story = {
             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
+            <Gear className="mr-2 h-4 w-4" />
             <span>Settings</span>
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
@@ -105,7 +105,7 @@ export const WithShortcuts: Story = {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <LogOut className="mr-2 h-4 w-4" />
+          <SignOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
@@ -133,7 +133,7 @@ export const WithSubMenu: Story = {
             <span>Billing</span>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
+            <Gear className="mr-2 h-4 w-4" />
             <span>Settings</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -151,11 +151,11 @@ export const WithSubMenu: Story = {
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem>
-                  <Mail className="mr-2 h-4 w-4" />
+                  <EnvelopeSimple className="mr-2 h-4 w-4" />
                   <span>Email</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <ChatCircle className="mr-2 h-4 w-4" />
                   <span>Message</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -174,11 +174,11 @@ export const WithSubMenu: Story = {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <Github className="mr-2 h-4 w-4" />
+          <GithubLogo className="mr-2 h-4 w-4" />
           <span>GitHub</span>
         </DropdownMenuItem>
         <DropdownMenuItem>
-          <LifeBuoy className="mr-2 h-4 w-4" />
+          <Lifebuoy className="mr-2 h-4 w-4" />
           <span>Support</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled>
@@ -187,7 +187,7 @@ export const WithSubMenu: Story = {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <LogOut className="mr-2 h-4 w-4" />
+          <SignOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>

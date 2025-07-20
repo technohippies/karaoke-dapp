@@ -150,7 +150,15 @@ export function SongPage() {
             console.error('Failed to convert wallet client to signer:', error)
           }
         }
-        loadContent(song, address, signer)
+        const loadedContent = await loadContent(song, address, signer)
+        console.log('🎯 LoadContent result:', {
+          hasContent: !!loadedContent,
+          contentDetails: loadedContent ? {
+            hasLyrics: !!loadedContent.lyrics,
+            hasTranslation: !!loadedContent.translation,
+            hasMidi: !!loadedContent.midiData
+          } : null
+        })
       }, 1000)
     }
   }, [isUnlockSuccess, address, song, loadContent, refetchSongUnlocked])
@@ -165,6 +173,17 @@ export function SongPage() {
       checkCacheOnly(song, address)
     }
   }, [songIsUnlocked, address, song, content, checkCacheOnly])
+  
+  // Debug content state
+  useEffect(() => {
+    console.log('🔍 Content state debug:', {
+      hasContent: !!content,
+      isContentLoading,
+      contentError,
+      songIsUnlocked,
+      isUnlockSuccess
+    })
+  }, [content, isContentLoading, contentError, songIsUnlocked, isUnlockSuccess])
 
   const handleUnlockSong = () => {
     if (!song) return

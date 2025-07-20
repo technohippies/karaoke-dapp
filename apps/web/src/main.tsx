@@ -9,6 +9,21 @@ import i18n from './i18n' // Initialize i18n
 import './index.css'
 import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
 
+// Check if running as a Farcaster Mini App
+const url = new URL(window.location.href)
+const isMiniApp = url.pathname.startsWith('/mini') || url.searchParams.get('miniApp') === 'true'
+
+// Dynamically import Farcaster SDK if running as Mini App
+if (isMiniApp) {
+  import('@farcaster/miniapp-sdk').then(({ sdk }) => {
+    // Store SDK globally for use in components
+    window.farcasterSDK = sdk
+    console.log('🎯 Farcaster Mini App SDK loaded')
+  }).catch(err => {
+    console.error('Failed to load Farcaster SDK:', err)
+  })
+}
+
 // Clear localStorage language cache for testing (remove this in production)
 // localStorage.removeItem('i18nextLng')
 

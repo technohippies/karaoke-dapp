@@ -30,7 +30,7 @@ export function usePurchase() {
     query: { enabled: !!address },
   })
 
-  const { data: voiceCredits, refetch: refetchVoiceCredits } = useReadContract({
+  const { data: voiceCredits, refetch: refetchVoiceCredits, isLoading: isLoadingVoiceCredits } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'voiceCredits',
@@ -216,6 +216,7 @@ export function usePurchase() {
     isPurchasing,
     hasCountry,
     lastPurchase,
+    isLoadingCredits: isLoadingVoiceCredits,
     
     // Data
     balance,

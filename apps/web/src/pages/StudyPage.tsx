@@ -10,7 +10,7 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
 import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
-import { ArrowLeft, Trophy, Target, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Trophy, Target, Warning } from '@phosphor-icons/react'
 import type { DueCard } from '../types/srs.types'
 
 interface StudyStats {
@@ -201,7 +201,7 @@ export function StudyPage() {
             {debugInfo && (
               <Card className="bg-white/5 border-white/10 p-4 mb-6 text-left">
                 <div className="flex items-center gap-2 mb-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-500" />
+                  <Warning className="w-4 h-4 text-yellow-500" />
                   <p className="text-sm font-medium text-white">Debug Info</p>
                 </div>
                 <div className="text-xs text-white/60 space-y-1">

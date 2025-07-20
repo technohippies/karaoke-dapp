@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select'
-import { AlertCircle } from 'lucide-react'
+import { Warning } from '@phosphor-icons/react'
 import { Alert, AlertDescription } from './ui/alert'
 
 // ISO 3166-1 alpha-2 country codes - top 50 by population + music markets
@@ -139,11 +139,7 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl text-left">{t('countryDialog.title')}</DialogTitle>
           <DialogDescription className="text-neutral-300 text-md text-left">
-            <ul className="list-disc list-inside space-y-1">
-              <li>{t('countryDialog.nonprofit')}</li>
-              <li>{t('countryDialog.ownData')}</li>
-              <li>{t('countryDialog.donation')}</li>
-            </ul>
+            {t('countryDialog.nonprofit')} • {t('countryDialog.ownData')} • {t('countryDialog.donation')}
           </DialogDescription>
         </DialogHeader>
         
@@ -182,7 +178,7 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
 
           {showMismatchWarning && ipCountryName && (
             <Alert className="bg-yellow-900/20 border-yellow-700/50">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <Warning className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-200 text-md">
                 {t('countryDialog.ipMismatch', { country: ipCountryName })}
               </AlertDescription>

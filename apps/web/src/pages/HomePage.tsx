@@ -167,18 +167,7 @@ export function HomePage() {
       </div>
       
       <div className="w-full max-w-2xl mx-auto px-6 py-4 pb-20">
-        <StudyStats
-          newCount={srsStats.new}
-          learningCount={srsStats.learning}
-          dueCount={srsStats.due}
-          onStudy={() => {
-            if (srsStats.due > 0) {
-              navigate('/study')
-            }
-          }}
-        />
-        
-        <h1 className="text-2xl font-bold text-white mb-4 mt-8">{t('home.songs')}</h1>
+        <h1 className="text-2xl font-bold text-white mb-4">{t('home.songs')}</h1>
         
         {loading ? (
           <div className="flex justify-center">
@@ -200,6 +189,19 @@ export function HomePage() {
             ))}
           </div>
         )}
+        
+        <div className="mt-8">
+          <StudyStats
+            newCount={srsStats.new}
+            learningCount={srsStats.learning}
+            dueCount={srsStats.due}
+            onStudy={() => {
+              if (srsStats.due > 0) {
+                navigate('/study')
+              }
+            }}
+          />
+        </div>
       </div>
     </div>
   )

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
+    "@farcaster/miniapp-sdk": "^0.1.7",
     "@lit-protocol/auth-helpers": "^7.2.0",
     "@lit-protocol/constants": "^7.2.0",
     "@lit-protocol/encryption": "^7.2.0",
@@ -34,14 +35,12 @@
     "@web3auth/base": "^9.7.0",
     "@web3auth/ethereum-provider": "^9.7.0",
     "@web3auth/modal": "^10.0.5",
-    "@xstate/react": "^4.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "ethers": "^6.15.0",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "idb": "^8.0.3",
-    "lucide-react": "^0.525.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-i18next": "^15.6.0",
@@ -51,8 +50,7 @@
     "tone": "^15.1.22",
     "ts-fsrs": "^5.2.1",
     "viem": "^2.31.7",
-    "wagmi": "^2.15.6",
-    "xstate": "^5.20.1"
+    "wagmi": "^2.15.6"
   },
   "devDependencies": {
     "@storybook/addon-docs": "^9.0.16",

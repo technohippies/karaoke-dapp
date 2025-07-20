@@ -3,6 +3,7 @@ import { type Web3AuthContextConfig } from "@web3auth/modal/react";
 import { base, baseSepolia, optimismSepolia } from "wagmi/chains";
 
 const clientId = import.meta.env.VITE_WEB3AUTH_CLIENT_ID || "YOUR_WEB3AUTH_CLIENT_ID"; // get from https://dashboard.web3auth.io
+const networkName = import.meta.env.VITE_WEB3AUTH_NETWORK || "sapphire_devnet";
 
 // Fix blockExplorerUrl to be an array as Web3Auth expects
 const baseMainnetFixed = {
@@ -27,10 +28,22 @@ const baseSepoliaFixed = {
   }
 };
 
+// Map network name to Web3Auth network constant
+const getWeb3AuthNetwork = (network: string) => {
+  switch (network.toUpperCase()) {
+    case "SAPPHIRE_MAINNET":
+      return WEB3AUTH_NETWORK.SAPPHIRE_MAINNET;
+    case "SAPPHIRE_DEVNET":
+      return WEB3AUTH_NETWORK.SAPPHIRE_DEVNET;
+    default:
+      return WEB3AUTH_NETWORK.SAPPHIRE_DEVNET;
+  }
+};
+
 const web3AuthContextConfig: Web3AuthContextConfig = {
   web3AuthOptions: {
     clientId,
-    web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET, // Must match your Web3Auth dashboard setting
+    web3AuthNetwork: getWeb3AuthNetwork(networkName), // Must match your Web3Auth dashboard setting
     uiConfig: {
       appName: "Karaoke Quest",
       appUrl: window.location.origin,

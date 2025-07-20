@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
@@ -39,7 +39,7 @@ export function StudyPageV2() {
   const { getDueCards, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
   const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
-  const { voiceCredits } = usePurchase()
+  const { voiceCredits, isConnected, isLoadingCredits } = usePurchase()
   
   // Contract hooks for exercises
   const { 
@@ -73,13 +73,14 @@ export function StudyPageV2() {
     startTime: Date.now()
   })
   const [sessionId] = useState(() => `exercise_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`)
+  const hasInitiatedDeduction = useRef(false)
   
   // Load due cards on mount
   useEffect(() => {
-    if (isDBReady && address) {
+    if (isDBReady && address && isConnected && !isLoadingCredits) {
       loadDueCards()
     }
-  }, [address, isDBReady])
+  }, [address, isDBReady, isConnected, isLoadingCredits])
   
   // Handle successful credit deduction
   useEffect(() => {
@@ -118,7 +119,8 @@ export function StudyPageV2() {
       setStudyStats(prev => ({ ...prev, totalCards: cards.length }))
       
       // Deduct credits for exercises
-      if (!hasDeductedCredits) {
+      if (!hasDeductedCredits && !hasInitiatedDeduction.current) {
+        hasInitiatedDeduction.current = true
         setIsCheckingCredits(true)
         try {
           await startExerciseWrite({
@@ -130,6 +132,7 @@ export function StudyPageV2() {
         } catch (error) {
           console.error('Failed to deduct credits:', error)
           setIsCheckingCredits(false)
+          hasInitiatedDeduction.current = false // Reset on error
           // Error will be handled by the error state from the hook
           return
         }

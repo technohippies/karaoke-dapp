@@ -16,7 +16,17 @@
       "due": "DUE",
       "studyButton": "Study",
       "allCaughtUp": "All Caught Up!",
-      "singKaraokeToAdd": "Sing Karaoke to Add Flashcards!"
+      "singKaraokeToAdd": "Sing Karaoke to Add Flashcards!",
+      "completion": {
+        "greatJob": "Great job!",
+        "streakGrowing": "Awesome! Your streak is growing! Keep it up!",
+        "practiceSession": "Great practice session! Come back tomorrow to build your streak!",
+        "back": "Back",
+        "shareToFarcaster": "Share to Farcaster",
+        "shareToFarcasterSoon": "Share to Farcaster (Soon)",
+        "shareMessageStreak": "I just completed a study session and grew my streak to {{streak}} days! 🔥 Learning languages through karaoke at https://karaoke.school",
+        "shareMessage": "I just completed a study session! 🎵 Learning languages through karaoke at https://karaoke.school"
+      }
     }
   },
   "leaderboard": {

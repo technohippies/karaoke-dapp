@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Mic, Square, Loader2 } from 'lucide-react'
+import { Microphone, Square, CircleNotch } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { cn } from '../lib/utils'
@@ -134,12 +134,12 @@ export function SayItBack({
           >
             {isProcessing ? (
               <>
-                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                <CircleNotch className="w-6 h-6 mr-2 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <Mic className="w-6 h-6 mr-2" />
+                <Microphone className="w-6 h-6 mr-2" />
                 Start Recording
               </>
             )}

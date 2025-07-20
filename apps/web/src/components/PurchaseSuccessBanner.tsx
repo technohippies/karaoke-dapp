@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle, X } from 'lucide-react'
+import { CheckCircle, X } from '@phosphor-icons/react'
 
 interface PurchaseSuccessBannerProps {
   lastPurchase: { type: 'combo' | 'voice' | 'song', timestamp: number } | null

@@ -1,236 +1,196 @@
-# Karaoke Language Learning Dapp
+# 卡拉 OK 语言学习 Dapp
 
-A decentralized karaoke application that combines language learning with blockchain technology, built with Lit Protocol for secure content encryption and Web3Auth for authentication.
+一个结合语言学习与区块链技术的去中心化卡拉 OK 应用，使用 Lit Protocol 进行安全内容加密，Web3Auth 进行身份验证。
 
-## 🎤 Features
+## 🎤 功能特点
 
-- **Multilingual Support**: UI available in English, Mandarin (中文), Uyghur (ئۇيغۇرچە), and Tibetan (བོད་སྐད)
-- **Spaced Repetition System (SRS)**: Learn lyrics efficiently with FSRS algorithm
-- **Encrypted Content**: Songs and translations secured with Lit Protocol
-- **Web3 Authentication**: Social login via Web3Auth
-- **Voice & Song Credits**: Token-based access system
-- **AI-Powered Feedback**: Real-time pronunciation scoring
-- **Offline-First**: IndexedDB for local data persistence
+- **多语言支持**：界面支持英语、中文、维吾尔语（ئۇيغۇرچە）和藏语（བོད་སྐད）
+- **间隔重复系统（SRS）**：使用 FSRS 算法高效学习歌词
+- **加密内容**：使用 Lit Protocol 保护歌曲和翻译
+- **Web3 身份验证**：通过 Web3Auth 进行社交登录
+- **语音和歌曲积分**：基于代币的访问系统
+- **AI 驱动反馈**：实时发音评分
+- **离线优先**：使用 IndexedDB 进行本地数据持久化
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-### Prerequisites
-- Node.js 18+ or Bun
-- Base Sepolia testnet ETH
-- USDC on Base Sepolia for purchasing credits
+### 前置要求
+- Node.js 18+ 或 Bun
+- Base Sepolia 测试网 ETH
+- Base Sepolia 上的 USDC 用于购买积分
 
-### Installation
+### 安装
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/yourusername/karaoke-dapp.git
 cd karaoke-dapp
 
-# Install dependencies
+# 安装依赖
 bun install
 
-# Set up environment variables
+# 设置环境变量
 cp .env.example .env
-# Edit .env with your configuration
+# 编辑 .env 文件配置
 
-# Start development server
+# 启动开发服务器
 cd apps/web
 bun dev
 ```
 
-### Environment Setup
+### 环境设置
 
-Create a `.env` file in the project root:
+在项目根目录创建 `.env` 文件：
 
 ```bash
-# Required for development
+# 开发必需
 VITE_BASE_SEPOLIA_RPC=https://sepolia.base.org
 VITE_KARAOKE_CONTRACT_ADDRESS=0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
+VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id
+VITE_COVALENT_API_KEY=your_covalent_api_key
+VITE_BASE_SEPOLIA_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
 
-# Required for content encryption (scripts)
-DEEPGRAM_API_KEY=your_deepgram_api_key  # For speech-to-text in Lit Actions
-OPENROUTER_API_KEY=your_openrouter_api_key  # For LLM scoring in Lit Actions
+# 内容加密必需（脚本）
+DEEPGRAM_API_KEY=your_deepgram_api_key  # 用于 Lit Actions 中的语音转文字
+OPENROUTER_API_KEY=your_openrouter_api_key  # 用于 Lit Actions 中的 LLM 评分
 PINATA_API_KEY=your_pinata_api_key
 PINATA_SECRET_KEY=your_pinata_secret
+PINATA_JWT=your_pinata_jwt
+VITE_PINATA_JWT=your_pinata_jwt
 PRIVATE_KEY=your_deployer_private_key
+
+# 合约和 Lit Protocol
+KARAOKE_CONTRACT=0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
+BASE_SEPOLIA_RPC=https://sepolia.base.org
+LIT_ACTION_CID=QmXrdyum5jDnNSTWAxUV8y5dRnpJsV9wuTUAH3RVGJw7jU
+PKP_TOKEN_ID=
+PKP_PUBLIC_KEY=
+PKP_ETH_ADDRESS=
+
+# Tableland 配置
+SONGS_TABLE_NAME=songs_84532_xxx
+
+# 其他可选
+ETHERSCAN_API_KEY=
+CAPACITY_CREDIT_NFT_ID=
+CAPACITY_DELEGATION_AUTH_SIG=
 ```
 
-## 📁 Project Structure
+## 📁 项目结构
 
 ```
 karaoke-dapp/
 ├── apps/
-│   └── web/                 # React frontend application
+│   └── web/                 # React 前端应用
 │       ├── src/
-│       │   ├── components/  # UI components
-│       │   ├── pages/       # Route pages
-│       │   ├── services/    # Business logic
-│       │   ├── hooks/       # Custom React hooks
-│       │   └── i18n/        # Translations
+│       │   ├── components/  # UI 组件
+│       │   ├── pages/       # 路由页面
+│       │   ├── services/    # 业务逻辑
+│       │   ├── hooks/       # 自定义 React hooks
+│       │   └── i18n/        # 翻译
 │       └── public/
-├── contracts/               # Smart contracts
-│   ├── src/                # Solidity contracts
-│   └── script/             # Deployment scripts
-├── lit-actions/            # Lit Protocol serverless functions
-├── scripts/                # Utility scripts
-├── tableland/              # Tableland database management
-└── data/                   # Song content (gitignored)
+├── contracts/               # 智能合约
+│   ├── src/                # Solidity 合约
+│   └── script/             # 部署脚本
+├── lit-actions/            # Lit Protocol 无服务器函数
+├── scripts/                # 工具脚本
+├── tableland/              # Tableland 数据库管理
+└── data/                   # 歌曲内容（已 gitignore）
 ```
 
-## 🏗️ Architecture
+## 🏗️ 架构
 
-### Smart Contracts
+### 智能合约
 
 **KaraokeSchool** (`0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`)
-- Manages voice and song credits
-- Handles song unlocking mechanism
-- Escrows credits during karaoke sessions
-- Verifies PKP signatures for scoring
+- 管理语音和歌曲积分
+- 处理歌曲解锁机制
+- 在卡拉 OK 会话期间托管积分
+- 验证 PKP 签名进行评分
 
-### Lit Protocol Integration
+### Lit Protocol 集成
 
-- **Content Encryption**: Songs, MIDI files, and translations are encrypted using Lit Protocol
-- **Access Control**: Only users who have unlocked songs can decrypt content
-- **PKP Scoring**: Secure, tamper-proof scoring using Programmable Key Pairs
-- **Lit Actions**: 
-  - Karaoke Scorer: Contains embedded API keys for Deepgram (STT) and OpenRouter (LLM)
-  - Single Line Scorer: For Study Mode pronunciation practice
-  
-**Note**: Lit Actions use simple access conditions (always true) for API key decryption, making them independent of contract changes.
+- **内容加密**：使用 Lit Protocol 加密歌曲、MIDI 文件和翻译
+- **访问控制**：只有解锁歌曲的用户才能解密内容
+- **Lit Actions**： 
+  - 卡拉 OK 评分器：包含嵌入的 API 密钥用于 Deepgram (STT) 和 OpenRouter (LLM)
+  - 单行评分器：用于学习模式的发音练习
 
-### Database
+### 数据库
 
-- **IndexedDB**: Local storage for offline functionality
-- **Tableland**: Decentralized SQL database for song metadata
-- **IPFS (Pinata)**: Encrypted content storage
+- **IndexedDB**：离线功能的本地存储
+- **Tableland**：去中心化 SQL 数据库用于歌曲元数据
+- **IPFS (Pinata)**：加密内容存储
 
-## 🎮 User Flow
+## 🛠️ 开发
 
-1. **Connect Wallet**: Web3Auth social login or wallet connection
-2. **Purchase Credits**: Buy song and voice credits with USDC
-3. **Browse Songs**: View available songs in the catalog
-4. **Unlock Songs**: Spend song credits to access content
-5. **Study Mode**: Practice individual lines with SRS
-6. **Karaoke Mode**: Full song performance with AI scoring
-7. **Review Progress**: Track learning statistics and streaks
-
-## 🔒 Security Considerations
-
-- **No API Keys in Code**: All sensitive keys must be in `.env` files
-- **Encrypted Storage**: All content is encrypted before IPFS upload
-- **Access Control**: Smart contract verification for content access
-- **PKP Verification**: Tamper-proof scoring through Lit Protocol
-
-## 🛠️ Development
-
-### Running Tests
+### 生产构建
 
 ```bash
-# Run contract tests
-cd contracts
-forge test
-
-# Run frontend tests
-cd apps/web
-bun test
-```
-
-### Building for Production
-
-```bash
-# Build frontend
+# 构建前端
 cd apps/web
 bun run build
 
-# Deploy contracts
+# 部署合约
 cd contracts
 forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --private-key $PRIVATE_KEY --broadcast
 
-# After deployment, update references:
-# 1. Update contract address in apps/web/src/constants/contracts.ts
-# 2. Update .env (KARAOKE_CONTRACT and VITE_KARAOKE_CONTRACT)
-# 3. Extract and update ABI:
+# 部署后更新引用：
+# 1. 更新 apps/web/src/constants/contracts.ts 中的合约地址
+# 2. 更新 .env (KARAOKE_CONTRACT 和 VITE_KARAOKE_CONTRACT)
+# 3. 提取并更新 ABI：
 cat out/KaraokeSchool.sol/KaraokeSchool.json | python3 -c "import json, sys; print(json.dumps(json.load(sys.stdin)['abi'], indent=2))" > ../apps/web/src/constants/abi/KaraokeSchool.json
 
-# ⚠️ IMPORTANT: See CONTRACT_UPDATE_GUIDE.md for full update process including Lit Protocol considerations
+# ⚠️ 重要：查看 CONTRACT_UPDATE_GUIDE.md 了解完整更新流程，包括 Lit Protocol 相关事项
 ```
 
-### Adding New Songs
+### 添加新歌曲
 
-1. Add MIDI and translation files to `data/raw/`
-2. Update `data/metadata.json`
-3. Run encryption script: `cd scripts && bun prepare-song.ts --id [songId]`
-4. Deploy to Tableland: `cd tableland && bun add-song.ts`
+1. 将 MIDI 和翻译文件添加到 `data/raw/`
+2. 更新 `data/metadata.json`
+3. 运行加密脚本：`cd scripts && bun prepare-song.ts --id [songId]`
+4. 部署到 Tableland：`cd tableland && bun add-song.ts`
 
-## 📝 Contributing
+## 📄 许可证
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+本项目采用 GNU Affero 通用公共许可证 v3.0 (AGPLv3) - 详情请参阅 LICENSE 文件。
 
-### Code Style
+## 📚 仓库访问
 
-- Use TypeScript for all new code
-- Follow existing component patterns
-- Add proper error handling
-- Include loading states
-- Ensure mobile responsiveness
+本项目在多个平台上可用，以实现冗余性和抗审查性：
 
-## 🌐 Deployment
-
-The application is deployed on:
-- Frontend: [Your deployment URL]
-- Contracts: Base Sepolia testnet
-
-## 📄 License
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPLv3) - see the LICENSE file for details.
-
-## ⚠️ Important Notes
-
-- This is a testnet application - use only test tokens
-- Never commit `.env` files or API keys
-- Always encrypt sensitive content before storage
-- Test thoroughly on testnet before mainnet deployment
-
-## 📚 Repository Access
-
-This project is available on multiple platforms for redundancy and censorship resistance:
-
-### Primary Repository
+### 主要仓库
 - **GitHub**: https://github.com/technohippies/karaoke-dapp.git
 
-### Decentralized Mirror
+### 去中心化镜像
 - **Radicle**: https://app.radicle.xyz/nodes/rosa.radicle.xyz/rad:zjAPSYMsctUsESkgc9XqTgcstWUH
-- **Clone via Radicle**: `rad:zjAPSYMsctUsESkgc9XqTgcstWUH`
+- **通过 Radicle 克隆**: `rad:zjAPSYMsctUsESkgc9XqTgcstWUH`
 
-The Radicle repository serves as a decentralized, censorship-resistant mirror. Updates are automatically synchronized from GitHub with a slight delay. If the repository is removed from centralized platforms for any reason, or if you're in a region with restricted access, the complete codebase will remain permanently accessible through Radicle's peer-to-peer network.
+Radicle 仓库作为去中心化、抗审查的镜像。更新会自动从 GitHub 同步，略有延迟。如果仓库因任何原因从中心化平台移除，或者您所在地区访问受限，完整代码库将通过 Radicle 的点对点网络永久可访问。
 
-## ⚖️ Legal Notice & Copyright Compliance
+## ⚖️ 法律声明和版权合规
 
-### Content Licensing
-This platform operates in full compliance with copyright law and digital rights management:
+### 内容许可
+本平台完全遵守版权法和数字权利管理：
 
-- **Lyrics Content**: All copyrighted lyrics are dynamically loaded from LRCLIB's API. We do not host, store, or distribute any copyrighted lyrical content on our servers or in this repository.
+- **歌词内容**：所有受版权保护的歌词均从 LRCLIB 的 API 动态加载。我们不在服务器或本仓库中托管、存储或分发任何受版权保护的歌词内容。
 
-- **Musical Compositions**: No copyrighted audio recordings or musical compositions are hosted on our infrastructure. The platform utilizes MIDI files which represent musical notation data only, not recorded performances.
+- **音乐作品**：我们的基础设施不托管任何受版权保护的音频录音或音乐作品。平台仅使用代表音乐记谱数据的 MIDI 文件，而非录制的表演。
 
-- **Digital Rights Management**: Encrypted MIDI files are made available for download (not streaming) exclusively after an on-chain purchase transaction is completed. This ensures proper licensing and royalty tracking.
+- **数字权利管理**：加密的 MIDI 文件仅在完成链上购买交易后才可下载（非流媒体）。这确保了适当的许可和版税跟踪。
 
-- **Royalty Compliance**: All transactions are recorded on-chain with complete transparency. Royalties are automatically calculated and reserved for rights holders in accordance with Mechanical Licensing Collective (MLC) requirements and applicable copyright law.
+- **版税合规**：所有交易都在链上记录，完全透明。根据机械许可集体 (MLC) 要求和适用的版权法，版税会自动计算并为权利持有人保留。
 
-- **Rights Holder Payments**: Smart contracts ensure that appropriate royalties are segregated and made available to verified rights holders through transparent on-chain mechanisms.
+- **权利持有人付款**：智能合约确保通过透明的链上机制将适当的版税分离并提供给经过验证的权利持有人。
 
-### Disclaimer
-This software is provided as a decentralized platform for language learning through karaoke. Users are responsible for ensuring their use of the platform complies with all applicable laws in their jurisdiction. The platform operators make no representations regarding the availability of content in any particular jurisdiction.
+### 免责声明
+本软件作为语言学习卡拉 OK 的去中心化平台提供。用户有责任确保他们使用平台符合其管辖区的所有适用法律。平台运营商对任何特定管辖区的内容可用性不作任何陈述。
 
-## 🙏 Acknowledgments
+## 🙏 致谢
 
-- Lit Protocol for content encryption
-- Web3Auth for authentication
-- Tableland for decentralized database
-- Base for L2 infrastructure
-- Splits.org for payment splitting infrastructure
-- Paradigm for Foundry/Forge development framework
+- Lit Protocol 提供内容加密
+- Web3Auth 提供身份验证
+- Tableland 提供去中心化数据库
+- Base 提供 L2 基础设施
+- Splits.org 提供支付分割基础设施
+- Paradigm 提供 Foundry/Forge 开发框架

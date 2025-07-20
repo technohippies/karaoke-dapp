@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { CloseHeader } from './CloseHeader'
-import { SpinnerWithScarlett } from './ui/spinner-with-scarlett'
+import { Spinner } from './ui/spinner'
 import { Button } from './ui/button'
 import { SpeechBubble } from './ui/speech-bubble'
 import scarlettThumbsUp from '../assets/scarlett-thumbs-up.png'
@@ -90,9 +90,13 @@ export function KaraokeCompletion({
           setLocalSaveComplete(true)
           console.log('✅ Auto-saved to IDB:', sessionHash)
           
-          // Check for due cards after saving
-          const cards = await getDueCards(1) // Just need to know if there are any
-          setDueCardsCount(cards.length)
+          // Add a small delay to ensure IDB transaction is fully committed
+          setTimeout(async () => {
+            // Check for due cards after saving
+            const cards = await getDueCards(1) // Just need to know if there are any
+            setDueCardsCount(cards.length)
+            console.log('📊 Due cards after save:', cards.length)
+          }, 500) // 500ms delay to ensure IDB transaction completes
         }
       } catch (err) {
         console.error('❌ Auto-save to IDB failed:', err)
@@ -195,7 +199,7 @@ export function KaraokeCompletion({
             >
               {progressState === 'syncing' ? (
                 <>
-                  <SpinnerWithScarlett size="sm" />
+                  <Spinner size="sm" className="mr-2" />
                   {t('karaoke.completion.syncing')}
                 </>
               ) : progressState === 'synced' ? (
