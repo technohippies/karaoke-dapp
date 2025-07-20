@@ -34,11 +34,12 @@ const ENCRYPTED_DIR = join(PROJECT_ROOT, 'data', 'encrypted')
 const OUTPUT_DIR = join(PROJECT_ROOT, 'data', 'encrypted')
 const SONGS_CONFIG = join(PROJECT_ROOT, 'data', 'metadata.json')
 
-// Contract address - MUST match the deployed contract used in the web app
-const CONTRACT_ADDRESS = process.env.KARAOKE_CONTRACT
+// Contract address - Use proxy address for permanent encryption
+const CONTRACT_ADDRESS = process.env.KARAOKE_PROXY || process.env.KARAOKE_CONTRACT
 if (!CONTRACT_ADDRESS) {
-  throw new Error('KARAOKE_CONTRACT environment variable is required')
+  throw new Error('KARAOKE_PROXY or KARAOKE_CONTRACT environment variable is required')
 }
+console.log(`📝 Using contract address: ${CONTRACT_ADDRESS}`)
 const CHAIN_ID = 84532 // Base Sepolia
 
 interface Song {

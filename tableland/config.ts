@@ -10,6 +10,11 @@ export const TABLELAND_CONFIG = {
       chainId: 11155420,
       rpcUrl: process.env.OPTIMISM_SEPOLIA_RPC_URL || 'https://sepolia.optimism.io',
       tablelandHost: 'https://testnets.tableland.network'
+    },
+    'base-mainnet': {
+      chainId: 8453,
+      rpcUrl: process.env.BASE_MAINNET_RPC_URL || 'https://mainnet.base.org',
+      tablelandHost: 'https://tableland.network'
     }
   },
   

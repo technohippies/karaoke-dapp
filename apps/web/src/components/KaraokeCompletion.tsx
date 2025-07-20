@@ -10,6 +10,7 @@ import { useIDBSRS } from '../hooks/useIDBSRS'
 import { ChainSwitcher } from './ChainSwitcher'
 import { useAccount } from 'wagmi'
 import { useDirectIDB } from '../hooks/useDirectIDB'
+import { tablelandChainId } from '../config/networks.config'
 
 interface LineScore {
   lineIndex: number
@@ -189,7 +190,7 @@ export function KaraokeCompletion({
         {/* Sync button - always on the right */}
         <div className="w-full">
           <ChainSwitcher 
-            requiredChainId={11155420}
+            requiredChainId={tablelandChainId}
             className="w-full"
           >
             <Button

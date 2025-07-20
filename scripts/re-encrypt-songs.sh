@@ -1,8 +1,8 @@
 #!/bin/bash
 # Re-encrypt all songs with the correct contract address
 
-echo "🔄 Re-encrypting songs with correct contract address..."
-echo "📝 Contract: ${KARAOKE_CONTRACT}"
+echo "🔄 Re-encrypting songs with proxy contract address..."
+echo "📝 Using proxy address: ${KARAOKE_PROXY}"
 
 # Re-encrypt all songs
 cd scripts && npx tsx prepare-song.ts --all

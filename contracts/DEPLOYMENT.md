@@ -1,12 +1,20 @@
 # KaraokeSchool Contract Deployment
 
-## Latest Deployment
+## Proxy Deployment (Use This!)
+- **Contract**: KaraokeProxy
+- **Address**: `0x9908f93A794297093fA0d235B51Ffbd86FDe8d08`
+- **Network**: Base Sepolia
+- **Implementation**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
+- **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0x9908f93A794297093fA0d235B51Ffbd86FDe8d08)
+- **Status**: ✅ ACTIVE - USE THIS ADDRESS FOR ALL OPERATIONS
+
+## Implementation Contract
 - **Contract**: KaraokeSchool (Ownable + Direct Splits)
 - **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
 - **Network**: Base Sepolia
 - **Deployer**: `0x0C6433789d14050aF47198B2751f6689731Ca79C`
 - **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0xc7D24B90C69c6F389fbC673987239f62F0869e3a)
-- **Status**: ✅ ACTIVE
+- **Status**: ✅ Implementation for proxy
 
 ## Previous Deployments
 1. **Address**: `0x07AaCA2D82f6bD352461df7F57130212210c2C74`

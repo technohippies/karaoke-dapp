@@ -5,8 +5,8 @@ Clean, modular Tableland operations for the karaoke app. **No script bloat** - t
 ## Current Setup
 
 - **Network**: Optimism Sepolia (11155420)
-- **Table**: `karaoke_songs_11155420_11155420_181`
-- **Contract**: Base Sepolia (for Lit Protocol encryption)
+- **Table**: `karaoke_songs_11155420_11155420_220`
+- **Contract**: Base Sepolia (0xc7D24B90C69c6F389fbC673987239f62F0869e3a)
 
 ## Core Tools
 

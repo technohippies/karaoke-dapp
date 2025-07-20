@@ -1,0 +1,11 @@
+{
+  "songs": {
+    "network": "base-mainnet",
+    "chainId": 8453,
+    "tableName": "karaoke_songs_8453_8453_25",
+    "transactionHash": "0x6a22bc53a4db9123546e98883b523ead61b5f6b58f742985b5ab1d7215493f74",
+    "deployedAt": "2025-07-20T15:07:56.857Z",
+    "deployedBy": "0x25B4048c3B3c58973571db2dbbF87103f7406966",
+    "schema": "(\n        id INTEGER PRIMARY KEY,\n        isrc TEXT NOT NULL,\n        iswc TEXT,\n        title TEXT NOT NULL,\n        artist TEXT NOT NULL,\n        duration INTEGER,\n        stems TEXT,\n        language TEXT DEFAULT 'en',\n        genius_id INTEGER,\n        lrclib_id INTEGER,\n        genius_slug TEXT,\n        streaming_links TEXT,\n        artwork_hash TEXT,\n        translations TEXT,\n        updated_at INTEGER\n      )"
+  }
+}

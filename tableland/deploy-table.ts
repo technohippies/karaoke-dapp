@@ -17,7 +17,17 @@ async function deployTable(tableName: TableName, network: NetworkName) {
   // Setup provider and signer
   const provider = new ethers.JsonRpcProvider(config.rpcUrl)
   const wallet = new Wallet(process.env.PRIVATE_KEY!, provider)
-  const db = new Database({ signer: wallet })
+  
+  // Create database config
+  const dbConfig: any = { signer: wallet }
+  
+  // For Base mainnet, explicitly set the registry contract
+  if (network === 'base-mainnet') {
+    dbConfig.baseUrl = config.tablelandHost
+    dbConfig.contract = '0x8268F7Aba0E152B3A853e8CB4Ab9795Ec66c2b6B'
+  }
+  
+  const db = new Database(dbConfig)
   
   console.log(`👤 Signer: ${wallet.address}`)
   

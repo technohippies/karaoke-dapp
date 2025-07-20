@@ -1,5 +1,7 @@
+import { songsTableName } from '../../../config/networks.config';
+
 // Table name
-export const SONGS_TABLE = 'karaoke_songs_11155420_11155420_181';
+export const SONGS_TABLE = songsTableName;
 
 // Types
 export interface Song {

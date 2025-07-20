@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "deploy": "bun run deploy-tables.ts",
+    "deploy:table": "bun run deploy-table-auto.ts",
+    "deploy:ledger": "bun run deploy-table-ledger.ts",
+    "deploy:privatekey": "bun run deploy-table.ts",
     "add": "bun run add-song.ts",
     "batch": "bun run batch-add-songs.ts",
     "pipeline": "bun run pipeline.ts",
@@ -12,6 +15,9 @@
     "query": "bun run query-songs.ts"
   },
   "dependencies": {
+    "@ethersproject/hardware-wallets": "5.8.0",
+    "@ledgerhq/hw-app-eth": "6.45.11",
+    "@ledgerhq/hw-transport-node-hid": "6.29.8",
     "@tableland/sdk": "^7.2.1",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.4",

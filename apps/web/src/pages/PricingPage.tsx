@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { PurchaseSuccessBanner } from '../components/PurchaseSuccessBanner'
-import { BASE_SEPOLIA_CHAIN_ID } from '../constants'
+import { defaultChainId } from '../config/networks.config'
 import { useTranslation } from 'react-i18next'
 
 export function PricingPage() {
@@ -68,7 +68,7 @@ export function PricingPage() {
                 {t('pricing.connectToPurchase')}
               </Button>
             ) : (
-              <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
+              <ChainSwitcher requiredChainId={defaultChainId} className="w-full">
                 <Button 
                   onClick={handleBuyCombo}
                   disabled={isApproving || isPurchasing}
@@ -118,7 +118,7 @@ export function PricingPage() {
               <li className="text-sm text-gray-400">Exercises: 1 {t('pricing.voiceCredit')} each</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
+            <ChainSwitcher requiredChainId={defaultChainId} className="w-full">
               <Button 
                 onClick={handleBuyVoice}
                 disabled={isApproving || isPurchasing || !isConnected}
@@ -149,7 +149,7 @@ export function PricingPage() {
               <li>3 {t('pricing.songCredits')}</li>
             </ul>
             
-            <ChainSwitcher requiredChainId={BASE_SEPOLIA_CHAIN_ID} className="w-full">
+            <ChainSwitcher requiredChainId={defaultChainId} className="w-full">
               <Button 
                 onClick={handleBuySong}
                 disabled={isApproving || isPurchasing || !isConnected}

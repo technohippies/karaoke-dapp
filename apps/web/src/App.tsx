@@ -8,6 +8,7 @@ import { StudyPageV2 } from './pages/StudyPageV2'
 import { AccountPage } from './pages/AccountPage'
 import { DebugIDB } from './pages/DebugIDB'
 import { IDBProvider } from './contexts/IDBContext'
+import { CountryProvider } from './contexts/CountryContext'
 import { AppWithCountryCheck } from './components/AppWithCountryCheck'
 
 // Helper component to redirect from old song URLs
@@ -65,22 +66,24 @@ function App() {
 
   return (
     <IDBProvider>
-      <Router>
-        <AppWithCountryCheck>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/study" element={<StudyPageV2 />} />
-            <Route path="/account" element={<AccountPage />} />
-            <Route path="/debug" element={<DebugIDB />} />
-            <Route path="/s/:songId" element={<SongPage />} />
-            {/* Redirect old song URLs to new format */}
-            <Route path="/song/:songId" element={<SongRedirect />} />
-            {/* Catch all - redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </AppWithCountryCheck>
-      </Router>
+      <CountryProvider>
+        <Router>
+          <AppWithCountryCheck>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/study" element={<StudyPageV2 />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="/debug" element={<DebugIDB />} />
+              <Route path="/s/:songId" element={<SongPage />} />
+              {/* Redirect old song URLs to new format */}
+              <Route path="/song/:songId" element={<SongRedirect />} />
+              {/* Catch all - redirect to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AppWithCountryCheck>
+        </Router>
+      </CountryProvider>
     </IDBProvider>
   )
 }

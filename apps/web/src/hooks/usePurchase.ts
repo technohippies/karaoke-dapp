@@ -122,7 +122,12 @@ export function usePurchase() {
 
   const handleApprove = (amount: bigint) => {
     if (!address) return
-    console.log('🔐 Approving USDC...')
+    console.log('🔐 Approving USDC...', {
+      usdcAddress: USDC_ADDRESS,
+      karaokeContract: KARAOKE_CONTRACT_ADDRESS,
+      amount: amount.toString(),
+      hasAddress: !!address,
+    })
     setIsApproving(true)
     approveUSDC({
       address: USDC_ADDRESS,

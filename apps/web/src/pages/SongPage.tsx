@@ -8,9 +8,9 @@ import { tablelandService, type Song } from '../services/database/tableland/Tabl
 import { usePostUnlockContent } from '../hooks/usePostUnlockContent'
 import { combineLyricsWithTranslation, parseLrcLyrics } from '../utils/parseLyrics'
 import { 
-  KARAOKE_CONTRACT_ADDRESS,
-  DEFAULT_CHAIN_ID
+  KARAOKE_CONTRACT_ADDRESS
 } from '../constants'
+import { defaultChainId as DEFAULT_CHAIN_ID } from '../config/networks.config'
 import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
 import { HeaderWithAuth } from '../components/HeaderWithAuth'
 import { ListItem } from '../components/ListItem'
@@ -119,7 +119,7 @@ export function SongPage() {
       isReconnecting,
       isConnecting,
       address,
-      expectedChain: `Base Sepolia (${DEFAULT_CHAIN_ID})`,
+      expectedChain: DEFAULT_CHAIN_ID === 11155420 ? `Optimism Sepolia (${DEFAULT_CHAIN_ID})` : `Base Sepolia (${DEFAULT_CHAIN_ID})`,
       hasVoiceCredits,
       hasSongCredits,
       voiceCreditsRaw: voiceCredits,
