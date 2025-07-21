@@ -13,13 +13,16 @@ export function usePurchase() {
   const [pendingPurchase, setPendingPurchase] = useState<'combo' | 'voice' | 'song' | null>(null)
   const [lastPurchase, setLastPurchase] = useState<{ type: 'combo' | 'voice' | 'song', timestamp: number } | null>(null)
 
-  // Read contract data
+  // Read contract data with polling for better synchronization
   const { data: usdcBalance, refetch: refetchBalance } = useReadContract({
     address: USDC_ADDRESS,
     abi: USDC_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { 
+      enabled: !!address,
+      refetchInterval: 5000 // Poll every 5 seconds
+    },
   })
 
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
@@ -27,7 +30,10 @@ export function usePurchase() {
     abi: USDC_ABI,
     functionName: 'allowance',
     args: address ? [address, KARAOKE_CONTRACT_ADDRESS] : undefined,
-    query: { enabled: !!address },
+    query: { 
+      enabled: !!address,
+      refetchInterval: 5000 // Poll every 5 seconds
+    },
   })
 
   const { data: voiceCredits, refetch: refetchVoiceCredits, isLoading: isLoadingVoiceCredits } = useReadContract({
@@ -35,7 +41,10 @@ export function usePurchase() {
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { 
+      enabled: !!address,
+      refetchInterval: 3000 // Poll every 3 seconds for critical data
+    },
   })
 
   const { data: songCredits, refetch: refetchSongCredits } = useReadContract({
@@ -43,7 +52,10 @@ export function usePurchase() {
     abi: KARAOKE_SCHOOL_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
-    query: { enabled: !!address },
+    query: { 
+      enabled: !!address,
+      refetchInterval: 3000 // Poll every 3 seconds for critical data
+    },
   })
 
   // Write contracts
@@ -66,12 +78,14 @@ export function usePurchase() {
   const isFirstPurchase = Number(voiceCredits || 0) === 0 && Number(songCredits || 0) === 0
 
   // Debug logging
-  console.log('🔍 Raw contract data:', { 
-    voiceCredits, 
-    songCredits, 
-    usdcBalance,
-    allowance 
-  })
+  useEffect(() => {
+    console.log('🔍 Raw contract data:', { 
+      voiceCredits, 
+      songCredits, 
+      usdcBalance,
+      allowance 
+    })
+  }, [voiceCredits, songCredits, usdcBalance, allowance])
 
   // Handle approve success
   useEffect(() => {
@@ -222,6 +236,16 @@ export function usePurchase() {
     hasCountry,
     lastPurchase,
     isLoadingCredits: isLoadingVoiceCredits,
+    
+    // Refetch functions for manual sync
+    refetchCredits: async () => {
+      await Promise.all([
+        refetchVoiceCredits(),
+        refetchSongCredits(),
+        refetchBalance(),
+        refetchAllowance()
+      ])
+    },
     
     // Data
     balance,

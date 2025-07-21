@@ -39,16 +39,21 @@ export function StudyPageV2() {
   const { getDueCards, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
   const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
-  const { voiceCredits, isConnected, isLoadingCredits } = usePurchase()
+  const { voiceCredits, isConnected, isLoadingCredits, refetchCredits } = usePurchase()
   
   // Contract hooks for exercises
   const { 
     writeContract: startExerciseWrite, 
     data: startExerciseHash,
-    error: startExerciseError
+    error: startExerciseError,
+    reset: resetStartExercise
   } = useWriteContract()
   
-  const { isSuccess: isStartExerciseSuccess, isLoading: isTransactionPending } = useWaitForTransactionReceipt({ 
+  const { 
+    isSuccess: isStartExerciseSuccess, 
+    isLoading: isTransactionPending,
+    error: transactionError 
+  } = useWaitForTransactionReceipt({ 
     hash: startExerciseHash 
   })
   
@@ -65,6 +70,8 @@ export function StudyPageV2() {
   const [aiFeedback, setAiFeedback] = useState<string | null>(null)
   const [showCompletion, setShowCompletion] = useState(false)
   const [previousStreak, setPreviousStreak] = useState(0)
+  const [creditError, setCreditError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
   
   const [studyStats, setStudyStats] = useState<StudyStats>({
     totalCards: 0,
@@ -87,8 +94,22 @@ export function StudyPageV2() {
     if (isStartExerciseSuccess && !hasDeductedCredits) {
       setHasDeductedCredits(true)
       setIsCheckingCredits(false)
+      setCreditError(null)
+      setRetryCount(0)
     }
   }, [isStartExerciseSuccess, hasDeductedCredits])
+  
+  // Handle transaction errors
+  useEffect(() => {
+    if (transactionError) {
+      console.error('Transaction failed:', transactionError)
+      setCreditError('Transaction failed. Please try again.')
+      setIsCheckingCredits(false)
+      hasInitiatedDeduction.current = false
+      // Force refetch credits to sync state
+      refetchCredits()
+    }
+  }, [transactionError, refetchCredits])
   
   // Store the streak when component mounts
   useEffect(() => {
@@ -122,6 +143,7 @@ export function StudyPageV2() {
       if (!hasDeductedCredits && !hasInitiatedDeduction.current) {
         hasInitiatedDeduction.current = true
         setIsCheckingCredits(true)
+        setCreditError(null)
         try {
           await startExerciseWrite({
             address: KARAOKE_CONTRACT_ADDRESS,
@@ -129,11 +151,13 @@ export function StudyPageV2() {
             functionName: 'startExercise',
             args: [BigInt(cards.length)]
           })
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to deduct credits:', error)
+          const errorMessage = error?.message || 'Failed to start exercise'
+          setCreditError(errorMessage)
           setIsCheckingCredits(false)
           hasInitiatedDeduction.current = false // Reset on error
-          // Error will be handled by the error state from the hook
+          setRetryCount(prev => prev + 1)
           return
         }
       }
@@ -311,6 +335,35 @@ export function StudyPageV2() {
   const currentCard = dueCards[currentCardIndex]
   const progress = dueCards.length > 0 ? ((currentCardIndex + 1) / dueCards.length) * 100 : 0
   
+  const handleRetryCredits = async () => {
+    if (!dueCards.length) return
+    
+    // Reset states
+    resetStartExercise()
+    setCreditError(null)
+    hasInitiatedDeduction.current = false
+    
+    // Force refetch to get latest credit balance
+    await refetchCredits()
+    
+    // Try again
+    setIsCheckingCredits(true)
+    try {
+      await startExerciseWrite({
+        address: KARAOKE_CONTRACT_ADDRESS,
+        abi: KARAOKE_SCHOOL_ABI,
+        functionName: 'startExercise',
+        args: [BigInt(dueCards.length)]
+      })
+    } catch (error: any) {
+      console.error('Retry failed:', error)
+      setCreditError(error?.message || 'Failed to start exercise')
+      setIsCheckingCredits(false)
+      hasInitiatedDeduction.current = false
+      setRetryCount(prev => prev + 1)
+    }
+  }
+  
   // Show loading state
   if (isLoading || isCheckingCredits || isTransactionPending) {
     return (
@@ -318,18 +371,34 @@ export function StudyPageV2() {
         <div className="text-center space-y-4">
           <SpinnerWithScarlett size="lg" />
           {isCheckingCredits && (
-            <p className="text-white/60">
-              {isTransactionPending ? t('exercise.confirmingTransaction') : t('exercise.checkingCredits')}
-            </p>
+            <div className="space-y-2">
+              <p className="text-white/60">
+                {isTransactionPending ? t('exercise.confirmingTransaction') : t('exercise.checkingCredits')}
+              </p>
+              {isTransactionPending && (
+                <div className="space-y-2">
+                  <p className="text-sm text-white/40">
+                    This may take a few seconds...
+                  </p>
+                  <div className="flex justify-center">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
     )
   }
   
-  // Handle contract errors
-  if (startExerciseError) {
-    const errorMessage = startExerciseError.message || ''
+  // Handle contract errors or credit errors
+  if (startExerciseError || creditError) {
+    const errorMessage = startExerciseError?.message || creditError || ''
     if (errorMessage.includes('InsufficientCredits')) {
       return (
         <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
@@ -348,10 +417,27 @@ export function StudyPageV2() {
       <div className="min-h-screen bg-neutral-900 flex items-center justify-center">
         <div className="text-center space-y-4 max-w-md">
           <h2 className="text-xl font-semibold text-white">{t('exercise.errorStarting')}</h2>
-          <p className="text-white/60">{t('exercise.tryAgainLater')}</p>
-          <Button onClick={() => navigate('/')}>
-            {t('exercise.backToHome')}
-          </Button>
+          <p className="text-white/60 text-sm">
+            {errorMessage.includes('User rejected') ? 
+              'Transaction was cancelled. Please try again.' : 
+              errorMessage
+            }
+          </p>
+          <div className="flex gap-3 justify-center">
+            {retryCount < 3 && (
+              <Button onClick={handleRetryCredits} variant="default">
+                Try Again
+              </Button>
+            )}
+            <Button onClick={() => navigate('/')} variant="secondary">
+              {t('exercise.backToHome')}
+            </Button>
+          </div>
+          {retryCount >= 3 && (
+            <p className="text-xs text-red-400">
+              Multiple attempts failed. Please check your wallet connection and try again later.
+            </p>
+          )}
         </div>
       </div>
     )

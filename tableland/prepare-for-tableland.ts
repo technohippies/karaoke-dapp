@@ -87,15 +87,15 @@ function prepareForTableland() {
       translations: SAMPLE_TRANSLATIONS[song.id] || {}
     }
 
-    // If we have encrypted data, extract the CIDs
+    // If we have encrypted data, use the actual CIDs
     if (encryptedData) {
-      if (encryptedData.encryptedMidi?.cid) {
-        console.log(`  ✓ MIDI CID: ${encryptedData.encryptedMidi.cid}`)
-        // In production, you'd map this to the correct stem format
+      if (encryptedData.midiCid) {
+        console.log(`  ✓ MIDI CID: ${encryptedData.midiCid}`)
+        tablelandData.stems = { piano: encryptedData.midiCid }
       }
-      if (encryptedData.encryptedTranslations?.cid) {
-        console.log(`  ✓ Translations CID: ${encryptedData.encryptedTranslations.cid}`)
-        // In production, you'd use this for the translations field
+      if (encryptedData.translationsCid) {
+        console.log(`  ✓ Translations CID: ${encryptedData.translationsCid}`)
+        tablelandData.translations = { encrypted: encryptedData.translationsCid }
       }
     }
 

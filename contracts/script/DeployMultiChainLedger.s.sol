@@ -4,19 +4,18 @@ pragma solidity ^0.8.20;
 import {Script, console} from "forge-std/Script.sol";
 import {KaraokeSchool} from "../src/KaraokeSchool.sol";
 
-contract DeployMultiChain is Script {
+contract DeployMultiChainLedger is Script {
     struct NetworkConfig {
         address usdcAddress;
         address splitsContract;
     }
     
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        
         // Get network config based on chain ID
         NetworkConfig memory config = getNetworkConfig();
         
-        vm.startBroadcast(deployerPrivateKey);
+        // Don't use private key, let Ledger handle signing
+        vm.startBroadcast();
         
         KaraokeSchool karaoke = new KaraokeSchool(
             config.usdcAddress, 

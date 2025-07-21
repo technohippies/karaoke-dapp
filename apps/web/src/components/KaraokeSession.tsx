@@ -8,6 +8,7 @@ import { KaraokeCompletion } from './KaraokeCompletion'
 import { useKaraoke } from '../hooks/useKaraoke'
 import { karaokeScoringService } from '../services/integrations/lit/KaraokeScoringService'
 import { SpinnerWithScarlett } from './ui/spinner-with-scarlett'
+import { isProduction } from '../config/networks.config'
 
 interface KaraokeSessionProps {
   songId: number
@@ -47,8 +48,8 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
     isWalletLoading
   })
   
-  // Use first 3 lines for testing
-  const testLyrics = lyrics.slice(0, 3)
+  // Use all lyrics for production, only 3 lines for testing
+  const testLyrics = isProduction ? lyrics : lyrics.slice(0, 3)
   
   // Memoize the onComplete callback to prevent recreation
   const handleKaraokeComplete = useCallback(async (mp3Blob: Blob, expectedLyrics: string) => {

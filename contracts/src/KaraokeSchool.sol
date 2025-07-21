@@ -12,7 +12,6 @@ interface IERC20 {
 contract KaraokeSchool is Ownable {
     IERC20 public immutable usdcToken;
     address public immutable splitsContract;
-    address public pkpAddress;
     
     uint256 public constant COMBO_PRICE = 7_000_000; // 7 USDC (6 decimals)
     uint256 public constant VOICE_PACK_PRICE = 4_000_000; // 4 USDC
@@ -37,11 +36,9 @@ contract KaraokeSchool is Ownable {
     
     constructor(
         address _usdcToken, 
-        address _pkpAddress,
         address _splitsContract
     ) Ownable(msg.sender) {
         usdcToken = IERC20(_usdcToken);
-        pkpAddress = _pkpAddress;
         splitsContract = _splitsContract;
     }
     
@@ -125,9 +122,6 @@ contract KaraokeSchool is Ownable {
         emit ExerciseStarted(msg.sender, numExercises);
     }
     
-    function setPkpAddress(address _pkpAddress) external onlyOwner {
-        pkpAddress = _pkpAddress;
-    }
     
     // Emergency function to recover any stuck tokens (not USDC from purchases)
     function recoverToken(address token, uint256 amount) external onlyOwner {
