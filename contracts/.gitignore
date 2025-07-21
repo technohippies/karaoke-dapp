@@ -1,0 +1,11 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Foundry files
+cache/
+out/
+
+# Broadcast files contain sensitive deployment info
+broadcast/

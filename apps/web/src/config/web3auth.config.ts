@@ -40,6 +40,13 @@ const getWeb3AuthNetwork = (network: string) => {
   }
 };
 
+// Debug logging
+console.log('🔐 Web3Auth Config:', {
+  clientId: clientId.substring(0, 10) + '...',
+  networkName,
+  network: getWeb3AuthNetwork(networkName)
+});
+
 const web3AuthContextConfig: Web3AuthContextConfig = {
   web3AuthOptions: {
     clientId,
