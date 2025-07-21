@@ -119,6 +119,13 @@ export function StudyPageV2() {
   const loadDueCards = async () => {
     if (!address) return
     
+    console.log('🎯 StudyPageV2 - Loading due cards with:', {
+      address,
+      voiceCredits,
+      isConnected,
+      contractAddress: KARAOKE_CONTRACT_ADDRESS
+    })
+    
     try {
       setIsLoading(true)
       const cards = await getDueCards(20)
@@ -145,6 +152,13 @@ export function StudyPageV2() {
         setIsCheckingCredits(true)
         setCreditError(null)
         try {
+          console.log('📝 Starting exercise with:', {
+            contractAddress: KARAOKE_CONTRACT_ADDRESS,
+            userAddress: address,
+            numExercises: cards.length,
+            voiceCredits
+          })
+          
           await startExerciseWrite({
             address: KARAOKE_CONTRACT_ADDRESS,
             abi: KARAOKE_SCHOOL_ABI,
@@ -375,20 +389,6 @@ export function StudyPageV2() {
               <p className="text-white/60">
                 {isTransactionPending ? t('exercise.confirmingTransaction') : t('exercise.checkingCredits')}
               </p>
-              {isTransactionPending && (
-                <div className="space-y-2">
-                  <p className="text-sm text-white/40">
-                    This may take a few seconds...
-                  </p>
-                  <div className="flex justify-center">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
