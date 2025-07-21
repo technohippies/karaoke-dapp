@@ -7,6 +7,7 @@ interface SyncStatusProps {
   localStreak: number
   cloudStreak: number | null
   lastSyncTimestamp: number | null
+  lastSyncError?: string
   onSaveProgress: () => void
   onRecover: () => void
   isSyncing?: boolean
@@ -17,6 +18,7 @@ export function SyncStatus({
   localStreak,
   cloudStreak,
   lastSyncTimestamp,
+  lastSyncError,
   onSaveProgress,
   onRecover,
   isSyncing = false,
@@ -39,6 +41,11 @@ export function SyncStatus({
       ) : (
         <>
           <h3 className="text-xl font-semibold text-white mb-4">{t('account.syncStatus.title')}</h3>
+          {lastSyncError && (
+            <div className="mb-4 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+              <p className="text-sm text-red-400">Last sync failed: {lastSyncError}</p>
+            </div>
+          )}
           <div className="flex gap-3">
           <Button
             onClick={onSaveProgress}

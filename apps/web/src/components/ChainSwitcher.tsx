@@ -1,5 +1,6 @@
 import { Button } from './ui/button'
 import { useAccount } from 'wagmi'
+import { useTranslation } from 'react-i18next'
 
 interface ChainSwitcherProps {
   requiredChainId: number
@@ -9,6 +10,7 @@ interface ChainSwitcherProps {
 
 export function ChainSwitcher({ requiredChainId, children, className }: ChainSwitcherProps) {
   const { chain } = useAccount()
+  const { t } = useTranslation()
   
   if (chain?.id === requiredChainId) {
     return <>{children}</>
@@ -17,11 +19,11 @@ export function ChainSwitcher({ requiredChainId, children, className }: ChainSwi
   const getChainName = (chainId: number) => {
     switch (chainId) {
       case 8453:
-        return 'Base'
+        return t('account.network.base')
       case 84532:
-        return 'Base Sepolia'
+        return t('account.network.baseSepolia')
       case 11155420:
-        return 'Optimism Sepolia'
+        return t('account.network.optimismSepolia')
       default:
         return 'Unknown Network'
     }
@@ -32,7 +34,7 @@ export function ChainSwitcher({ requiredChainId, children, className }: ChainSwi
       disabled
       className={className}
     >
-      Switch to {getChainName(requiredChainId)}
+      {t('account.network.switchTo')} {getChainName(requiredChainId)}
     </Button>
   )
 }

@@ -5,8 +5,9 @@ import { CrownCross, Fire } from '@phosphor-icons/react'
 import { SimpleHeader } from '../components/SimpleHeader'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { SyncStatus } from '../components/SyncStatus'
-import { BASE_SEPOLIA_CHAIN_ID } from '../constants'
-import { defaultChainId as DEFAULT_CHAIN_ID } from '../config/networks.config'
+import { ChainSwitcher } from '../components/ChainSwitcher'
+import { BASE_SEPOLIA_CHAIN_ID, OPTIMISM_SEPOLIA_CHAIN_ID } from '../constants'
+import { defaultChainId as DEFAULT_CHAIN_ID, tablelandChainId } from '../config/networks.config'
 import { usePurchase } from '../hooks/usePurchase'
 import { useStreak } from '../hooks/useStreak'
 import { useIDBSync } from '../hooks/useIDBSync'
@@ -27,9 +28,9 @@ export function AccountPage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isRecovering, setIsRecovering] = useState(false)
   
-  // Load cloud streak from Tableland
+  // Load cloud streak from Tableland when on Tableland chain
   useEffect(() => {
-    if (address && walletClient && chain?.id === DEFAULT_CHAIN_ID) {
+    if (address && walletClient && chain?.id === tablelandChainId) {
       loadCloudStreak()
     }
   }, [address, walletClient, chain?.id])
@@ -65,7 +66,12 @@ export function AccountPage() {
       await refreshStreak() // Refresh local streak
     } catch (error) {
       console.error('Failed to save progress:', error)
-      alert(t('account.errors.failedToSave'))
+      // Check if it's a specific error we can provide more context for
+      if (error instanceof Error && error.message.includes('BATCH_ERROR')) {
+        alert(t('account.errors.failedToSave') + ' ' + t('account.errors.transactionTooLarge'))
+      } else {
+        alert(t('account.errors.failedToSave'))
+      }
     } finally {
       setIsSyncing(false)
     }
@@ -134,13 +140,14 @@ export function AccountPage() {
             </div>
           </div>
           
-          {/* Sync Status */}
-          {chain?.id === DEFAULT_CHAIN_ID && (
+          {/* Sync Status - Show sync options when on Tableland chain */}
+          {chain?.id === tablelandChainId && (
             <div className="mb-8">
               <SyncStatus
                 localStreak={localStreak}
                 cloudStreak={cloudStreak}
                 lastSyncTimestamp={syncStatus.lastSyncTimestamp}
+                lastSyncError={syncStatus.lastSyncError}
                 onSaveProgress={handleSaveProgress}
                 onRecover={handleRecover}
                 isSyncing={isSyncing}
@@ -149,18 +156,50 @@ export function AccountPage() {
             </div>
           )}
           
-          {/* Credits Widget */}
-          <CreditsWidget 
-            balance={balance}
-            voiceCredits={voiceCredits}
-            songCredits={songCredits}
-          />
+          {/* Message about switching to Tableland chain for sync */}
+          {chain?.id === DEFAULT_CHAIN_ID && DEFAULT_CHAIN_ID !== tablelandChainId && (
+            <div className="mb-8 bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+              <p className="text-blue-400 mb-3">
+                {t('account.network.syncChainMessage')} {tablelandChainId === OPTIMISM_SEPOLIA_CHAIN_ID ? t('account.network.optimismSepolia') : 'Tableland'}.
+              </p>
+              <ChainSwitcher 
+                requiredChainId={tablelandChainId}
+                className="w-full"
+              />
+            </div>
+          )}
           
-          {/* Network message */}
-          {chain && chain.id !== DEFAULT_CHAIN_ID && (
+          {/* Credits Widget - Show when on contract chain */}
+          {chain?.id === DEFAULT_CHAIN_ID && (
+            <CreditsWidget 
+              balance={balance}
+              voiceCredits={voiceCredits}
+              songCredits={songCredits}
+            />
+          )}
+          
+          {/* Message when on Tableland chain but not contract chain */}
+          {chain?.id === tablelandChainId && chain?.id !== DEFAULT_CHAIN_ID && (
+            <div className="bg-yellow-900/20 border border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-400 mb-3">
+                {t('account.network.creditsChainMessage')} {DEFAULT_CHAIN_ID === BASE_SEPOLIA_CHAIN_ID ? t('account.network.baseSepolia') : t('account.network.base')}.
+              </p>
+              <ChainSwitcher 
+                requiredChainId={DEFAULT_CHAIN_ID}
+                className="w-full"
+              />
+            </div>
+          )}
+          
+          {/* Network info message for unsupported chains */}
+          {chain && chain.id !== DEFAULT_CHAIN_ID && chain.id !== tablelandChainId && (
             <div className="mt-4">
               <p className="text-neutral-400">
-                {t('account.network.currentNetwork')}: {chain.name || `Chain ${chain.id}`}. {t('account.network.pleaseConnect')} {DEFAULT_CHAIN_ID === BASE_SEPOLIA_CHAIN_ID ? t('account.network.baseSepolia') : t('account.network.base')}.
+                {t('account.network.currentNetwork')}: {chain.name || `Chain ${chain.id}`}. 
+                {t('account.network.unsupportedChain', {
+                  contractChain: DEFAULT_CHAIN_ID === BASE_SEPOLIA_CHAIN_ID ? t('account.network.baseSepolia') : t('account.network.base'),
+                  tablelandChain: tablelandChainId === OPTIMISM_SEPOLIA_CHAIN_ID ? t('account.network.optimismSepolia') : 'Tableland'
+                })}
               </p>
             </div>
           )}

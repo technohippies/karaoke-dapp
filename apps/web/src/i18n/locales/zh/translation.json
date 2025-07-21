@@ -16,7 +16,18 @@
       "due": "待复习",
       "studyButton": "学习",
       "allCaughtUp": "全部完成！",
-      "singKaraokeToAdd": "唱卡拉OK来添加抽认卡！"
+      "singKaraokeToAdd": "唱卡拉OK来添加抽认卡！",
+      "completion": {
+        "greatJob": "做得好！",
+        "streakGrowing": "太棒了！你的连续学习天数在增长！继续保持！",
+        "practiceSession": "练习得很好！明天再来建立你的连续学习记录！",
+        "back": "返回",
+        "shareToFarcaster": "分享到 Farcaster",
+        "shareToFarcasterSoon": "分享到 Farcaster（即将推出）",
+        "shareMessageStreak": "我刚完成了一次学习，将我的连续学习天数增长到了 {{streak}} 天！🔥 在 https://karaoke.school 通过卡拉OK学习语言",
+        "shareMessage": "我刚完成了一次学习！🎵 在 https://karaoke.school 通过卡拉OK学习语言",
+        "scarlettPointingAlt": "Scarlett 指向"
+      }
     }
   },
   "leaderboard": {
@@ -98,11 +109,17 @@
       "currentNetwork": "网络",
       "pleaseConnect": "请连接到",
       "baseSepolia": "Base Sepolia",
-      "base": "Base"
+      "base": "Base",
+      "optimismSepolia": "Optimism Sepolia",
+      "syncChainMessage": "要同步进度，请切换到",
+      "creditsChainMessage": "要查看积分，请切换到",
+      "switchTo": "切换到",
+      "unsupportedChain": "本应用使用 {{contractChain}} 管理积分，{{tablelandChain}} 同步数据。"
     },
     "errors": {
       "failedToSave": "保存进度失败。请重试。",
-      "failedToRecover": "恢复数据失败。请重试。"
+      "failedToRecover": "恢复数据失败。请重试。",
+      "transactionTooLarge": "交易太大。请尝试减少同步项目的数量。"
     }
   },
   "pricing": {

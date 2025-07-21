@@ -90,7 +90,7 @@ export function StudyCompletion({
             </div>
             <img 
               src={scarlettPointing} 
-              alt="Scarlett pointing" 
+              alt={t('home.study.completion.scarlettPointingAlt')} 
               className="w-48 h-auto"
             />
           </div>

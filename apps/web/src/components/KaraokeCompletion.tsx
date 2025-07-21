@@ -56,7 +56,7 @@ export function KaraokeCompletion({
     isInitialized,
     syncStatus
   } = useIDBSRS()
-  const { getDueCards } = useDirectIDB()
+  const { getUserStats } = useDirectIDB()
   const [saveError] = useState<string | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [dueCardsCount, setDueCardsCount] = useState<number | null>(null)
@@ -94,10 +94,10 @@ export function KaraokeCompletion({
           // Add a small delay to ensure IDB transaction is fully committed
           setTimeout(async () => {
             // Check for due cards after saving
-            const cards = await getDueCards(1) // Just need to know if there are any
-            setDueCardsCount(cards.length)
-            console.log('📊 Due cards after save:', cards.length)
-          }, 500) // 500ms delay to ensure IDB transaction completes
+            const stats = await getUserStats()
+            setDueCardsCount(stats.cardsToReview)
+            console.log('📊 Due cards after save:', stats.cardsToReview)
+          }, 1500) // 1.5s delay to ensure IDB transaction fully completes
         }
       } catch (err) {
         console.error('❌ Auto-save to IDB failed:', err)
@@ -105,7 +105,7 @@ export function KaraokeCompletion({
     }
     
     autoSaveToIDB()
-  }, [isInitialized, songId, scoringDetails, score, transcript, startedAt, saveKaraokeSession, localSaveComplete, getDueCards])
+  }, [isInitialized, songId, scoringDetails, score, transcript, startedAt, saveKaraokeSession, localSaveComplete, getUserStats])
   
   // Monitor chain changes
   useEffect(() => {

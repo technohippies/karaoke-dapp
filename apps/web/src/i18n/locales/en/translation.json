@@ -25,7 +25,8 @@
         "shareToFarcaster": "Share to Farcaster",
         "shareToFarcasterSoon": "Share to Farcaster (Soon)",
         "shareMessageStreak": "I just completed a study session and grew my streak to {{streak}} days! 🔥 Learning languages through karaoke at https://karaoke.school",
-        "shareMessage": "I just completed a study session! 🎵 Learning languages through karaoke at https://karaoke.school"
+        "shareMessage": "I just completed a study session! 🎵 Learning languages through karaoke at https://karaoke.school",
+        "scarlettPointingAlt": "Scarlett pointing"
       }
     }
   },
@@ -108,11 +109,17 @@
       "currentNetwork": "Network",
       "pleaseConnect": "Please connect to",
       "baseSepolia": "Base Sepolia",
-      "base": "Base"
+      "base": "Base",
+      "optimismSepolia": "Optimism Sepolia",
+      "syncChainMessage": "To sync your progress, switch to",
+      "creditsChainMessage": "To view credits, switch to",
+      "switchTo": "Switch to",
+      "unsupportedChain": "This app works with {{contractChain}} for credits and {{tablelandChain}} for data sync."
     },
     "errors": {
       "failedToSave": "Failed to save progress. Please try again.",
-      "failedToRecover": "Failed to recover data. Please try again."
+      "failedToRecover": "Failed to recover data. Please try again.",
+      "transactionTooLarge": "The transaction is too large. Try reducing the number of items to sync."
     }
   },
   "pricing": {
