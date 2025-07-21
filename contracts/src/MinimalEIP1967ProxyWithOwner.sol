@@ -40,8 +40,10 @@ contract MinimalEIP1967ProxyWithOwner {
     // ENScribe compatibility - transfer ownership changes admin
     function transferOwnership(address newOwner) external {
         require(msg.sender == owner(), "Ownable: caller is not the owner");
+        require(newOwner != address(0), "Invalid owner");
         address oldOwner = owner();
-        changeAdmin(newOwner);
+        _setAdmin(newOwner);
+        emit AdminChanged(oldOwner, newOwner);
         emit OwnershipTransferred(oldOwner, newOwner);
     }
     
