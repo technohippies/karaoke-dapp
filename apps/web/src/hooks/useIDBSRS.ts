@@ -220,10 +220,11 @@ export function useIDBSRS() {
       return null
     }
 
-    // Ensure we're on Optimism Sepolia for Tableland
-    if (chain?.id !== 11155420) {
-      const msg = 'Please switch to Optimism Sepolia network for sync'
-      console.error('❌ Wrong chain:', chain?.id, 'need:', 11155420)
+    // Ensure we're on the correct Tableland chain
+    const tablelandChainId = Number(import.meta.env.VITE_TABLELAND_CHAIN_ID) || 11155420
+    if (chain?.id !== tablelandChainId) {
+      const msg = `Please switch to ${tablelandChainId === 8453 ? 'Base Mainnet' : 'Optimism Sepolia'} network for sync`
+      console.error('❌ Wrong chain:', chain?.id, 'need:', tablelandChainId)
       setError(msg)
       return null
     }

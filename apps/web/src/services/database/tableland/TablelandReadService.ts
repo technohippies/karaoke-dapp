@@ -38,7 +38,9 @@ export interface Song {
 
 // Tableland Service Class
 export class TablelandService {
-  private baseUrl = 'https://testnets.tableland.network/api/v1';
+  private baseUrl = import.meta.env.VITE_DEFAULT_CHAIN_ID === '8453' 
+    ? 'https://tableland.network/api/v1'
+    : 'https://testnets.tableland.network/api/v1';
   
   // Using REST API (no wallet required for reads)
   async getSongs(): Promise<Song[]> {

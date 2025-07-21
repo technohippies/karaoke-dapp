@@ -165,7 +165,9 @@ export function AccountPage() {
               <ChainSwitcher 
                 requiredChainId={tablelandChainId}
                 className="w-full"
-              />
+              >
+                <></>
+              </ChainSwitcher>
             </div>
           )}
           
@@ -187,7 +189,9 @@ export function AccountPage() {
               <ChainSwitcher 
                 requiredChainId={DEFAULT_CHAIN_ID}
                 className="w-full"
-              />
+              >
+                <></>
+              </ChainSwitcher>
             </div>
           )}
           

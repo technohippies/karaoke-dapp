@@ -1,0 +1,27 @@
+{
+  "network": "Base Mainnet",
+  "chainId": 8453,
+  "deploymentDate": "2025-07-21",
+  "contracts": {
+    "KaraokeProxy": {
+      "address": "0x06AC258d391A5B2B6660d8d5Dee97507591376D0",
+      "type": "Proxy"
+    },
+    "KaraokeSchoolV2": {
+      "address": "0xC812b46cF46A6e87AB8eA46341d306fD8BD52F85",
+      "type": "Implementation"
+    }
+  },
+  "owner": "0x25B4048c3B3c58973571db2dbbF87103f7406966",
+  "dependencies": {
+    "USDC": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "splitsContract": "0x7eA10e96D656Ab19D679fFfA3CA1Db9A531B1210"
+  },
+  "gasUsed": "3919030",
+  "notes": [
+    "Use proxy address (0x06AC258d391A5B2B6660d8d5Dee97507591376D0) for all interactions",
+    "Splits contract correctly set to 0x7eA10e96D656Ab19D679fFfA3CA1Db9A531B1210",
+    "Contract verification pending due to API rate limit",
+    "Previous deployment at 0xbeBaE3Cf7477F1B34C944535D2cf31c15B2bfA05 had wrong splits address"
+  ]
+}

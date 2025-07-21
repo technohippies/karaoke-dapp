@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 import {Script, console} from "forge-std/Script.sol";
 import {KaraokeProxy} from "../src/KaraokeProxy.sol";
-import {KaraokeSchool} from "../src/KaraokeSchool.sol";
+import {KaraokeSchoolV2} from "../src/KaraokeSchoolV2.sol";
 
 contract SetupProxy is Script {
     function run() external {
@@ -24,7 +24,7 @@ contract SetupProxy is Script {
         console.log("Implementation set successfully");
         
         // Verify by calling a view function through proxy
-        KaraokeSchool karaoke = KaraokeSchool(payable(proxyAddress));
+        KaraokeSchoolV2 karaoke = KaraokeSchoolV2(payable(proxyAddress));
         address owner = karaoke.owner();
         console.log("Owner (via proxy):", owner);
         
