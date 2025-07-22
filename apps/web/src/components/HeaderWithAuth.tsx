@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi'
 import { useNavigate } from 'react-router-dom'
 import { useStreak } from '../hooks/useStreak'
 import { LanguageSelector } from './LanguageSelector'
+import { useTranslation } from 'react-i18next'
 
 interface HeaderWithAuthProps {
   crownCount?: number
@@ -21,6 +22,7 @@ export function HeaderWithAuth({
   onBack,
   pageTitle
 }: HeaderWithAuthProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { address, isConnected } = useAccount()
   const { connect, loading: connectLoading } = useWeb3AuthConnect()
@@ -83,11 +85,11 @@ export function HeaderWithAuth({
               {isConnected && address ? (
                 userInfo?.name || formatAddress(address)
               ) : connectLoading ? (
-                'Connecting...'
+                t('common.connecting')
               ) : disconnectLoading ? (
-                'Disconnecting...'
+                t('common.disconnecting')
               ) : (
-                'Connect'
+                t('common.connectWallet')
               )}
             </Button>
             <LanguageSelector />

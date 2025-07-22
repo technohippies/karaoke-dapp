@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'

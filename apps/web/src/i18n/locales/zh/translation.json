@@ -1,6 +1,8 @@
 {
   "common": {
     "connectWallet": "连接钱包",
+    "connecting": "连接中...",
+    "disconnecting": "断开连接中...",
     "buyCredits": "购买积分"
   },
   "home": {

@@ -1,6 +1,8 @@
 {
   "common": {
     "connectWallet": "ھەمياننى ئۇلاش",
+    "connecting": "ئۇلىنىۋاتىدۇ...",
+    "disconnecting": "ئۈزۈلۈۋاتىدۇ...",
     "buyCredits": "نومۇر سېتىۋېلىش"
   },
   "home": {

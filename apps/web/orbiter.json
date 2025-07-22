@@ -1,0 +1,6 @@
+{
+  "siteId": "8afa41a4-1c1e-46c4-9c57-f03f67dbf234",
+  "domain": "karaokeschool",
+  "buildCommand": "npm run build:prod",
+  "buildDir": "dist"
+}

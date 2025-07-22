@@ -40,15 +40,13 @@ const queryClient = new QueryClient()
 
 const root = createRoot(document.getElementById('root')!)
 root.render(
-  <React.StrictMode>
-    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-900"><SpinnerWithScarlett size="lg" /></div>}>
-      <QueryClientProvider client={queryClient}>
-        <Web3AuthProvider config={web3AuthContextConfig}>
-          <WagmiProvider>
-            <App />
-          </WagmiProvider>
-        </Web3AuthProvider>
-      </QueryClientProvider>
-    </React.Suspense>
-  </React.StrictMode>
+  <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-900"><SpinnerWithScarlett size="lg" /></div>}>
+    <QueryClientProvider client={queryClient}>
+      <Web3AuthProvider config={web3AuthContextConfig}>
+        <WagmiProvider>
+          <App />
+        </WagmiProvider>
+      </Web3AuthProvider>
+    </QueryClientProvider>
+  </React.Suspense>
 )

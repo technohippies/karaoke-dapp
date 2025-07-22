@@ -56,7 +56,7 @@ i18n
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
-      lookupLocalStorage: 'karaoke_language'
+      lookupLocalStorage: 'i18nextLng'
     },
 
     interpolation: {

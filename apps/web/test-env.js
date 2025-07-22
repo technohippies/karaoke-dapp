@@ -1,1 +1,0 @@
-console.log('KARAOKE_CONTRACT_ADDRESS:', import.meta.env.VITE_KARAOKE_CONTRACT)

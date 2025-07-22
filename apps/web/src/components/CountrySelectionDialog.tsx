@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import {
   Dialog,
   DialogContent,
@@ -21,58 +22,13 @@ import { Warning } from '@phosphor-icons/react'
 import { Alert, AlertDescription } from './ui/alert'
 
 // ISO 3166-1 alpha-2 country codes - top 50 by population + music markets
-const COUNTRIES = [
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'IN', name: 'India' },
-  { code: 'CN', name: 'China' },
-  { code: 'ID', name: 'Indonesia' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'PL', name: 'Poland' },
-  { code: 'RU', name: 'Russia' },
-  { code: 'TR', name: 'Turkey' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'AE', name: 'United Arab Emirates' },
-  { code: 'IL', name: 'Israel' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'HK', name: 'Hong Kong' },
-  { code: 'TW', name: 'Taiwan' },
-  { code: 'TH', name: 'Thailand' },
-  { code: 'MY', name: 'Malaysia' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'VN', name: 'Vietnam' },
-  { code: 'AR', name: 'Argentina' },
-  { code: 'CL', name: 'Chile' },
-  { code: 'CO', name: 'Colombia' },
-  { code: 'PE', name: 'Peru' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'NZ', name: 'New Zealand' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'GR', name: 'Greece' },
-  { code: 'CZ', name: 'Czech Republic' },
-  { code: 'HU', name: 'Hungary' },
-].sort((a, b) => a.name.localeCompare(b.name))
+const COUNTRY_CODES = [
+  'US', 'GB', 'CA', 'AU', 'DE', 'FR', 'JP', 'KR', 'BR', 'MX', 
+  'IN', 'CN', 'ID', 'IT', 'ES', 'NL', 'SE', 'NO', 'DK', 'FI', 
+  'PL', 'RU', 'TR', 'SA', 'AE', 'IL', 'SG', 'HK', 'TW', 'TH', 
+  'MY', 'PH', 'VN', 'AR', 'CL', 'CO', 'PE', 'ZA', 'NG', 'EG', 
+  'KE', 'NZ', 'IE', 'AT', 'CH', 'BE', 'PT', 'GR', 'CZ', 'HU'
+]
 
 interface CountrySelectionDialogProps {
   open: boolean
@@ -85,6 +41,13 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
   const [ipCountry, setIpCountry] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showMismatchWarning, setShowMismatchWarning] = useState(false)
+
+  // Create sorted countries list using native browser API
+  const displayNames = new Intl.DisplayNames([i18n.language], { type: 'region' })
+  const countries = COUNTRY_CODES.map(code => ({
+    code,
+    name: displayNames.of(code) || code
+  })).sort((a, b) => a.name.localeCompare(b.name, i18n.language))
 
   // Fetch IP-based country when dialog opens
   useEffect(() => {
@@ -126,7 +89,7 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
   }
 
   const ipCountryName = ipCountry 
-    ? COUNTRIES.find(c => c.code === ipCountry)?.name || ipCountry
+    ? displayNames.of(ipCountry) || ipCountry
     : null
 
   return (
@@ -159,7 +122,7 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
                 className="bg-neutral-800 border-neutral-700" 
                 position="item-aligned"
               >
-                {COUNTRIES.map(country => (
+                {countries.map(country => (
                   <SelectItem 
                     key={country.code} 
                     value={country.code}

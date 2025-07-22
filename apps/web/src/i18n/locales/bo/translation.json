@@ -1,6 +1,7 @@
 {
   "common": {
     "connectWallet": "སྒམ་འབྲེལ་མཐུད་",
+    "connecting": "འབྲེལ་མཐུད་བཞིན་པ།...",
     "buyCredits": "སྐར་མ་ཉོ་"
   },
   "home": {

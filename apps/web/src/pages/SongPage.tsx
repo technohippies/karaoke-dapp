@@ -588,7 +588,7 @@ export function SongPage() {
                 className="w-full px-6 py-3"
               >
                 <CircleNotch size={20} className="animate-spin mr-2" />
-                Connecting...
+                {t('common.connecting')}
               </Button>
             ) : !isConnected ? (
               <Button
@@ -596,7 +596,7 @@ export function SongPage() {
                 disabled={connectLoading}
                 className="w-full px-6 py-3"
               >
-                {connectLoading ? 'Connecting...' : 'Connect Wallet'}
+                {connectLoading ? t('common.connecting') : t('common.connectWallet')}
               </Button>
             ) : chain?.id !== DEFAULT_CHAIN_ID ? (
               <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full">

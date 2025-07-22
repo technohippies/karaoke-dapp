@@ -1,6 +1,8 @@
 {
   "common": {
     "connectWallet": "Connect Wallet",
+    "connecting": "Connecting...",
+    "disconnecting": "Disconnecting...",
     "buyCredits": "Buy Credits"
   },
   "home": {
