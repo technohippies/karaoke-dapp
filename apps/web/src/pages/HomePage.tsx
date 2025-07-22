@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAccount } from 'wagmi'
 import { useTranslation } from 'react-i18next'
-import { useWeb3AuthConnect } from '@web3auth/modal/react'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
 import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
@@ -16,13 +15,12 @@ import doctorsWithoutBorders from '../assets/doctors-without-borders.png'
 export function HomePage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
-  const { isConnected, address } = useAccount()
+  const { isConnected, address, connect } = useWalletAuth()
   const navigate = useNavigate()
   const { getUserStats, isReady: isDBReady } = useDirectIDB()
   const { currentStreak } = useStreak()
   const [srsStats, setSrsStats] = useState({ new: 0, learning: 0, due: 0 })
   const { t, i18n } = useTranslation()
-  const { connect } = useWeb3AuthConnect()
   
   // Log current language for debugging
   useEffect(() => {
@@ -31,6 +29,14 @@ export function HomePage() {
     console.log('Available languages:', i18n.languages)
     console.log('Translation test - Songs:', t('home.songs'))
     console.log('Translation test - NEW:', t('home.study.new'))
+    console.log('i18n store:', i18n.store.data)
+    console.log('i18n resources:', i18n.options.resources)
+    // Direct test
+    if (i18n.options.resources?.en?.translation) {
+      console.log('Direct access test:', (i18n.options.resources.en.translation as any).home?.songs)
+    }
+    console.log('Get resource:', i18n.getResource('en', 'translation', 'home.songs'))
+    console.log('Get resource nested:', i18n.getResource('en', 'translation', 'home'))
   }, [i18n.language, t])
 
   useEffect(() => {

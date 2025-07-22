@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
-import { useWeb3AuthConnect } from '@web3auth/modal/react'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 import { useTranslation } from 'react-i18next'
 import { MusicNote, FileText, Lock, CircleNotch } from '@phosphor-icons/react'
 import { tablelandService, type Song } from '../services/database/tableland/TablelandReadService'
@@ -31,7 +31,7 @@ export function SongPage() {
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
-  const { connect: connectWallet, loading: connectLoading } = useWeb3AuthConnect()
+  const walletAuth = useWalletAuth()
   const { loadContent, checkCacheOnly, content, isLoading: isContentLoading, error: contentError } = usePostUnlockContent()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
@@ -592,11 +592,11 @@ export function SongPage() {
               </Button>
             ) : !isConnected ? (
               <Button
-                onClick={connectWallet}
-                disabled={connectLoading}
+                onClick={walletAuth.connect}
+                disabled={walletAuth.isConnecting}
                 className="w-full px-6 py-3"
               >
-                {connectLoading ? t('common.connecting') : t('common.connectWallet')}
+                {walletAuth.isConnecting ? t('common.connecting') : t('common.connectWallet')}
               </Button>
             ) : chain?.id !== DEFAULT_CHAIN_ID ? (
               <ChainSwitcher requiredChainId={DEFAULT_CHAIN_ID} className="w-full">

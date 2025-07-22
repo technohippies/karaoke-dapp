@@ -8,7 +8,7 @@ import zh from './locales/zh/translation.json'
 import ug from './locales/ug/translation.json'
 import bo from './locales/bo/translation.json'
 
-const resources = {
+export const resources = {
   en: { translation: en },
   zh: { translation: zh },
   'zh-CN': { translation: zh }, // Support both zh and zh-CN
@@ -44,6 +44,11 @@ i18n
     // Ensure all languages are loaded
     supportedLngs: ['en', 'zh', 'ug', 'bo'],
     load: 'languageOnly', // This will treat zh-CN as zh
+    
+    // IMPORTANT: Set react.useSuspense to false to ensure sync loading
+    react: {
+      useSuspense: false
+    },
     
     debug: true // Enable debug mode to see language detection logs
   })

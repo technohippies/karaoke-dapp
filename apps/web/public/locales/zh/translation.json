@@ -1,0 +1,225 @@
+{
+  "common": {
+    "connectWallet": "连接钱包",
+    "connecting": "连接中...",
+    "disconnecting": "断开连接中...",
+    "buyCredits": "购买积分"
+  },
+  "home": {
+    "heroTitle": "卡拉OK学英语",
+    "heroSubtitle": "与Scarlett一起",
+    "yourFlashcards": "你的学习卡",
+    "songs": "歌曲",
+    "loadingSongs": "正在加载歌曲...",
+    "noSongs": "暂无歌曲",
+    "study": {
+      "new": "新的",
+      "learning": "学习中",
+      "due": "待复习",
+      "studyButton": "学习",
+      "allCaughtUp": "全部完成！",
+      "singKaraokeToAdd": "唱卡拉OK来添加抽认卡！",
+      "completion": {
+        "greatJob": "做得好！",
+        "streakGrowing": "太棒了！你的连续学习天数在增长！继续保持！",
+        "practiceSession": "练习得很好！明天再来建立你的连续学习记录！",
+        "back": "返回",
+        "shareToFarcaster": "分享到 Farcaster",
+        "shareToFarcasterSoon": "分享到 Farcaster（即将推出）",
+        "shareMessageStreak": "我刚完成了一次学习，将我的连续学习天数增长到了 {{streak}} 天！🔥 在 https://karaoke.school 通过卡拉OK学习语言",
+        "shareMessage": "我刚完成了一次学习！🎵 在 https://karaoke.school 通过卡拉OK学习语言",
+        "scarlettPointingAlt": "Scarlett 指向"
+      }
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "排行榜即将推出！"
+  },
+  "song": {
+    "loading": "歌曲加载中...",
+    "loadingContent": "内容加载中...",
+    "tabs": {
+      "lyrics": "歌词",
+      "leaderboard": "排行榜"
+    },
+    "unlock": {
+      "title": "解锁歌曲",
+      "loadContent": "加载内容以查看歌词",
+      "button": "解锁",
+      "unlocking": "解锁中...",
+      "loading": "加载中...",
+      "needSongCredit": "解锁（1个歌曲积分）",
+      "needVoiceCredit": "购买语音积分",
+      "description1": "",
+      "description2": ""
+    },
+    "karaoke": {
+      "start": "开始K歌",
+      "starting": "启动中...",
+      "selectLine": "选择一行"
+    },
+    "lyricsMeaning": {
+      "meaning": "含义",
+      "grammar": "语法"
+    },
+    "priceInfo": {
+      "song": "1个歌曲积分 = {{price}} USDC",
+      "voice": "1个语音积分 = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "没有歌曲积分",
+      "voice": "没有语音积分"
+    }
+  },
+  "streaming": {
+    "title": "播放",
+    "platforms": {
+      "soundcloud": "SoundCloud",
+      "spotify": "Spotify",
+      "appleMusic": "Apple Music",
+      "youtube": "YouTube",
+      "qqMusic": "QQ音乐",
+      "netease": "网易云音乐"
+    },
+    "noLinks": "没有可用的播放链接",
+    "censored": "被审查？使用",
+    "sentinelDVPN": "Sentinel DVPN",
+    "orUseThis": "或使用这个：",
+    "soundcloudMirror": "SoundCloud 镜像"
+  },
+  "account": {
+    "title": "账户",
+    "walletAddress": "您的钱包地址",
+    "crowns": "皇冠",
+    "crownsComingSoon": "(即将推出)",
+    "dayStreak": "连续天数",
+    "syncStatus": {
+      "title": "同步状态",
+      "synced": "已同步",
+      "ago": "前",
+      "saveProgress": "保存进度",
+      "recoverFromCloud": "从云端恢复"
+    },
+    "credits": {
+      "title": "积分",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "语音",
+      "songs": "歌曲",
+      "pricing": "价格"
+    },
+    "network": {
+      "currentNetwork": "网络",
+      "pleaseConnect": "请连接到",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base",
+      "optimismSepolia": "Optimism Sepolia",
+      "syncChainMessage": "要同步进度，请切换到",
+      "creditsChainMessage": "要查看积分，请切换到",
+      "switchTo": "切换到",
+      "unsupportedChain": "本应用使用 {{contractChain}} 管理积分，{{tablelandChain}} 同步数据。"
+    },
+    "errors": {
+      "failedToSave": "保存进度失败。请重试。",
+      "failedToRecover": "恢复数据失败。请重试。",
+      "transactionTooLarge": "交易太大。请尝试减少同步项目的数量。"
+    }
+  },
+  "pricing": {
+    "title": "价格",
+    "starterPack": "卡拉OK新手包",
+    "voicePack": "卡拉OK语音包",
+    "songPack": "卡拉OK歌曲包",
+    "voiceCredits": "语音积分",
+    "songCredits": "歌曲积分",
+    "voiceCredit": "语音积分",
+    "eachKaraokeCosts": "每次卡拉OK消耗",
+    "buy": "购买",
+    "approving": "批准中...",
+    "purchasing": "购买中...",
+    "connectToPurchase": "连接钱包以购买"
+  },
+  "faq": {
+    "title": "常见问题",
+    "howDoesItWork": {
+      "question": "这是如何工作的？",
+      "answer": "歌曲积分解锁歌曲。一旦解锁，您可以通过卡拉OK学习英语歌词，阅读翻译，并练习由AI评分的练习。一旦解锁，您将永远拥有该歌曲的访问权限。"
+    },
+    "whatAreSongCredits": {
+      "question": "什么是歌曲积分？",
+      "answer": "歌曲积分让您可以访问歌曲的歌词、翻译以及进行卡拉OK的能力。"
+    },
+    "whatAreVoiceCredits": {
+      "question": "什么是语音积分？",
+      "answer": "语音积分用于卡拉OK（每次30积分）和语言学习练习（每次1积分）。它们为AI评分系统提供动力。"
+    },
+    "whyPayGas": {
+      "question": "为什么我必须支付gas费？",
+      "answer": "您在Tableland上拥有自己的数据库中的数据。您可以在其他dapp中使用这些数据，我们相信这是教育运作的未来方式。"
+    },
+    "isThisNew": {
+      "question": "这是新的吗？",
+      "answer": "是的，这是一个全新的dapp，请报告错误。"
+    },
+    "moreComingSoon": {
+      "question": "你们会添加更多歌曲吗？",
+      "answer": "是的，很多。还有更多乐器。"
+    },
+    "justEnglish": {
+      "question": "只教英语吗？",
+      "answer": "是的，但社区成员很快会分叉一个西班牙语版本。"
+    },
+    "isOpenSource": {
+      "question": "这个代码是开源的吗？",
+      "answer": "是的，我们所有的代码都是完全开源的（AGPLv3），在"
+    }
+  },
+  "exercise": {
+    "sayThis": "说这句：",
+    "loadingCards": "加载学习卡片中...",
+    "processing": "处理中...",
+    "stopRecording": "停止录音",
+    "next": "下一个",
+    "tryAgain": "再试一次",
+    "startRecording": "开始录音",
+    "youSaid": "你说的是：",
+    "checkingCredits": "扣除语音积分中...",
+    "confirmingTransaction": "确认交易中...",
+    "insufficientCredits": "语音积分不足",
+    "purchaseMoreCredits": "您需要更多语音积分才能开始此练习。",
+    "goToPricing": "购买积分",
+    "errorStarting": "无法开始练习",
+    "tryAgainLater": "开始练习时出错。请稍后再试。",
+    "backToHome": "返回主页"
+  },
+  "karaoke": {
+    "grading": "评分中",
+    "score": "分数",
+    "scoreMessages": {
+      "excellent": "非常棒！",
+      "good": "做得好！",
+      "keepPracticing": "继续练习！",
+      "gettingThere": "快要成功了！",
+      "dontGiveUp": "不要放弃！"
+    },
+    "completion": {
+      "savedLocally": "您的进度已保存在本地。随时可以通过练习进行学习！",
+      "readyToStudy": "现在您可以通过练习进行学习了！",
+      "connectWalletToSave": "连接您的钱包到 Optimism Sepolia 以保存进度",
+      "syncing": "同步中...",
+      "saved": "已保存",
+      "saveProgress": "保存进度"
+    }
+  },
+  "countryDialog": {
+    "title": "卡拉OK英语学校",
+    "nonprofit": "非营利组织",
+    "ownData": "您拥有自己的数据，我们不托管任何内容",
+    "donation": "歌曲收入的50%捐赠给无国界医生",
+    "donationShort": "50%捐赠给无国界医生",
+    "yourCountry": "您的国家",
+    "selectCountry": "选择您的国家",
+    "detecting": "正在检测您的位置...",
+    "ipMismatch": "您的IP地址显示来自{{country}}。请确认您的实际居住国家。",
+    "confirm": "确认"
+  }
+}

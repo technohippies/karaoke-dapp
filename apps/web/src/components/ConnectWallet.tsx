@@ -1,8 +1,8 @@
-import { useWeb3AuthConnect } from '@web3auth/modal/react'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 import './ConnectWallet.css'
 
 export function ConnectWallet() {
-  const { connect, isConnected, connectorName, loading, error } = useWeb3AuthConnect()
+  const { connect, isConnected, isConnecting } = useWalletAuth()
   
   return (
     <div className="connect-wallet">
@@ -13,17 +13,13 @@ export function ConnectWallet() {
         <button
           onClick={() => connect()}
           className="wallet-button"
-          disabled={loading || isConnected}
+          disabled={isConnecting || isConnected}
         >
-          {loading ? 'Connecting...' : 'Connect with Web3Auth'}
+          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
         </button>
         
-        {error && (
-          <p className="error-message">{error.message}</p>
-        )}
-        
-        {isConnected && connectorName && (
-          <p className="success-message">Connected via {connectorName}</p>
+        {isConnected && (
+          <p className="success-message">Connected successfully!</p>
         )}
       </div>
     </div>

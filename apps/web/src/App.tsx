@@ -46,6 +46,30 @@ function App() {
     }
   }, [])
   
+  // Signal Farcaster Mini App ready after component mounts
+  useEffect(() => {
+    console.log('🎯 [v2] App mounted, checking for SDK...')
+    // Check if we have the Farcaster SDK
+    if (window.farcasterSDK) {
+      console.log('🎯 [v2] SDK found, waiting 100ms before calling ready()')
+      // Small delay to ensure all child components are rendered
+      const timer = setTimeout(() => {
+        console.log('🎯 [v2] Calling ready() now...')
+        window.farcasterSDK.actions.ready()
+          .then(() => {
+            console.log('🎯 [v2] Farcaster Mini App ready signal sent successfully!')
+          })
+          .catch((err: any) => {
+            console.error('🎯 [v2] Failed to send ready signal to Farcaster:', err)
+          })
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    } else {
+      console.log('🎯 [v2] No SDK found, not calling ready()')
+    }
+  }, [])
+  
 
   return (
     <IDBProvider>

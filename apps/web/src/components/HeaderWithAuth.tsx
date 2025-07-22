@@ -1,10 +1,9 @@
 import { CrownCross, Fire, CaretLeft } from '@phosphor-icons/react'
 import { Button } from './ui/button'
 import { IconButton } from './IconButton'
-import { useWeb3AuthConnect, useWeb3AuthDisconnect, useWeb3AuthUser } from '@web3auth/modal/react'
-import { useAccount } from 'wagmi'
 import { useNavigate } from 'react-router-dom'
 import { useStreak } from '../hooks/useStreak'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 import { LanguageSelector } from './LanguageSelector'
 import { useTranslation } from 'react-i18next'
 
@@ -24,10 +23,7 @@ export function HeaderWithAuth({
 }: HeaderWithAuthProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { address, isConnected } = useAccount()
-  const { connect, loading: connectLoading } = useWeb3AuthConnect()
-  const { loading: disconnectLoading } = useWeb3AuthDisconnect()
-  const { userInfo } = useWeb3AuthUser()
+  const { address, isConnected, isConnecting, isDisconnecting, connect } = useWalletAuth()
   const { currentStreak } = useStreak()
   
   const formatAddress = (addr: string) => {
@@ -80,13 +76,13 @@ export function HeaderWithAuth({
             <Button 
               variant="outline" 
               onClick={handleAuth}
-              disabled={connectLoading || disconnectLoading}
+              disabled={isConnecting || isDisconnecting}
             >
               {isConnected && address ? (
-                userInfo?.name || formatAddress(address)
-              ) : connectLoading ? (
+                formatAddress(address)
+              ) : isConnecting ? (
                 t('common.connecting')
-              ) : disconnectLoading ? (
+              ) : isDisconnecting ? (
                 t('common.disconnecting')
               ) : (
                 t('common.connectWallet')

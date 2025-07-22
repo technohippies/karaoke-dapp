@@ -1,17 +1,17 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Web3AuthProvider } from '@web3auth/modal/react'
-import { WagmiProvider } from '@web3auth/modal/react/wagmi'
-import web3AuthContextConfig from './config/web3auth.config'
 import App from './App'
-import i18n from './i18n' // Initialize i18n
+import i18n from './i18n/config' // Initialize i18n
 import './index.css'
 import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
+import { WalletProvider } from './components/WalletProvider'
 
 // Check if running as a Farcaster Mini App
 const url = new URL(window.location.href)
-const isMiniApp = url.pathname.startsWith('/mini') || url.searchParams.get('miniApp') === 'true'
+const isMiniApp = url.pathname.startsWith('/mini') || url.searchParams.get('miniApp') === 'true' ||
+  window.location.hostname === 'karaoke.school' || 
+  window.location.hostname === 'karaokeschool.school'
 
 // Dynamically import Farcaster SDK if running as Mini App
 if (isMiniApp) {
@@ -19,17 +19,6 @@ if (isMiniApp) {
     // Store SDK globally for use in components
     window.farcasterSDK = sdk
     console.log('🎯 Farcaster Mini App SDK loaded')
-    
-    // Signal ready after a small delay to ensure UI is rendered
-    setTimeout(() => {
-      sdk.actions.ready()
-        .then(() => {
-          console.log('🎯 Farcaster Mini App ready signal sent')
-        })
-        .catch((err: any) => {
-          console.error('Failed to send ready signal to Farcaster:', err)
-        })
-    }, 100)
   }).catch(err => {
     console.error('Failed to load Farcaster SDK:', err)
   })
@@ -37,6 +26,10 @@ if (isMiniApp) {
 
 // Clear localStorage language cache for testing (remove this in production)
 // localStorage.removeItem('i18nextLng')
+
+// Version info for debugging
+console.log('📦 App Version: 1.0.3 - Farcaster wallet auto-connect fix')
+console.log('🎯 Is Mini App:', isMiniApp)
 
 // Log language detection info
 console.log('🌐 Initial language detection:', {
@@ -53,11 +46,9 @@ const root = createRoot(document.getElementById('root')!)
 root.render(
   <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-neutral-900"><SpinnerWithScarlett size="lg" /></div>}>
     <QueryClientProvider client={queryClient}>
-      <Web3AuthProvider config={web3AuthContextConfig}>
-        <WagmiProvider>
-          <App />
-        </WagmiProvider>
-      </Web3AuthProvider>
+      <WalletProvider isMiniApp={isMiniApp}>
+        <App />
+      </WalletProvider>
     </QueryClientProvider>
   </React.Suspense>
 )

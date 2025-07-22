@@ -1,0 +1,225 @@
+{
+  "common": {
+    "connectWallet": "Connect Wallet",
+    "connecting": "Connecting...",
+    "disconnecting": "Disconnecting...",
+    "buyCredits": "Buy Credits"
+  },
+  "home": {
+    "heroTitle": "Karaoke to Learn English",
+    "heroSubtitle": "with Scarlett",
+    "yourFlashcards": "Your Flashcards",
+    "songs": "Songs",
+    "loadingSongs": "Loading songs...",
+    "noSongs": "No songs available",
+    "study": {
+      "new": "NEW",
+      "learning": "LEARNING",
+      "due": "DUE",
+      "studyButton": "Study",
+      "allCaughtUp": "All Caught Up!",
+      "singKaraokeToAdd": "Sing Karaoke to Add Flashcards!",
+      "completion": {
+        "greatJob": "Great job!",
+        "streakGrowing": "Awesome! Your streak is growing! Keep it up!",
+        "practiceSession": "Great practice session! Come back tomorrow to build your streak!",
+        "back": "Back",
+        "shareToFarcaster": "Share to Farcaster",
+        "shareToFarcasterSoon": "Share to Farcaster (Soon)",
+        "shareMessageStreak": "I just completed a study session and grew my streak to {{streak}} days! 🔥 Learning languages through karaoke at https://karaoke.school",
+        "shareMessage": "I just completed a study session! 🎵 Learning languages through karaoke at https://karaoke.school",
+        "scarlettPointingAlt": "Scarlett pointing"
+      }
+    }
+  },
+  "leaderboard": {
+    "comingSoon": "Leaderboards coming soon!"
+  },
+  "song": {
+    "loading": "Loading song...",
+    "loadingContent": "Loading Content...",
+    "tabs": {
+      "lyrics": "Lyrics",
+      "leaderboard": "Leaderboard"
+    },
+    "unlock": {
+      "title": "Unlock Song",
+      "loadContent": "Load content to view lyrics",
+      "button": "Unlock",
+      "unlocking": "Unlocking...",
+      "loading": "Loading...",
+      "needSongCredit": "Unlock (1 song credit)",
+      "needVoiceCredit": "Buy Voice Credits",
+      "description1": "",
+      "description2": ""
+    },
+    "karaoke": {
+      "start": "Start Karaoke",
+      "starting": "Starting...",
+      "selectLine": "Select a line"
+    },
+    "lyricsMeaning": {
+      "meaning": "Meaning",
+      "grammar": "Grammar"
+    },
+    "priceInfo": {
+      "song": "1 Song Credit = {{price}} USDC",
+      "voice": "1 Voice Credit = {{price}} USDC"
+    },
+    "noCredits": {
+      "song": "No song credits",
+      "voice": "No voice credits"
+    }
+  },
+  "streaming": {
+    "title": "Stream",
+    "platforms": {
+      "soundcloud": "SoundCloud",
+      "spotify": "Spotify",
+      "appleMusic": "Apple Music",
+      "youtube": "YouTube",
+      "qqMusic": "QQ Music",
+      "netease": "NetEase Music"
+    },
+    "noLinks": "No streaming links available",
+    "censored": "Censored? Use",
+    "sentinelDVPN": "Sentinel DVPN",
+    "orUseThis": "or use this:",
+    "soundcloudMirror": "SoundCloud Mirror"
+  },
+  "account": {
+    "title": "Account",
+    "walletAddress": "Your Wallet Address",
+    "crowns": "Crowns",
+    "crownsComingSoon": "(Coming Soon)",
+    "dayStreak": "Day Streak",
+    "syncStatus": {
+      "title": "Sync Status",
+      "synced": "Synced",
+      "ago": "ago",
+      "saveProgress": "Save Progress",
+      "recoverFromCloud": "Recover from Cloud"
+    },
+    "credits": {
+      "title": "Credits",
+      "usdcBalance": "USDC (Base $ETH)",
+      "voice": "Voice",
+      "songs": "Songs",
+      "pricing": "Pricing"
+    },
+    "network": {
+      "currentNetwork": "Network",
+      "pleaseConnect": "Please connect to",
+      "baseSepolia": "Base Sepolia",
+      "base": "Base",
+      "optimismSepolia": "Optimism Sepolia",
+      "syncChainMessage": "To sync your progress, switch to",
+      "creditsChainMessage": "To view credits, switch to",
+      "switchTo": "Switch to",
+      "unsupportedChain": "This app works with {{contractChain}} for credits and {{tablelandChain}} for data sync."
+    },
+    "errors": {
+      "failedToSave": "Failed to save progress. Please try again.",
+      "failedToRecover": "Failed to recover data. Please try again.",
+      "transactionTooLarge": "The transaction is too large. Try reducing the number of items to sync."
+    }
+  },
+  "pricing": {
+    "title": "Pricing",
+    "starterPack": "Karaoke Starter Pack",
+    "voicePack": "Karaoke Voice Pack",
+    "songPack": "Karaoke Song Pack",
+    "voiceCredits": "Voice Credits",
+    "songCredits": "Song Credits",
+    "voiceCredit": "voice credit",
+    "eachKaraokeCosts": "Each karaoke costs",
+    "buy": "Buy",
+    "approving": "Approving...",
+    "purchasing": "Purchasing...",
+    "connectToPurchase": "Connect Wallet to Purchase"
+  },
+  "faq": {
+    "title": "FAQ",
+    "howDoesItWork": {
+      "question": "How does this work?",
+      "answer": "Song credits unlock songs. Once unlocked, you can karaoke to the lyrics to learn English, read the translations, and practice exercises where your errors will be graded by AI. Once unlocked, you always have access to the song."
+    },
+    "whatAreSongCredits": {
+      "question": "What are song credits?",
+      "answer": "Song credits give you access to the song's lyrics, its translations, and the ability to do karaoke."
+    },
+    "whatAreVoiceCredits": {
+      "question": "What are voice credits?",
+      "answer": "Voice credits are used for karaoke sessions (30 credits each) and language learning exercises (1 credit each). They power the AI grading system."
+    },
+    "whyPayGas": {
+      "question": "Why do I have to pay gas?",
+      "answer": "You own your data in your own database on Tableland. You can use this data in other dapps, and we believe this is the future of how education will work."
+    },
+    "isThisNew": {
+      "question": "Is this new?",
+      "answer": "Yes, this is a brand new dapp, so please report bugs."
+    },
+    "moreComingSoon": {
+      "question": "Will you be adding more songs?",
+      "answer": "Yes, lots. More instruments too."
+    },
+    "justEnglish": {
+      "question": "Just teaching English?",
+      "answer": "Yes, but a community member will be forking for Spanish soon."
+    },
+    "isOpenSource": {
+      "question": "Is this code open source?",
+      "answer": "Yes, all of our code is fully open source (AGPLv3) on"
+    }
+  },
+  "exercise": {
+    "sayThis": "Say this:",
+    "loadingCards": "Loading study cards...",
+    "processing": "Processing...",
+    "stopRecording": "Stop Recording",
+    "next": "Next",
+    "tryAgain": "Try Again",
+    "startRecording": "Start Recording",
+    "youSaid": "You said:",
+    "checkingCredits": "Deducting voice credits...",
+    "confirmingTransaction": "Confirming transaction...",
+    "insufficientCredits": "Insufficient Voice Credits",
+    "purchaseMoreCredits": "You need more voice credits to start this exercise session.",
+    "goToPricing": "Purchase Credits",
+    "errorStarting": "Failed to Start Exercise",
+    "tryAgainLater": "There was an error starting your exercise session. Please try again later.",
+    "backToHome": "Back to Home"
+  },
+  "karaoke": {
+    "grading": "Grading",
+    "score": "Score",
+    "scoreMessages": {
+      "excellent": "Excellent work!",
+      "good": "Good job!",
+      "keepPracticing": "Keep practicing!",
+      "gettingThere": "You're getting there!",
+      "dontGiveUp": "Don't give up!"
+    },
+    "completion": {
+      "savedLocally": "Your progress is saved locally. Study with exercises anytime!",
+      "readyToStudy": "Now you can study with exercises!",
+      "connectWalletToSave": "Connect your wallet to Optimism Sepolia to save progress",
+      "syncing": "Syncing...",
+      "saved": "Saved",
+      "saveProgress": "Save Progress"
+    }
+  },
+  "countryDialog": {
+    "title": "Karaoke English School",
+    "nonprofit": "Non-profit",
+    "ownData": "You own your data, we host nothing",
+    "donation": "50% of song revenue donated to Doctors Without Borders",
+    "donationShort": "50% to Doctors Without Borders",
+    "yourCountry": "Your Country",
+    "selectCountry": "Select your country",
+    "detecting": "Detecting your location...",
+    "ipMismatch": "Your IP address appears to be from {{country}}. Please confirm your actual country of residence.",
+    "confirm": "Confirm"
+  }
+}

@@ -53,14 +53,14 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
   useEffect(() => {
     if (open && !ipCountry) {
       setLoading(true)
-      fetch('http://ip-api.com/json/?fields=status,countryCode')
+      fetch('https://ipapi.co/json/')
         .then(res => res.json())
         .then(data => {
-          if (data.status === 'success' && data.countryCode) {
-            setIpCountry(data.countryCode)
+          if (data.country_code) {
+            setIpCountry(data.country_code)
             // Auto-select the IP country if user hasn't selected anything yet
             if (!selectedCountry) {
-              setSelectedCountry(data.countryCode)
+              setSelectedCountry(data.country_code)
             }
           }
         })
