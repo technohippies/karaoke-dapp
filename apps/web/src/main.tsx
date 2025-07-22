@@ -7,11 +7,9 @@ import './index.css'
 import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
 import { WalletProvider } from './components/WalletProvider'
 
-// Check if running as a Farcaster Mini App
+// Check if running as a Farcaster Mini App - ONLY via query param or path
 const url = new URL(window.location.href)
-const isMiniApp = url.pathname.startsWith('/mini') || url.searchParams.get('miniApp') === 'true' ||
-  window.location.hostname === 'karaoke.school' || 
-  window.location.hostname === 'karaokeschool.school'
+const isMiniApp = url.pathname.startsWith('/mini') || url.searchParams.get('miniApp') === 'true'
 
 // Dynamically import Farcaster SDK if running as Mini App
 if (isMiniApp) {
@@ -28,7 +26,7 @@ if (isMiniApp) {
 // localStorage.removeItem('i18nextLng')
 
 // Version info for debugging
-console.log('📦 App Version: 1.0.3 - Farcaster wallet auto-connect fix')
+console.log('📦 App Version: 1.0.6 - Fixed Web3Auth network mismatch')
 console.log('🎯 Is Mini App:', isMiniApp)
 
 // Log language detection info

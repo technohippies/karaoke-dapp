@@ -1,13 +1,11 @@
 {
   "name": "@karaoke/web",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && cp dist/index.html dist/404.html",
-    "build:prod": "./build-prod.sh",
-    "build:orbiter": "./build-orbiter.sh",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",

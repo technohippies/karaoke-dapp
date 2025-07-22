@@ -50,9 +50,9 @@ console.log('🔐 Web3Auth Config:', {
 const web3AuthContextConfig: Web3AuthContextConfig = {
   web3AuthOptions: {
     clientId,
-    web3AuthNetwork: getWeb3AuthNetwork(networkName), // Must match your Web3Auth dashboard setting
+    web3AuthNetwork: getWeb3AuthNetwork(networkName),
     uiConfig: {
-      appName: "Karaoke Quest",
+      appName: "Karaoke Quest", 
       appUrl: window.location.origin,
       theme: {
         primary: "#768729"

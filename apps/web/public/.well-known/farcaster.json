@@ -1,6 +1,6 @@
 {
   "miniapp": {
-    "version": "1",
+    "version": "2",
     "name": "卡拉OK英语 Karaoke English",
     "iconUrl": "https://karaoke.school/app-icon-1024.png",
     "homeUrl": "https://karaoke.school?miniApp=true",
