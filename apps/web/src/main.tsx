@@ -19,6 +19,17 @@ if (isMiniApp) {
     // Store SDK globally for use in components
     window.farcasterSDK = sdk
     console.log('🎯 Farcaster Mini App SDK loaded')
+    
+    // Signal ready after a small delay to ensure UI is rendered
+    setTimeout(() => {
+      sdk.actions.ready()
+        .then(() => {
+          console.log('🎯 Farcaster Mini App ready signal sent')
+        })
+        .catch((err: any) => {
+          console.error('Failed to send ready signal to Farcaster:', err)
+        })
+    }, 100)
   }).catch(err => {
     console.error('Failed to load Farcaster SDK:', err)
   })

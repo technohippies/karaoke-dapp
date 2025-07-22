@@ -46,23 +46,6 @@ function App() {
     }
   }, [])
   
-  // Signal Farcaster Mini App ready after UI renders
-  useEffect(() => {
-    if (window.farcasterSDK) {
-      // Small delay to ensure UI is fully rendered
-      const timer = setTimeout(() => {
-        window.farcasterSDK.actions.ready()
-          .then(() => {
-            console.log('🎯 Farcaster Mini App ready signal sent')
-          })
-          .catch((err: any) => {
-            console.error('Failed to send ready signal to Farcaster:', err)
-          })
-      }, 100) // 100ms delay to avoid content reflows
-      
-      return () => clearTimeout(timer)
-    }
-  }, [])
 
   return (
     <IDBProvider>
