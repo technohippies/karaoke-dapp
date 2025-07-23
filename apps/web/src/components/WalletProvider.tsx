@@ -4,6 +4,7 @@ import { WagmiProvider } from '@web3auth/modal/react/wagmi'
 import { WagmiProvider as WagmiProviderStandalone } from 'wagmi'
 import web3AuthContextConfig from '../config/web3auth.config'
 import { farcasterWagmiConfig } from '../config/wagmi-farcaster.config'
+import { web3AuthWagmiConfig } from '../config/wagmi-web3auth.config'
 
 interface WalletProviderProps {
   children: ReactNode
@@ -21,7 +22,7 @@ export function WalletProvider({ children, isMiniApp }: WalletProviderProps) {
 
   return (
     <Web3AuthProvider config={web3AuthContextConfig}>
-      <WagmiProvider>
+      <WagmiProvider config={web3AuthWagmiConfig}>
         {children}
       </WagmiProvider>
     </Web3AuthProvider>

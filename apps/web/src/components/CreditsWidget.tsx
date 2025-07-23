@@ -10,14 +10,13 @@ interface CreditsWidgetProps {
   hidePricingButton?: boolean
 }
 
-export function CreditsWidget({ balance, voiceCredits, songCredits, hidePricingButton = false }: CreditsWidgetProps) {
+export function CreditsWidget({ balance: _balance, voiceCredits, songCredits, hidePricingButton = false }: CreditsWidgetProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   
   return (
     <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
       <h3 className="text-xl font-semibold text-white mb-2">{t('account.credits.title')}</h3>
-      <p className="text-neutral-400 mb-6">{t('account.credits.usdcBalance')}: <span className="text-white font-semibold">${balance}</span></p>
       
       {/* Credits Row */}
       <div className="flex gap-4 mb-6">

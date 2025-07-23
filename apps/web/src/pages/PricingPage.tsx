@@ -53,15 +53,19 @@ export function PricingPage() {
       {isFirstPurchase ? (
         // Starter Pack for new users
         <div className="mb-8">
-          <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
-            <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.starterPack')}</h3>
-            <div className="text-4xl font-bold text-blue-400 mb-2">$7 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
-            <ul className="space-y-2 text-gray-300 mb-6">
-              <li>3 {t('pricing.songCredits')}</li>
-              <li>2,000 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 30 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">Exercises: 1 {t('pricing.voiceCredit')} each</li>
-            </ul>
+          <div className="rounded-lg p-8 bg-neutral-800 border border-neutral-700 text-center">
+            <h3 className="text-3xl font-bold mb-6 text-white">{t('pricing.starterPack')}</h3>
+            <div className="text-4xl font-bold text-blue-400 mb-6">$7 <span className="text-sm text-neutral-400 font-medium">$USDC Base</span></div>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="rounded-lg p-4 text-center border border-neutral-700">
+                <div className="text-2xl font-bold text-white">3</div>
+                <div className="text-neutral-400 text-sm font-medium mt-1">Songs</div>
+              </div>
+              <div className="rounded-lg p-4 text-center border border-neutral-700">
+                <div className="text-2xl font-bold text-white">2k</div>
+                <div className="text-neutral-400 text-sm font-medium mt-1">{t('pricing.voiceCredits')}</div>
+              </div>
+            </div>
             
             {!isConnected ? (
               <Button className="w-full bg-white text-black py-3 px-6" disabled>
@@ -90,12 +94,21 @@ export function PricingPage() {
                 </Button>
               </ChainSwitcher>
             )}
+            
+            {/* USDC Balance */}
+            {isConnected && (
+              <div className="mt-4 text-center">
+                <p className="text-neutral-400 text-sm">
+                  Balance: <span className="text-white font-semibold">${balance}</span> $USDC Base
+                </p>
+              </div>
+            )}
           </div>
         </div>
       ) : (
         <>
           {/* Credits Widget - shown above purchase options for existing users */}
-          {isConnected && (
+          {isConnected && (voiceCredits > 0 || songCredits > 0) && (
             <div className="mb-8">
               <CreditsWidget 
                 balance={balance}
@@ -111,11 +124,9 @@ export function PricingPage() {
           {/* Voice Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.voicePack')}</h3>
-            <div className="text-4xl font-bold text-green-400 mb-2">$4 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-green-400 mb-2">$4 <span className="text-sm text-neutral-400 font-medium">$USDC Base</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>2,000 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">{t('pricing.eachKaraokeCosts')} 30 {t('pricing.voiceCredits')}</li>
-              <li className="text-sm text-gray-400">Exercises: 1 {t('pricing.voiceCredit')} each</li>
+              <li>2k {t('pricing.voiceCredits')}</li>
             </ul>
             
             <ChainSwitcher requiredChainId={defaultChainId} className="w-full">
@@ -144,9 +155,9 @@ export function PricingPage() {
           {/* Song Pack */}
           <div className="rounded-lg p-6 bg-neutral-800 border border-neutral-700">
             <h3 className="text-2xl font-bold mb-2 text-white">{t('pricing.songPack')}</h3>
-            <div className="text-4xl font-bold text-purple-400 mb-2">$3 <span className="text-sm text-gray-400">($ETH on Base)</span></div>
+            <div className="text-4xl font-bold text-purple-400 mb-2">$3 <span className="text-sm text-neutral-400 font-medium">$USDC Base</span></div>
             <ul className="space-y-2 text-gray-300 mb-6">
-              <li>3 {t('pricing.songCredits')}</li>
+              <li>3 Songs</li>
             </ul>
             
             <ChainSwitcher requiredChainId={defaultChainId} className="w-full">
@@ -176,7 +187,7 @@ export function PricingPage() {
       )}
 
       {/* Credits Widget - shown below starter pack for first time users */}
-      {isFirstPurchase && isConnected && (
+      {isFirstPurchase && isConnected && (voiceCredits > 0 || songCredits > 0) && (
         <CreditsWidget 
           balance={balance}
           voiceCredits={voiceCredits}
@@ -191,35 +202,35 @@ export function PricingPage() {
         <div className="space-y-6">
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.howDoesItWork.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.howDoesItWork.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.howDoesItWork.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whatAreSongCredits.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.whatAreSongCredits.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.whatAreSongCredits.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whatAreVoiceCredits.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.whatAreVoiceCredits.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.whatAreVoiceCredits.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.whyPayGas.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.whyPayGas.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.whyPayGas.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.isThisNew.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.isThisNew.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.isThisNew.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.moreComingSoon.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.moreComingSoon.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.moreComingSoon.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.justEnglish.question')}</h3>
-            <p className="text-neutral-50 text-md">{t('faq.justEnglish.answer')}</p>
+            <p className="text-neutral-50 text-base">{t('faq.justEnglish.answer')}</p>
           </div>
           <div>
             <h3 className="font-semibold mb-2 text-white text-lg">{t('faq.isOpenSource.question')}</h3>
-            <p className="text-neutral-50 text-md">
+            <p className="text-neutral-50 text-base">
               {t('faq.isOpenSource.answer')}{' '}
               <a href="https://github.com/technohippies/karaoke-dapp" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
                 GitHub

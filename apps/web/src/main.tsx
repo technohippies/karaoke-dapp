@@ -26,7 +26,7 @@ if (isMiniApp) {
 // localStorage.removeItem('i18nextLng')
 
 // Version info for debugging
-console.log('📦 App Version: 1.0.6 - Fixed Web3Auth network mismatch')
+console.log('📦 App Version: 1.0.8 - Fixed env loading for production deployment')
 console.log('🎯 Is Mini App:', isMiniApp)
 
 // Log language detection info

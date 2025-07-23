@@ -148,7 +148,6 @@ export function usePurchase() {
       abi: USDC_ABI,
       functionName: 'approve',
       args: [KARAOKE_CONTRACT_ADDRESS, amount],
-      gas: 100000n, // Set reasonable gas limit for Base
     })
   }
 
@@ -161,7 +160,6 @@ export function usePurchase() {
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buyCombopack',
       args: [country],
-      gas: 150000n, // Set reasonable gas limit for Base
     })
   }
 

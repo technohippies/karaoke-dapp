@@ -126,7 +126,7 @@
   },
   "pricing": {
     "title": "Pricing",
-    "starterPack": "Karaoke Starter Pack",
+    "starterPack": "Karaoke Starter",
     "voicePack": "Karaoke Voice Pack",
     "songPack": "Karaoke Song Pack",
     "voiceCredits": "Voice Credits",
@@ -146,7 +146,7 @@
     },
     "whatAreSongCredits": {
       "question": "What are song credits?",
-      "answer": "Song credits give you access to the song's lyrics, its translations, and the ability to do karaoke."
+      "answer": "Song credits give you access to the song's lyrics, its translations, and the ability to do karaoke. Each song costs 1 credit to unlock."
     },
     "whatAreVoiceCredits": {
       "question": "What are voice credits?",
@@ -154,7 +154,7 @@
     },
     "whyPayGas": {
       "question": "Why do I have to pay gas?",
-      "answer": "You own your data in your own database on Tableland. You can use this data in other dapps, and we believe this is the future of how education will work."
+      "answer": "You own your data in your own database on Tableland, so you pay the gas. Storage and gas tends to be very cheap on Base, often less than $.01 for gas."
     },
     "isThisNew": {
       "question": "Is this new?",
