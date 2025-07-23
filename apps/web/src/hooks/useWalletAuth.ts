@@ -1,6 +1,6 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
-import { useWeb3Auth } from '@web3auth/modal/react'
 import { useEffect } from 'react'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 
 // Check if we're in a Farcaster Mini App context
 export const isMiniApp = () => {
@@ -16,13 +16,13 @@ export const isMiniApp = () => {
 export function useWalletAuth() {
   const miniApp = isMiniApp()
   
-  // Wagmi hooks for both contexts (Web3Auth provides wagmi integration)
+  // Wagmi hooks for all contexts
   const wagmiAccount = useAccount()
   const { connect: wagmiConnect, connectors } = useConnect()
   const { disconnect: wagmiDisconnect } = useDisconnect()
   
-  // Web3Auth context for modal control
-  const { web3Auth } = useWeb3Auth() || {}
+  // RainbowKit modal hook for non-mini app context
+  const { openConnectModal } = useConnectModal()
 
   // Auto-connect for Farcaster Mini App
   useEffect(() => {
@@ -32,7 +32,7 @@ export function useWalletAuth() {
     }
   }, [miniApp, wagmiAccount.isConnected, connectors, wagmiConnect])
 
-  // Unified interface - Web3Auth uses wagmi under the hood
+  // Unified interface
   return {
     address: wagmiAccount.address,
     isConnected: wagmiAccount.isConnected,
@@ -46,25 +46,14 @@ export function useWalletAuth() {
           wagmiConnect({ connector: connectors[0] })
         }
       } else {
-        // Regular app - trigger Web3Auth modal
-        if (web3Auth) {
-          try {
-            await web3Auth.connect()
-          } catch (error) {
-            console.error('Web3Auth connection error:', error)
-          }
-        } else if (connectors.length > 0) {
-          // Fallback to first wagmi connector
-          wagmiConnect({ connector: connectors[0] })
+        // Regular app - trigger RainbowKit modal
+        if (openConnectModal) {
+          openConnectModal()
         }
       }
     },
     disconnect: async () => {
-      if (web3Auth && web3Auth.status === 'connected') {
-        await web3Auth.logout()
-      } else {
-        wagmiDisconnect()
-      }
+      wagmiDisconnect()
     }
   }
 }

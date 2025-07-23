@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MemoryRouter } from 'react-router-dom'
-import { WagmiProvider } from '@web3auth/modal/react/wagmi'
-import { Web3AuthProvider } from '@web3auth/modal/react'
+import { WagmiProvider } from 'wagmi'
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import web3AuthContextConfig from '../config/web3auth.config'
+import { rainbowConfig } from '../config/rainbowkit.config'
 import { PricingPage } from '../pages/PricingPage'
 
 const meta: Meta<typeof PricingPage> = {
@@ -30,13 +30,13 @@ const meta: Meta<typeof PricingPage> = {
       
       return (
         <QueryClientProvider client={queryClient}>
-          <Web3AuthProvider config={web3AuthContextConfig}>
-            <WagmiProvider>
+          <WagmiProvider config={rainbowConfig}>
+            <RainbowKitProvider>
               <MemoryRouter>
                 <Story />
               </MemoryRouter>
-            </WagmiProvider>
-          </Web3AuthProvider>
+            </RainbowKitProvider>
+          </WagmiProvider>
         </QueryClientProvider>
       )
     },

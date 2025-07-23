@@ -1,11 +1,8 @@
 import { CrownCross, Fire, CaretLeft } from '@phosphor-icons/react'
-import { Button } from './ui/button'
 import { IconButton } from './IconButton'
-import { useNavigate } from 'react-router-dom'
 import { useStreak } from '../hooks/useStreak'
-import { useWalletAuth } from '../hooks/useWalletAuth'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { LanguageSelector } from './LanguageSelector'
-import { useTranslation } from 'react-i18next'
 
 interface HeaderWithAuthProps {
   crownCount?: number
@@ -21,22 +18,7 @@ export function HeaderWithAuth({
   onBack,
   pageTitle
 }: HeaderWithAuthProps) {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-  const { address, isConnected, isConnecting, isDisconnecting, connect } = useWalletAuth()
   const { currentStreak } = useStreak()
-  
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-3)}`
-  }
-
-  const handleAuth = () => {
-    if (isConnected) {
-      navigate('/account')
-    } else {
-      connect()
-    }
-  }
 
   return (
     <header className="w-full bg-neutral-900 border-b border-neutral-700 h-16">
@@ -73,21 +55,7 @@ export function HeaderWithAuth({
           </div>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleAuth}
-              disabled={isConnecting || isDisconnecting}
-            >
-              {isConnected && address ? (
-                formatAddress(address)
-              ) : isConnecting ? (
-                t('common.connecting')
-              ) : isDisconnecting ? (
-                t('common.disconnecting')
-              ) : (
-                t('common.connectWallet')
-              )}
-            </Button>
+            <ConnectButton />
             <LanguageSelector />
           </div>
         </div>

@@ -82,7 +82,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
           return
         }
         
-        const signer = await walletClientToSigner(currentWalletClient)
+        const signer = await walletClientToSigner(currentWalletClient as any)
         console.log('🔑 Signer created:', signer)
         
         const result = await karaokeScoringService.scoreKaraoke(
