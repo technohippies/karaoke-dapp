@@ -154,7 +154,7 @@
     },
     "whyPayGas": {
       "question": "为什么我必须支付gas费？",
-      "answer": "您在Tableland上拥有自己的数据库中的数据。您可以在其他dapp中使用这些数据，我们相信这是教育运作的未来方式。"
+      "answer": "您在Tableland上拥有自己的数据库中的数据，所以您需要支付gas费。在Base上存储和gas费通常非常便宜，gas费通常少于$0.01。"
     },
     "isThisNew": {
       "question": "这是新的吗？",

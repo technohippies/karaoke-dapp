@@ -6,6 +6,14 @@
   "workspaces": [
     "apps/*"
   ],
+  "scripts": {
+    "upload-action": "npx tsx scripts/upload-lit-action.ts",
+    "mint-pkp": "npx tsx scripts/mint-pkp-with-permissions.ts",
+    "mint-pkp:self-owned": "npx tsx scripts/mint-pkp-with-permissions.ts --self-owned",
+    "dev": "cd apps/web && npm run dev",
+    "dev:porto": "cd apps/porto-test && npm run dev",
+    "build": "cd apps/web && npm install && npm run build"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "latest",
@@ -28,12 +36,5 @@
     "dotenv": "latest",
     "form-data": "latest",
     "wagmi": "^2.15.6"
-  },
-  "scripts": {
-    "upload-action": "npx tsx scripts/upload-lit-action.ts",
-    "mint-pkp": "npx tsx scripts/mint-pkp-with-permissions.ts",
-    "mint-pkp:self-owned": "npx tsx scripts/mint-pkp-with-permissions.ts --self-owned",
-    "dev": "cd apps/web && npm run dev",
-    "build": "cd apps/web && npm install && npm run build"
   }
 }
