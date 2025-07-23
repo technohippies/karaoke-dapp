@@ -4,24 +4,27 @@
 - **Contract**: KaraokeProxy
 - **Address**: `0x9908f93A794297093fA0d235B51Ffbd86FDe8d08`
 - **Network**: Base Sepolia
-- **Implementation**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
+- **Implementation**: `0xD2099db9F031626208b16140048773C6C286229F`
 - **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0x9908f93A794297093fA0d235B51Ffbd86FDe8d08)
 - **Status**: ✅ ACTIVE - USE THIS ADDRESS FOR ALL OPERATIONS
 
 ## Implementation Contract
-- **Contract**: KaraokeSchool (Ownable + Direct Splits)
-- **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
+- **Contract**: KaraokeSchoolV2 (7 USDC combo price)
+- **Address**: `0xD2099db9F031626208b16140048773C6C286229F`
 - **Network**: Base Sepolia
 - **Deployer**: `0x0C6433789d14050aF47198B2751f6689731Ca79C`
-- **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0xc7D24B90C69c6F389fbC673987239f62F0869e3a)
-- **Status**: ✅ Implementation for proxy
+- **Verified**: ✅ [View on Basescan](https://sepolia.basescan.org/address/0xD2099db9F031626208b16140048773C6C286229F)
+- **Status**: ✅ Current implementation for proxy (7 USDC combo price)
 
 ## Previous Deployments
 1. **Address**: `0x07AaCA2D82f6bD352461df7F57130212210c2C74`
    - **Status**: ⚠️ DEPRECATED (country tracking version)
    
 2. **Address**: `0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d`
-   - **Status**: ⚠️ DEPRECATED (SimpleKaraoke)
+   - **Status**: ⚠️ DEPRECATED (SimpleKaraoke with 3 USDC combo price)
+   
+3. **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
+   - **Status**: ⚠️ DEPRECATED (KaraokeSchool with 3 USDC combo price)
 
 ## Constructor Parameters
 - **USDC Token**: `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
@@ -33,9 +36,9 @@
 - `songCredits(address)` - Get song credits for user
 - `hasUnlockedSong(address,uint256)` - Check if user unlocked song
 - `userCountry(address)` - Get user's registered country code
-- `buyCombopack(string)` - Buy 100 voice + 10 song credits for 3 USDC (with country)
-- `buyVoicePack(string)` - Buy 50 voice credits for 1 USDC (with country)
-- `buySongPack(string)` - Buy 5 song credits for 2 USDC (with country)
+- `buyCombopack(string)` - Buy 100 voice + 10 song credits for 7 USDC (with country)
+- `buyVoicePack(string)` - Buy 50 voice credits for 4 USDC (with country)
+- `buySongPack(string)` - Buy 5 song credits for 3 USDC (with country)
 - `unlockSong(uint256)` - Unlock song using song credits
 
 ## New Features
