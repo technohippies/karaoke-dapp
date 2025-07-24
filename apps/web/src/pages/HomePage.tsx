@@ -202,7 +202,8 @@ export function HomePage() {
             learningCount={srsStats.learning}
             dueCount={srsStats.due}
             onStudy={() => {
-              if (srsStats.due > 0) {
+              // Navigate only if there are NEW cards or due cards
+              if (srsStats.new > 0 || srsStats.due > 0) {
                 navigate('/study')
               }
             }}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useWalletClient } from 'wagmi'
@@ -31,7 +31,6 @@ interface StudyStats {
 
 export function StudyPageV2() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { t } = useTranslation()
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -68,7 +67,6 @@ export function StudyPageV2() {
   const [lastScore, setLastScore] = useState<number | null>(null)
   const [transcript, setTranscript] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null)
   const [showCompletion, setShowCompletion] = useState(false)
   const [previousStreak, setPreviousStreak] = useState(0)
   const [creditError, setCreditError] = useState<string | null>(null)
@@ -213,7 +211,6 @@ export function StudyPageV2() {
       if (result.success && result.transcript) {
         setTranscript(result.transcript)
         setLastScore(result.score || 0)
-        setAiFeedback(result.feedback || null)
         setShowFeedback(true)
         
         const isCorrect = (result.score || 0) >= 80  // Changed threshold to 80%
@@ -271,7 +268,6 @@ export function StudyPageV2() {
     setLastScore(null)
     setTranscript('')
     setShowFeedback(false)
-    setAiFeedback(null)
     
     // Move to next card or complete
     if (currentCardIndex < dueCards.length - 1) {
@@ -348,7 +344,8 @@ export function StudyPageV2() {
   // Check if ready
   // const isReady = isConnected && walletClient && isLitReady && isDBReady && !isLoading
   const currentCard = dueCards[currentCardIndex]
-  const progress = dueCards.length > 0 ? ((currentCardIndex + 1) / dueCards.length) * 100 : 0
+  const progress = dueCards.length > 0 ? (currentCardIndex / dueCards.length) * 100 : 0
+  console.log('📊 Progress bar:', { currentCardIndex, totalCards: dueCards.length, progress: progress.toFixed(1) + '%' })
   
   const handleRetryCredits = async () => {
     if (!dueCards.length) return
@@ -492,50 +489,31 @@ export function StudyPageV2() {
           </Card>
           
           {/* Feedback */}
-          {showFeedback && (
-            <Card className={`p-6 border ${lastScore !== null && lastScore >= 80 ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
-              <div className="space-y-3">
-                {lastScore !== null && lastScore >= 80 ? (
-                  // Success - just show checkmark
-                  <div className="flex items-center justify-center py-4">
-                    <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
-                      <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                ) : (
-                  // Failure - show transcript and AI feedback
-                  <>
-                    {transcript && (
-                      <div>
-                        <p className="text-sm text-white/60 mb-1">{t('exercise.youSaid')}</p>
-                        <p className="text-white">{transcript}</p>
-                      </div>
-                    )}
-                    {aiFeedback && (
-                      <div className="mt-4 p-3 bg-neutral-800 rounded-lg">
-                        <p className="text-white font-medium">{aiFeedback}</p>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </Card>
+          {showFeedback && lastScore !== null && lastScore < 80 && transcript && (
+            <>
+              <h2 className="text-2xl font-semibold text-white">
+                {t('exercise.youSaid')}
+              </h2>
+              
+              <Card className="bg-red-500/10 border-red-500/20 p-8">
+                <p className="text-3xl font-medium text-white leading-relaxed">
+                  {transcript}
+                </p>
+              </Card>
+            </>
           )}
           
-          {/* Attempt indicator */}
-          {attempts > 0 && (
-            <div className="flex justify-center gap-2">
-              {[0, 1].map((i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full ${
-                    i < attempts ? 'bg-red-500' : 'bg-neutral-600'
-                  }`}
-                />
-              ))}
-            </div>
+          {/* Success checkmark */}
+          {showFeedback && lastScore !== null && lastScore >= 80 && (
+            <Card className="bg-green-500/10 border-green-500/20 p-6">
+              <div className="flex items-center justify-center py-4">
+                <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            </Card>
           )}
         </div>
       </div>
@@ -567,6 +545,8 @@ export function StudyPageV2() {
                 <StopCircle size={28} weight="fill" />
                 <span>{getButtonText()}</span>
               </>
+            ) : getButtonState() === 'next' ? (
+              <span>{getButtonText()}</span>
             ) : (
               <>
                 <Microphone size={28} weight="fill" />

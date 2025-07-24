@@ -1,18 +1,16 @@
 import { MusicNotes, MicrophoneStage } from '@phosphor-icons/react'
 import { Button } from './ui/button'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 interface CreditsWidgetProps {
   voiceCredits: number
   songCredits: number
   hidePricingButton?: boolean
-  isFirstPurchase?: boolean
 }
 
-export function CreditsWidget({ voiceCredits, songCredits, hidePricingButton = false, isFirstPurchase }: CreditsWidgetProps) {
+export function CreditsWidget({ voiceCredits, songCredits, hidePricingButton = false }: CreditsWidgetProps) {
   const navigate = useNavigate()
-  const location = useLocation()
   const { t } = useTranslation()
   
   return (

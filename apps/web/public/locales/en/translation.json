@@ -28,7 +28,9 @@
         "shareToFarcasterSoon": "Share to Farcaster (Soon)",
         "shareMessageStreak": "I just completed a study session and grew my streak to {{streak}} days! 🔥 Learning languages through karaoke at https://karaoke.school",
         "shareMessage": "I just completed a study session! 🎵 Learning languages through karaoke at https://karaoke.school",
-        "scarlettPointingAlt": "Scarlett pointing"
+        "scarlettPointingAlt": "Scarlett pointing",
+        "dayStreak": "{{count}} day streak",
+        "dayStreak_plural": "{{count}} day streak"
       }
     }
   },
@@ -38,6 +40,7 @@
   "song": {
     "loading": "Loading song...",
     "loadingContent": "Loading Content...",
+    "download": "Download",
     "tabs": {
       "lyrics": "Lyrics",
       "leaderboard": "Leaderboard"

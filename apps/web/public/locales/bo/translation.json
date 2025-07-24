@@ -37,6 +37,7 @@
   "song": {
     "loading": "གླུ་གཞས་འཇུག་བཞིན་པ།",
     "loadingContent": "ནང་དོན་འཇུག་བཞིན་པ།",
+    "download": "ཕབ་ལེན།",
     "tabs": {
       "lyrics": "གླུ་ཚིག",
       "leaderboard": "ཐོབ་མཛད"

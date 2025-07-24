@@ -32,16 +32,18 @@ export interface KaraokeCompletionProps {
   transcript?: string
   songId?: string
   startedAt?: number
+  scoringError?: string | null
   onClose: () => void
 }
 
 export function KaraokeCompletion({ 
   initialProgressState = 'idle', 
-  score = 85,
+  score = 0,
   scoringDetails,
   transcript,
   songId,
   startedAt = Date.now(),
+  scoringError,
   onClose
 }: KaraokeCompletionProps) {
   const navigate = useNavigate()
@@ -95,8 +97,14 @@ export function KaraokeCompletion({
           setTimeout(async () => {
             // Check for due cards after saving
             const stats = await getUserStats()
-            setDueCardsCount(stats.cardsToReview)
-            console.log('📊 Due cards after save:', stats.cardsToReview)
+            // Count all cards that can be studied (new + learning + due)
+            const totalToStudy = (stats.newCards || 0) + (stats.learningCards || 0) + (stats.cardsToReview || 0)
+            setDueCardsCount(totalToStudy)
+            console.log('📊 Cards to study after save:', totalToStudy, 'breakdown:', {
+              new: stats.newCards,
+              learning: stats.learningCards,
+              due: stats.cardsToReview
+            })
           }, 1500) // 1.5s delay to ensure IDB transaction fully completes
         }
       } catch (err) {
@@ -129,6 +137,7 @@ export function KaraokeCompletion({
   })
 
   const getScoreMessage = () => {
+    if (scoringError) return t('karaoke.scoreMessages.errorOccurred')
     if (score >= 90) return t('karaoke.scoreMessages.excellent')
     if (score >= 80) return t('karaoke.scoreMessages.good')
     if (score >= 70) return t('karaoke.scoreMessages.keepPracticing')
@@ -227,13 +236,19 @@ export function KaraokeCompletion({
               <h1 className="text-4xl font-bold text-white mb-8">{t('karaoke.score')}</h1>
               
               <div className="text-6xl font-bold text-white mb-8">
-                {score}
+                {scoringError ? '?' : score}
               </div>
               
               {/* Error message */}
-              {saveError && (
-                <div className="text-red-400 text-sm mb-4">
-                  {saveError}
+              {(saveError || scoringError) && (
+                <div className="text-red-400 text-sm mb-4 px-4">
+                  {scoringError ? (
+                    scoringError === 'No transcript received from Deepgram' ? 
+                      t('karaoke.errors.transcriptFailed') : 
+                      t('karaoke.errors.technicalError')
+                  ) : (
+                    saveError
+                  )}
                 </div>
               )}
             </div>

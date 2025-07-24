@@ -12,7 +12,7 @@ export const STORES = {
 } as const
 
 // Define the complete schema upgrade logic
-export function upgradeDB(db: IDBDatabase, oldVersion: number, newVersion: number) {
+export function upgradeDB(db: any, oldVersion: number, newVersion: number) {
   console.log(`🔄 Upgrading database from version ${oldVersion} to ${newVersion}`)
   console.log('🔄 Current object stores:', Array.from(db.objectStoreNames))
   

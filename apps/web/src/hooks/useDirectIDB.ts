@@ -20,8 +20,26 @@ export function useDirectIDB() {
     console.log('📊 Direct getDueCards found:', allCards.length, 'total cards')
     
     const dueCards = allCards
-      .filter(card => card.dueDate <= now)
-      .sort((a, b) => a.dueDate - b.dueDate)
+      .filter(card => {
+        // Cards available for study:
+        // - New cards (state 0) are always available
+        // - Learning cards (state 1 or 3) when their due date has passed
+        // - Review cards (state 2) when their due date has passed
+        return card.state === 0 || card.dueDate <= now
+      })
+      .sort((a, b) => {
+        // Priority order: NEW (0) -> LEARNING (1,3) -> REVIEW (2)
+        if (a.state !== b.state) {
+          // NEW cards first
+          if (a.state === 0) return -1
+          if (b.state === 0) return 1
+          // Then learning cards
+          if ((a.state === 1 || a.state === 3) && b.state === 2) return -1
+          if ((b.state === 1 || b.state === 3) && a.state === 2) return 1
+        }
+        // Within same state, sort by due date
+        return a.dueDate - b.dueDate
+      })
       .slice(0, limit)
       .map(card => ({
         id: card.id!,
@@ -78,15 +96,38 @@ export function useDirectIDB() {
     let learningCards = 0
     let cardsToReview = 0
     
-    allLines.forEach(line => {
+    allLines.forEach((line, idx) => {
+      // Anki-style categories:
+      // NEW: Never studied (state 0)
+      // LEARNING: Currently in learning/relearning steps (state 1 or 3)
+      // DUE: Review cards (state 2) that are due today
+      
       if (line.state === 0) {
+        // New cards
         newCards++
       } else if (line.state === 1 || line.state === 3) {
+        // Learning/Relearning cards
         learningCards++
+      } else if (line.state === 2 && line.dueDate <= now) {
+        // Review cards that are due (only graduated cards)
+        cardsToReview++
       }
       
-      if (line.dueDate <= now) {
-        cardsToReview++
+      // Log first few cards for debugging
+      if (idx < 5) {
+        const minutesUntilDue = (line.dueDate - now) / 60000
+        const isDue = line.dueDate <= now
+        // Learning cards need special handling - they're in learning steps, not "due" like review cards
+        const status = line.state === 0 ? 'available' :
+                      (line.state === 1 || line.state === 3) ? `learning (interval: ${minutesUntilDue.toFixed(1)} min)` :
+                      line.state === 2 ? (isDue ? 'DUE NOW' : `due in ${minutesUntilDue.toFixed(1)} min`) :
+                      'unknown'
+        console.log(`📋 Card ${idx}: state=${line.state}, category=${
+          line.state === 0 ? 'NEW' : 
+          line.state === 1 || line.state === 3 ? 'LEARNING' : 
+          line.state === 2 ? 'REVIEW' : 
+          'UNKNOWN'
+        }, ${status}`)
       }
     })
     

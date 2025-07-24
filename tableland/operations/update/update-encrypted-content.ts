@@ -4,8 +4,12 @@ import { Wallet, ethers } from 'ethers'
 import { TABLELAND_CONFIG, type NetworkName } from '../../config'
 import dotenv from 'dotenv'
 
-// Load environment variables
-dotenv.config({ path: '../../../.env' })
+// Load environment variables - try multiple paths
+const result = dotenv.config({ path: require('path').resolve(process.cwd(), '../.env') })
+if (result.error) {
+  // Try from tableland directory
+  dotenv.config({ path: require('path').resolve(process.cwd(), '.env') })
+}
 
 interface UpdateOptions {
   songId: number
@@ -32,8 +36,15 @@ async function updateSongData(options: UpdateOptions) {
   }
 
   // Setup provider and signer
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error('PRIVATE_KEY not found in environment variables. Make sure .env file exists and contains PRIVATE_KEY')
+  }
+  
   const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
-  const wallet = new Wallet(process.env.PRIVATE_KEY!, provider)
+  const privateKey = process.env.PRIVATE_KEY.startsWith('0x') 
+    ? process.env.PRIVATE_KEY
+    : `0x${process.env.PRIVATE_KEY}`
+  const wallet = new Wallet(privateKey, provider)
   const db = new Database({ signer: wallet })
   
   console.log(`📍 Network: ${network}`)

@@ -28,6 +28,7 @@ export async function getAuthSig(walletAddress: string) {
     walletAddress,
     nonce: latestBlockhash,
     litNodeClient,
+    statement: "Free: Decrypt song lyrics",
   })
   
   // Generate the authSig
@@ -80,6 +81,7 @@ export async function getSessionSigs(walletAddress: string, chain: string = 'bas
       walletAddress,
       nonce: latestBlockhash,
       litNodeClient,
+      statement: "Free: Decrypt song lyrics",
     })
     
     // Generate the authSig

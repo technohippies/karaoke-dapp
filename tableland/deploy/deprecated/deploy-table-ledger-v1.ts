@@ -2,7 +2,7 @@
 import { Database } from '@tableland/sdk'
 import { ethers } from 'ethers'
 import { LedgerSigner } from '@ethersproject/hardware-wallets'
-import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config.js'
+import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '../.env' })

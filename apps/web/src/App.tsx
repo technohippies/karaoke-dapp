@@ -3,10 +3,9 @@ import { HashRouter as Router, Routes, Route, Navigate, useParams } from 'react-
 import { litProtocolService } from './lib/litProtocol'
 import { HomePage } from './pages/HomePage'
 import { SongPage } from './pages/SongPage'
-import { PricingPageV4 } from './pages/PricingPageV4'
+import { PricingPage } from './pages/PricingPage'
 import { StudyPageV2 } from './pages/StudyPageV2'
 import { AccountPage } from './pages/AccountPage'
-import { DebugIDB } from './pages/DebugIDB'
 import { IDBProvider } from './contexts/IDBContext'
 import { CountryProvider } from './contexts/CountryContext'
 import { AppWithCountryCheck } from './components/AppWithCountryCheck'
@@ -78,10 +77,9 @@ function App() {
           <AppWithCountryCheck>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/pricing" element={<PricingPageV4 />} />
+              <Route path="/pricing" element={<PricingPage />} />
               <Route path="/study" element={<StudyPageV2 />} />
               <Route path="/account" element={<AccountPage />} />
-              <Route path="/debug" element={<DebugIDB />} />
               <Route path="/s/:songId" element={<SongPage />} />
               {/* Redirect old song URLs to new format */}
               <Route path="/song/:songId" element={<SongRedirect />} />

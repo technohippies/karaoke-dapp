@@ -38,10 +38,14 @@ class IDBWriteService {
       await this.initializeSyncMetadata()
       
       // Debug: Check what's in the database after init
-      const debugTx = this.db.transaction(['karaoke_lines'], 'readonly')
-      const debugStore = debugTx.objectStore('karaoke_lines')
-      const lineCount = await debugStore.count()
-      console.log('📊 After Write Service init, line count:', lineCount)
+      try {
+        const debugTx = this.db.transaction(['karaoke_lines'], 'readonly')
+        const debugStore = debugTx.objectStore('karaoke_lines')
+        const lineCount = await debugStore.count()
+        console.log('📊 After Write Service init, line count:', lineCount)
+      } catch (debugError) {
+        console.warn('⚠️ Could not get line count (DB may be closing):', debugError)
+      }
     } catch (error) {
       console.error('❌ Failed to initialize IDB:', error)
       throw error
@@ -50,8 +54,9 @@ class IDBWriteService {
 
   private async initializeSyncMetadata(): Promise<void> {
     if (!this.db) return
-
-    const tx = this.db.transaction('sync_metadata', 'readwrite')
+    
+    try {
+      const tx = this.db.transaction('sync_metadata', 'readwrite')
     const store = tx.objectStore('sync_metadata')
     
     const existing = await store.get('status')
@@ -62,6 +67,10 @@ class IDBWriteService {
         pendingChanges: 0,
         syncInProgress: false
       })
+    }
+    } catch (error) {
+      console.warn('⚠️ Could not initialize sync metadata (DB may be closing):', error)
+      // Don't throw - this is not critical for basic functionality
     }
   }
 
@@ -86,16 +95,36 @@ class IDBWriteService {
       // Save/update lines with FSRS calculations
       const linesStore = tx.objectStore('karaoke_lines')
       
+      // Only process lines that need practice or have existing cards
+      console.log(`📝 Processing ${sessionData.lines.length} lines for saving`)
+      let savedCount = 0
+      let skippedCount = 0
+      
       for (const line of sessionData.lines) {
-        const isCorrect = line.score >= 70 // 70% threshold
-        const rating = isCorrect ? Rating.Good : Rating.Again
 
         // Check if line exists
         const existingIndex = linesStore.index('by-song-line')
         const existing = await existingIndex.get([sessionData.songId, line.lineIndex])
 
+        // Skip lines that don't need practice and don't already exist
+        if (!line.needsPractice && !existing) {
+          skippedCount++
+          continue
+        }
+
         if (existing) {
-          // Update existing card
+          // Don't update NEW cards - they haven't been studied yet
+          if (existing.state === 0) {
+            console.log(`📝 Skipping update for NEW card line ${line.lineIndex}`)
+            continue
+          }
+          
+          // Update existing card with rating based on score
+          const isCorrect = !line.needsPractice
+          const rating = isCorrect ? Rating.Good : Rating.Again
+          
+          console.log(`📝 Updating existing card for line ${line.lineIndex}: currentState=${existing.state}, rating=${rating}`)
+          
           const card: Card = {
             due: new Date(existing.dueDate),
             stability: fromStoredStability(existing.stability),
@@ -129,25 +158,26 @@ class IDBWriteService {
           }
 
           await linesStore.put(updated)
+          savedCount++
         } else {
-          // Create new card
+          // Create new card - should start in NEW state
           const newCard = createEmptyCard()
-          const scheduling = this.fsrs.repeat(newCard, new Date())
-          const { card } = scheduling[rating]
-
+          
+          console.log(`📝 Creating NEW card for line ${line.lineIndex}: score=${line.score}, needsPractice=${line.needsPractice}`)
+          
           const newLine: IDBKaraokeLine = {
             songId: sessionData.songId,
             lineIndex: line.lineIndex,
             lineText: line.expectedText,
-            difficulty: toStoredDifficulty(card.difficulty),
-            stability: toStoredStability(card.stability),
+            difficulty: toStoredDifficulty(newCard.difficulty),
+            stability: toStoredStability(newCard.stability),
             elapsedDays: 0,
-            scheduledDays: card.scheduled_days,
-            reps: 1,
-            lapses: isCorrect ? 0 : 1,
-            state: card.state,
-            lastReview: now,
-            dueDate: card.due.getTime(),
+            scheduledDays: 0,
+            reps: 0, // Never been reviewed
+            lapses: 0, // No failures yet
+            state: 0, // NEW state
+            lastReview: null, // Never reviewed
+            dueDate: now, // NEW cards are always available immediately
             createdAt: now,
             updatedAt: now,
             synced: false,
@@ -155,6 +185,7 @@ class IDBWriteService {
           }
 
           await linesStore.add(newLine)
+          savedCount++
         }
       }
 
@@ -167,7 +198,8 @@ class IDBWriteService {
       }
 
       await tx.done
-      console.log('✅ Saved karaoke session to IDB:', sessionData.sessionId)
+      console.log(`✅ Saved karaoke session to IDB: ${sessionData.sessionId}`)
+      console.log(`📊 Lines summary: ${savedCount} saved, ${skippedCount} skipped (didn't need practice)`)
       return sessionData.sessionId
     } catch (error) {
       console.error('❌ Failed to save karaoke session to IDB:', error)
@@ -253,6 +285,10 @@ class IDBWriteService {
       const rating = wasCorrect ? Rating.Good : Rating.Again
       const scheduling = this.fsrs.repeat(card, new Date())
       const newCard = scheduling[rating].card
+      
+      // Log the scheduling details
+      const intervalMinutes = (newCard.due.getTime() - Date.now()) / 60000
+      console.log(`📅 FSRS scheduling: state ${card.state} → ${newCard.state}, rating=${rating}, interval=${intervalMinutes.toFixed(1)} minutes`)
 
       // Update the card
       const updated: IDBKaraokeLine = {

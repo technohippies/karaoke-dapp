@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactNode, useMemo } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RainbowKitProvider, Locale, darkTheme } from '@rainbow-me/rainbowkit'
@@ -16,8 +16,8 @@ const queryClient = new QueryClient()
 export function WalletProvider({ children, isMiniApp }: WalletProviderProps) {
   const { i18n } = useTranslation()
   
-  // Map i18n language codes to RainbowKit locale codes
-  const getRainbowKitLocale = (): Locale => {
+  // Memoize the locale to prevent unnecessary recalculations during renders
+  const locale = useMemo<Locale>(() => {
     const currentLang = i18n.language
     
     // RainbowKit supported locales mapping
@@ -31,7 +31,7 @@ export function WalletProvider({ children, isMiniApp }: WalletProviderProps) {
     }
     
     return (localeMap[currentLang] || 'en-US') as Locale
-  }
+  }, [i18n.language])
 
   if (isMiniApp) {
     return (
@@ -47,7 +47,7 @@ export function WalletProvider({ children, isMiniApp }: WalletProviderProps) {
     <WagmiProvider config={rainbowConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider 
-          locale={getRainbowKitLocale()}
+          locale={locale}
           theme={darkTheme({
             accentColor: '#525252', // neutral-600
             accentColorForeground: 'white',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Fire } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 
 interface StreakAnimationProps {
   initialStreak: number
@@ -16,6 +17,7 @@ export function StreakAnimation({
   autoAnimate = true,
   animationDelay = 1000
 }: StreakAnimationProps) {
+  const { t } = useTranslation()
   const [displayStreak, setDisplayStreak] = useState(initialStreak)
   const [isAnimating, setIsAnimating] = useState(false)
   
@@ -44,13 +46,13 @@ export function StreakAnimation({
   
   return (
     <div className="flex flex-col items-center">
-      <Fire size={48} weight="fill" className="text-orange-500 mb-2" />
-      <p className="text-2xl text-white">
-        <span className={`font-bold inline-block transition-all duration-300 ${
+      <Fire size={72} weight="fill" className="text-orange-500 mb-4" />
+      <p className="text-4xl font-bold text-white">
+        <span className={`inline-block transition-all duration-300 ${
           isAnimating ? 'scale-110 text-orange-400' : ''
         }`}>
-          {displayStreak}
-        </span> day streak
+          {t('home.study.completion.dayStreak', { count: displayStreak })}
+        </span>
       </p>
     </div>
   )

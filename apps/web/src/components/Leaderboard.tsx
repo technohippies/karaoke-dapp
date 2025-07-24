@@ -1,7 +1,6 @@
 
 import { useTranslation } from 'react-i18next'
-import scarlettWithCrown from '@/assets/scarlett-next-to-crown.png'
-import { SpeechBubble } from '@/components/ui/speech-bubble'
+import { CrownCross } from '@phosphor-icons/react'
 
 interface LeaderboardEntry {
   rank: number
@@ -26,25 +25,15 @@ export function Leaderboard({ entries, className = "" }: LeaderboardProps) {
   // Show coming soon state
   if (entries.length === 0) {
     return (
-      <div className={`flex flex-col justify-center items-center min-h-[300px] sm:min-h-[400px] relative ${className}`}>
-        <div className="mb-3 px-4 relative z-10">
-          <SpeechBubble 
-            variant="default"
-            size="lg"
-            tailSide="bottom"
-            tailPosition="center"
-          >
-            {t('leaderboard.comingSoon')}
-          </SpeechBubble>
+      <div className={`text-center py-16 ${className}`}>
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
+            <CrownCross size={28} className="text-neutral-400" />
+          </div>
         </div>
-        <div className="relative w-full flex justify-center">
-          <img 
-            src={scarlettWithCrown} 
-            alt="Scarlett with crown" 
-            className="w-40 sm:w-48 md:w-56 h-auto max-w-full object-contain"
-            style={{ maxHeight: '200px' }}
-          />
-        </div>
+        <h3 className="text-xl font-bold text-white">
+          {t('leaderboard.comingSoon')}
+        </h3>
       </div>
     )
   }

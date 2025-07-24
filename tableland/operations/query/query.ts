@@ -4,7 +4,11 @@ import { Wallet, ethers } from 'ethers'
 import { TABLELAND_CONFIG, type NetworkName } from '../../config'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '../../../.env' })
+// Try multiple paths for .env
+const result = dotenv.config({ path: require('path').resolve(process.cwd(), '../.env') })
+if (result.error) {
+  dotenv.config({ path: require('path').resolve(process.cwd(), '.env') })
+}
 
 async function queryTable(query: string, network: NetworkName = 'optimism-sepolia', tableName?: string) {
   const networkConfig = TABLELAND_CONFIG.networks[network]
@@ -14,19 +18,25 @@ async function queryTable(query: string, network: NetworkName = 'optimism-sepoli
     process.exit(1)
   }
 
-  const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
-  const wallet = new Wallet(process.env.PRIVATE_KEY!, provider)
-  const db = new Database({ signer: wallet })
+  // For queries, we don't need a signer
+  const db = new Database()
   
   // If no table name provided, try to load from deployments
   let table = tableName
   if (!table) {
     try {
-      const deploymentPath = `../../deployments/${network === 'base-mainnet' ? 'mainnet' : 'testnet'}/${network.replace('-', '_')}.json`
-      const deployment = require(deploymentPath)
-      table = deployment.tables?.songs || deployment.tableName
-    } catch {
-      console.error(`❌ No table name provided and couldn't load from deployments`)
+      const fs = require('fs')
+      const path = require('path')
+      const deploymentPath = path.resolve(__dirname, `../../deployments/${network === 'base-mainnet' ? 'mainnet' : 'testnet'}/${network.replace('-', '_')}.json`)
+      const deploymentData = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'))
+      table = deploymentData.tables?.songs?.tableName || deploymentData.tableName
+      
+      if (!table) {
+        console.error(`❌ No songs table found in deployment file`)
+        process.exit(1)
+      }
+    } catch (e) {
+      console.error(`❌ No table name provided and couldn't load from deployments:`, e)
       process.exit(1)
     }
   }

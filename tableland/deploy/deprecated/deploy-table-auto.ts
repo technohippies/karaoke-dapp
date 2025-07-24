@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { spawn } from 'child_process'
-import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config.js'
+import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config'
 
 /**
  * Automatically selects deployment method based on network

@@ -3,7 +3,7 @@ import { Database } from '@tableland/sdk'
 import { ethers } from 'ethers'
 import HIDTransport from '@ledgerhq/hw-transport-node-hid'
 import Eth from '@ledgerhq/hw-app-eth'
-import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config.js'
+import { TABLELAND_CONFIG, type TableName, type NetworkName } from '../../config'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '../.env' })

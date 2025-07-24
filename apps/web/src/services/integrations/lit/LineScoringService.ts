@@ -3,9 +3,10 @@ import { LIT_ABILITY, LIT_NETWORK } from '@lit-protocol/constants'
 import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers'
 import { ethers } from 'ethers'
 import { getDetectedLanguage } from '../../../i18n'
+import { LIT_ACTIONS } from '@/constants/litActions'
 
-// Single Line Scorer V5 deployed to IPFS - removed LLM feedback for better accuracy
-const SINGLE_LINE_SCORER_CID = 'QmPaDrDLiBqWH2dJy9cUS2GPk8W33nc4A9Yxx8PM4rXbiD'
+// Use CID from centralized constants
+const SINGLE_LINE_SCORER_CID = LIT_ACTIONS.sayItBackV2.cid
 
 interface LineScoreResult {
   success: boolean

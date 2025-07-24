@@ -1,10 +1,6 @@
 import { LitNodeClient } from '@lit-protocol/lit-node-client'
-import { 
-  PKP_PUBLIC_KEY, 
-  LIT_ACTION_CID,
-  KARAOKE_CONTRACT_ADDRESS,
-  SIMPLE_V1_LIT_ACTION_CID
-} from '../constants'
+import { KARAOKE_CONTRACT_ADDRESS } from '../constants'
+import { LIT_ACTIONS } from '../constants/litActions'
 
 interface SessionToken {
   userAddress: string
@@ -105,10 +101,10 @@ export class LitProtocolService {
         }
         
         response = await this.litNodeClient.executeJs({
-          ipfsId: LIT_ACTION_CID,
+          ipfsId: LIT_ACTIONS.karaokeScorerV21.cid, // TODO: This method appears to be legacy/unused
           sessionSigs: this.sessionSigs,
           jsParams: {
-            publicKey: PKP_PUBLIC_KEY,
+            publicKey: undefined, // PKP_PUBLIC_KEY was removed - needs to be provided
             sessionToken,
             audioData: audioArray,
             contractAddress: KARAOKE_CONTRACT_ADDRESS,
@@ -191,19 +187,16 @@ export class LitProtocolService {
       throw new Error('Lit Protocol not initialized or no session')
     }
     
-    const publicKey = PKP_PUBLIC_KEY
-    if (!publicKey) {
-      throw new Error('PKP public key not configured')
-    }
+    // PKP_PUBLIC_KEY was removed - this method needs to be updated
+    throw new Error('PKP public key not configured - gradeSimpleV1 needs to be updated')
     
     console.log('🎤 Grading audio for attempt:', attemptNumber)
     
     try {
-      const response = await this.litNodeClient.executeJs({
+      const response = await this.litNodeClient!.executeJs({
         sessionSigs: this.sessionSigs,
-        ipfsId: SIMPLE_V1_LIT_ACTION_CID,
+        ipfsId: '', // TODO: This method is broken and needs to be removed
         jsParams: {
-          publicKey,
           userAddress,
           attemptNumber: attemptNumber.toString(),
           audioData: Array.from(audioData)

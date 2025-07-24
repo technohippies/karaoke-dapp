@@ -87,16 +87,19 @@ src/
 ### Environment Variables
 
 ```bash
-# Base Sepolia RPC endpoint
-VITE_BASE_SEPOLIA_RPC=https://sepolia.base.org
-
-# Contract addresses (MUST match encryption contract)
-VITE_KARAOKE_CONTRACT_ADDRESS=0xc7D24B90C69c6F389fbC673987239f62F0869e3a
-VITE_BASE_SEPOLIA_USDC_ADDRESS=0x036CbD53842c5426634e7929541eC2318f3dCF7e
-
-# Optional: Custom IPFS gateway
-VITE_IPFS_GATEWAY=https://gateway.pinata.cloud
+# Copy example to create local config
+cp .env.example .env.local
 ```
+
+Key variables:
+- `VITE_DEFAULT_CHAIN_ID` - Network chain ID (84532 for Base Sepolia, 8453 for Base Mainnet)
+- `VITE_NETWORK_NAME` - Network name (base-sepolia or base-mainnet)
+- `VITE_KARAOKE_CONTRACT` - Karaoke contract address
+- `VITE_TABLELAND_CHAIN_ID` - Tableland network (11155420 for Optimism Sepolia in dev)
+- `VITE_SONGS_TABLE_NAME` - Tableland table name
+- `VITE_BASE_SEPOLIA_RPC_URL` - Base Sepolia RPC endpoint
+
+Note: Development uses mixed testnets (Base Sepolia for contracts/Lit, Optimism Sepolia for Tableland)
 
 ## 🧪 Development
 
@@ -178,6 +181,31 @@ When the smart contract is updated:
    - `.env.example`: Update for other developers
 
 4. **Clear browser cache** and IndexedDB to ensure fresh data
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+bun dev
+# Uses .env.local values automatically
+```
+
+### Production Build
+```bash
+bun build
+# Uses .env.production for production builds
+```
+
+### Deploy to Orbiter
+```bash
+npx orbiter deploy --env
+```
+
+### Environment Files
+- `.env.production` - Production values (Base mainnet)
+- `.env.local` - Local development (mixed testnets) - Git ignored
+- `.env.example` - Template for new developers
+- No base `.env` file (prevents confusion)
 
 ## 📄 License
 

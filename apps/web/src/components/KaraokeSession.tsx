@@ -23,10 +23,11 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
   const { address, isConnected } = useAccount()
   const { data: walletClient, isLoading: isWalletLoading } = useWalletClient()
   const [showCompletion, setShowCompletion] = useState(false)
-  const [karaokeScore, setKaraokeScore] = useState(85) // Default score
+  const [karaokeScore, setKaraokeScore] = useState<number | null>(null) // Default score
   const [scoringDetails, setScoringDetails] = useState<any>(null)
   const [transcript, setTranscript] = useState<string>('')
   const [isScoring, setIsScoring] = useState(false)
+  const [scoringError, setScoringError] = useState<string | null>(null)
   const hasProcessedRef = useRef(false)
   const hasStartedRef = useRef(false)
   const [sessionStartTime] = useState(Date.now())
@@ -76,7 +77,7 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
         
         if (!currentWalletClient) {
           console.error('❌ No current wallet client available - using fallback score')
-          setKaraokeScore(85) // Fallback score
+          setKaraokeScore(0) // Set to 0 when no wallet
           setIsScoring(false)
           setShowCompletion(true)
           return
@@ -94,17 +95,19 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
         
         if (result.success) {
           console.log('✅ Scoring successful:', result)
-          setKaraokeScore(result.score || 85)
+          setKaraokeScore(result.score || 0)
           setScoringDetails(result.scoringDetails)
           setTranscript(result.transcript || '')
         } else {
           console.error('❌ Scoring failed:', result.error)
-          setKaraokeScore(85) // Fallback score
+          setKaraokeScore(0) // Set to 0 on scoring failure
+          setScoringError(result.error || 'Technical error occurred')
         }
         
       } catch (error) {
         console.error('❌ Scoring error:', error)
-        setKaraokeScore(85) // Fallback score
+        setKaraokeScore(0) // Set to 0 on error
+        setScoringError(error instanceof Error ? error.message : 'Technical error occurred')
       } finally {
         setIsScoring(false)
         setShowCompletion(true)
@@ -195,12 +198,13 @@ export function KaraokeSession({ songId, lyrics, midiData, onClose, paymentTxHas
 
     return (
       <KaraokeCompletion
-        score={karaokeScore}
+        score={karaokeScore ?? 0}
         scoringDetails={enhancedScoringDetails}
         transcript={transcript}
         initialProgressState="idle"
         songId={songId.toString()}
         startedAt={sessionStartTime}
+        scoringError={scoringError}
         onClose={handleClose}
       />
     )

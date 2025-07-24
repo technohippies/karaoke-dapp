@@ -99,16 +99,16 @@ export function combineLyricsWithTranslation(
     const translationMap = new Map<string, string>()
     
     // Create a map of timestamps to translations
-    console.log(`📊 Building translation map from ${translations.lines.length} lines`)
+    // console.log(`📊 Building translation map from ${translations.lines.length} lines`)
     translations.lines.forEach((line, idx) => {
       if (line.timestamp) {
         translationMap.set(line.timestamp, line.translation)
         if (idx < 5 || line.translation.includes('舞后')) {
-          console.log(`   Map[${line.timestamp}] = "${line.translation}"`)
+          // console.log(`   Map[${line.timestamp}] = "${line.translation}"`)
         }
       }
     })
-    console.log(`   Total entries in map: ${translationMap.size}`)
+    // console.log(`   Total entries in map: ${translationMap.size}`)
     
     // Match lyrics with translations
     return parsedLyrics.map((lyric, index) => {
@@ -122,20 +122,20 @@ export function combineLyricsWithTranslation(
       const milliseconds = Math.round((lyric.time % 1) * 100)
       const timestamp = `[${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}]`
       
-      console.log(`🔍 Matching line ${index}: "${lyric.text}"`)
-      console.log(`   Generated timestamp: ${timestamp} from time: ${lyric.time}`)
+      // console.log(`🔍 Matching line ${index}: "${lyric.text}"`)
+      // console.log(`   Generated timestamp: ${timestamp} from time: ${lyric.time}`)
       
       // Look for exact or close timestamp match
       if (translationMap.has(timestamp)) {
         translation = translationMap.get(timestamp) || ''
-        console.log(`   ✅ Found by timestamp: "${translation}"`)
+        // console.log(`   ✅ Found by timestamp: "${translation}"`)
       } else if (translations.lines && index < translations.lines.length) {
         // Fallback to index-based matching
         translation = translations.lines[index].translation || ''
-        console.log(`   ⚠️ Fallback to index ${index}: "${translation}"`)
-        console.log(`   Expected timestamp: ${translations.lines[index].timestamp}`)
+        // console.log(`   ⚠️ Fallback to index ${index}: "${translation}"`)
+        // console.log(`   Expected timestamp: ${translations.lines[index].timestamp}`)
       } else {
-        console.log(`   ❌ No translation found`)
+        // console.log(`   ❌ No translation found`)
       }
       
       return {

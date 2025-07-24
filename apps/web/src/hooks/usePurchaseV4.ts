@@ -3,11 +3,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { KARAOKE_CONTRACT_ADDRESS } from '../constants'
 import { KARAOKE_SCHOOL_V4_ABI } from '../contracts/abis/KaraokeSchoolV4'
 import { useCountry } from './useCountry'
-
-// ETH prices (in wei)
-export const COMBO_PRICE = 2000000000000000n // 0.002 ETH
-export const VOICE_PACK_PRICE = 1100000000000000n // 0.0011 ETH  
-export const SONG_PACK_PRICE = 800000000000000n // 0.0008 ETH
+import { COMBO_PRICE_ETH, VOICE_PACK_PRICE_ETH, SONG_PACK_PRICE_ETH } from '../constants/pricing'
 
 export function usePurchaseV4() {
   const { address, isConnected } = useAccount()
@@ -91,7 +87,7 @@ export function usePurchaseV4() {
       abi: KARAOKE_SCHOOL_V4_ABI,
       functionName: 'buyCombopack',
       args: [country],
-      value: COMBO_PRICE,
+      value: COMBO_PRICE_ETH,
       gas: 200000n,
     })
   }
@@ -105,7 +101,7 @@ export function usePurchaseV4() {
       abi: KARAOKE_SCHOOL_V4_ABI,
       functionName: 'buyVoicePack',
       args: [country],
-      value: VOICE_PACK_PRICE,
+      value: VOICE_PACK_PRICE_ETH,
       gas: 200000n,
     })
   }
@@ -119,7 +115,7 @@ export function usePurchaseV4() {
       abi: KARAOKE_SCHOOL_V4_ABI,
       functionName: 'buySongPack',
       args: [country],
-      value: SONG_PACK_PRICE,
+      value: SONG_PACK_PRICE_ETH,
       gas: 200000n,
     })
   }

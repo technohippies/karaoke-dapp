@@ -3,7 +3,7 @@ import React from 'react'
 interface IconButtonProps {
   children: React.ReactNode
   onClick?: () => void
-  variant?: 'default' | 'outline' | 'ghost'
+  variant?: 'default' | 'outline' | 'ghost' | 'dark'
   size?: 'sm' | 'md' | 'lg'
   className?: string
   disabled?: boolean
@@ -22,7 +22,8 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>((
   const variantClasses = {
     default: "bg-blue-600 text-white hover:bg-blue-700",
     outline: "border border-neutral-600 bg-transparent text-white hover:bg-neutral-800",
-    ghost: "text-neutral-400 hover:text-white hover:bg-neutral-800"
+    ghost: "text-neutral-400 hover:text-white hover:bg-neutral-800",
+    dark: "bg-neutral-800 text-white hover:bg-neutral-700 border border-neutral-700"
   }
   
   const sizeClasses = {

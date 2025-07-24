@@ -50,9 +50,9 @@ export function StudyCompletion({
         <CloseHeader onClose={onClose} />
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Score section at top */}
-          <div className="w-full max-w-2xl mx-auto px-6 pt-8">
-            <div className="text-center">
+          {/* Score section - vertically centered */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full max-w-2xl mx-auto px-6 text-center">
               <h1 className="text-4xl font-bold text-white mb-8">{t('home.study.completion.greatJob')}</h1>
               
               {/* Streak Animation */}
@@ -66,9 +66,6 @@ export function StudyCompletion({
               </div>
             </div>
           </div>
-          
-          {/* Spacer to push content to bottom */}
-          <div className="flex-1"></div>
           
           {/* Coach feedback - positioned at bottom */}
           <div className="flex flex-col items-center pb-[72px] px-6">

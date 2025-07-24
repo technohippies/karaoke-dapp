@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
 import { useWalletAuth } from '../hooks/useWalletAuth'
 import { useTranslation } from 'react-i18next'
@@ -28,7 +28,6 @@ import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
-  const location = useLocation()
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -508,7 +507,7 @@ export function SongPage() {
                 <div className="flex items-center gap-3">
                   <StreamingSheet
                     trigger={
-                      <IconButton variant="outline">
+                      <IconButton variant="dark">
                         <MusicNote size={20} weight="fill" />
                       </IconButton>
                     }
@@ -516,7 +515,7 @@ export function SongPage() {
                   />
                   {song.genius_slug && (
                     <IconButton 
-                      variant="outline"
+                      variant="dark"
                       onClick={() => window.open(`https://dm.vern.cc/${song.genius_slug}`, '_blank', 'noopener,noreferrer')}
                     >
                       <FileText size={20} weight="fill" />
@@ -536,15 +535,12 @@ export function SongPage() {
                   {/* Check if content is loaded - show lock if not */}
                   {!content ? (
                     /* Content not loaded - show lock */
-                    <div className="mt-4 text-center py-8">
-                      <div className="flex justify-center mb-4">
+                    <div className="mt-4 text-center py-16">
+                      <div className="flex justify-center">
                         <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center">
                           <Lock size={28} className="text-neutral-400" />
                         </div>
                       </div>
-                      <h3 className="text-xl font-bold text-white">
-                        {songIsUnlocked ? t('song.unlock.loadContent') : t('song.unlock.title')}
-                      </h3>
                     </div>
                   ) : (
                     /* Content loaded - show actual lyrics */
@@ -684,7 +680,7 @@ export function SongPage() {
                               {t('song.loadingContent')}
                             </>
                           ) : (
-                            'Download & Decrypt'
+                            t('song.download')
                           )}
                         </Button>
                         {contentError && (

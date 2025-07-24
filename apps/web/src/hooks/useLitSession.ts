@@ -57,6 +57,7 @@ export function useLitSession() {
             nonce: await litProtocolService.litNodeClient!.getLatestBlockhash(),
             litNodeClient: litProtocolService.litNodeClient!,
             domain: 'localhost',
+            statement: "免费：解密歌曲歌词", // Custom message: "Free: Decrypt song lyrics"
           })
 
           // Create a signer object that works with wagmi's signMessageAsync

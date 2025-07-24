@@ -2,9 +2,10 @@ import { LitNodeClient } from '@lit-protocol/lit-node-client'
 import { LIT_ABILITY, LIT_NETWORK } from '@lit-protocol/constants'
 import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers'
 import { ethers } from 'ethers'
+import { LIT_ACTIONS } from '@/constants/litActions'
 
-// Deployed Lit Action CID - V21 with strict scoring fix (non-copyrighted examples)
-const LIT_ACTION_CID = 'QmVFTzVB7L1BSb5C83BWc3VuUftZLaLCVzgFXvuu35kX3i'
+// Use CID from centralized constants
+const LIT_ACTION_CID = LIT_ACTIONS.karaokeScorerV21.cid
 
 interface LineScore {
   lineIndex: number

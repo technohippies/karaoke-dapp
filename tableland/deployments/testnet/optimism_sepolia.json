@@ -1,0 +1,14 @@
+{
+  "tables": {
+    "songs": {
+      "network": "optimism-sepolia",
+      "chainId": 11155420,
+      "tableName": "karaoke_songs_11155420_11155420_263",
+      "transactionHash": "0xca3465c1ec40553b98b3a50c8adeb7d637f6dd18eb75a8af64b631d367c73132",
+      "deployedAt": "2025-07-24T13:32:43.945Z",
+      "deployedBy": "0x25B4048c3B3c58973571db2dbbF87103f7406966",
+      "schema": "(\n        id INTEGER PRIMARY KEY,\n        isrc TEXT NOT NULL,\n        iswc TEXT,\n        title TEXT NOT NULL,\n        artist TEXT NOT NULL,\n        duration INTEGER,\n        stems TEXT,\n        language TEXT DEFAULT 'en',\n        genius_id INTEGER,\n        lrclib_id INTEGER,\n        genius_slug TEXT,\n        streaming_links TEXT,\n        artwork_hash TEXT,\n        translations TEXT,\n        updated_at INTEGER\n      )"
+    }
+  },
+  "lastUpdated": "2025-07-24T13:32:43.946Z"
+}

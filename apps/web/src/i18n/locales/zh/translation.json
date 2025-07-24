@@ -20,7 +20,7 @@
       "allCaughtUp": "全部完成！",
       "singKaraokeToAdd": "唱卡拉OK来添加抽认卡！",
       "completion": {
-        "greatJob": "做得好！",
+        "greatJob": "做得好",
         "streakGrowing": "太棒了！你的连续学习天数在增长！继续保持！",
         "practiceSession": "练习得很好！明天再来建立你的连续学习记录！",
         "back": "返回",
@@ -28,7 +28,9 @@
         "shareToFarcasterSoon": "分享到 Farcaster（即将推出）",
         "shareMessageStreak": "我刚完成了一次学习，将我的连续学习天数增长到了 {{streak}} 天！🔥 在 https://karaoke.school 通过卡拉OK学习语言",
         "shareMessage": "我刚完成了一次学习！🎵 在 https://karaoke.school 通过卡拉OK学习语言",
-        "scarlettPointingAlt": "Scarlett 指向"
+        "scarlettPointingAlt": "Scarlett 指向",
+        "dayStreak": "{{count}} 天连续",
+        "dayStreak_plural": "{{count}} 天连续"
       }
     }
   },
@@ -38,6 +40,7 @@
   "song": {
     "loading": "歌曲加载中...",
     "loadingContent": "内容加载中...",
+    "download": "下载",
     "tabs": {
       "lyrics": "歌词",
       "leaderboard": "排行榜"
@@ -209,7 +212,12 @@
       "good": "做得好！",
       "keepPracticing": "继续练习！",
       "gettingThere": "快要成功了！",
-      "dontGiveUp": "不要放弃！"
+      "dontGiveUp": "不要放弃！",
+      "errorOccurred": "出了点问题。请截图并将详情发送给我们以获得退款。"
+    },
+    "errors": {
+      "transcriptFailed": "出了点问题。请截图并将详情发送给我们以获得退款。",
+      "technicalError": "出了点问题。请截图并将详情发送给我们以获得退款。"
     },
     "completion": {
       "savedLocally": "您的进度已保存在本地。随时可以通过练习进行学习！",

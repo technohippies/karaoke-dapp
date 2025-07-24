@@ -47,7 +47,7 @@ Create `.env` file in `apps/web/`:
 # Copy values from .env.production or set:
 VITE_DEFAULT_CHAIN_ID=8453
 VITE_NETWORK_NAME=base-mainnet
-VITE_KARAOKE_CONTRACT=0x06AC258d391A5B2B6660d8d5Dee97507591376D0
+VITE_KARAOKE_CONTRACT=0x00a4c373c8263A70b520880151fA39D323030B22
 VITE_BASE_MAINNET_USDC_ADDRESS=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
 VITE_TABLELAND_CHAIN_ID=8453
 VITE_SONGS_TABLE_NAME=karaoke_songs_8453_8453_25
@@ -81,7 +81,7 @@ karaoke-dapp/
 
 ### Smart Contracts
 
-**KaraokeSchool** (`0x06AC258d391A5B2B6660d8d5Dee97507591376D0` on Base Mainnet)
+**KaraokeSchool** (`0x00a4c373c8263A70b520880151fA39D323030B22` on Base Mainnet)
 - Manages voice and song credits
 - Handles song unlocking mechanism
 - Escrows credits during karaoke sessions
@@ -92,8 +92,8 @@ karaoke-dapp/
 - **Content Encryption**: Songs, MIDI files, and translations encrypted via Lit Protocol
 - **Access Control**: Only users who unlocked songs can decrypt content
 - **Lit Actions**: 
-  - Karaoke Scorer: Contains embedded API keys for Deepgram (STT) and OpenRouter (LLM)
-  - Single Line Scorer: For pronunciation practice in study mode
+  - Karaoke Scorer - Contains embedded API keys for Deepgram (STT) and OpenRouter (LLM)
+  - Exercise - "Say It Back": Single line STT grading
 
 ### Database
 
@@ -164,28 +164,6 @@ This software is provided as a decentralized platform for language learning kara
 - Lit Protocol for content encryption
 - RainbowKit for wallet connections
 - Tableland for decentralized database
-- Base for L2 infrastructure
 - Splits.org for payment splitting infrastructure
 - Paradigm for Foundry/Forge development framework
-
----
-
-# 卡拉 OK 语言学习 Dapp (Chinese)
-
-一个结合语言学习与区块链技术的去中心化卡拉 OK 应用，使用 Lit Protocol 进行安全内容加密。
-
-## 主要特性
-
-- 多语言界面支持
-- 间隔重复学习系统
-- 加密内容保护
-- AI 驱动的发音评分
-- 离线优先设计
-
-## 部署信息
-
-- 网络：Base Mainnet
-- 合约地址：0x06AC258d391A5B2B6660d8d5Dee97507591376D0
-- Tableland 表：karaoke_songs_8453_8453_25
-
-详细信息请参阅上方英文文档。
+- Base & Ethereum

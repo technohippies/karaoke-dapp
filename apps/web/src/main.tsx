@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import i18n from './i18n/config' // Initialize i18n
 import './index.css'
-import './styles/rainbowkit-overrides.css'
 import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
 import { WalletProvider } from './components/WalletProvider'
 

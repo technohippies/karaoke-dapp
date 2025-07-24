@@ -17,10 +17,18 @@ export function closeGlobalDB() {
 }
 
 export async function getGlobalDB(): Promise<IDBPDatabase<KaraokeSRSDB>> {
-  // If we already have a connection, return it
+  // If we already have a connection, check if it's still valid
   if (globalDB) {
-    console.log('🔗 Reusing existing global DB connection')
-    return globalDB
+    try {
+      // Try a simple operation to check if DB is still open
+      await globalDB.objectStoreNames
+      console.log('🔗 Reusing existing global DB connection')
+      return globalDB
+    } catch (error) {
+      console.warn('🔗 Existing DB connection is invalid, creating new one')
+      globalDB = null
+      dbInitPromise = null
+    }
   }
 
   // If we're already initializing, wait for that to complete

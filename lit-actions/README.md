@@ -52,43 +52,64 @@ This directory contains Lit Protocol serverless functions used by the Karaoke Sc
    ```
 2. Encrypt the keys:
    ```bash
-   cd ../scripts
-   npx tsx encrypt-api-keys.ts
+   cd lit-actions/tools
+   npm install  # if needed
+   npm run encrypt-keys
    ```
 3. Update the Lit Action with encrypted keys
 4. Deploy:
    ```bash
-   npx tsx upload-lit-action.ts ../lit-actions/karaokeScorer.js --name "Karaoke Scorer V19"
+   cd lit-actions/tools
+   npm run upload ../karaoke-scorer/karaokeScorerV22.js -- --name "Karaoke Scorer V22"
    ```
 5. Update frontend with new CID
 
 ## Deployment Process
 
-1. **Check current CID** in use:
+1. **Deploy new version**:
    ```bash
-   grep LIT_ACTION_CID ../.env
+   cd lit-actions/tools
+   bun install  # if needed
+   bun run upload ../karaoke-scorer/karaokeScorerV22.js -- --name "Description"
    ```
 
-2. **Deploy new version**:
-   ```bash
-   cd ../scripts
-   npx tsx upload-lit-action.ts ../lit-actions/filename.js --name "Description"
-   ```
+2. **Update references**:
+   - Update `apps/web/src/constants/litActions.ts` with new CID
+   - The services automatically use the updated constants
 
-3. **Update references**:
-   - `.env`: `LIT_ACTION_CID=<new_cid>`
-   - `apps/web/src/services/integrations/lit/KaraokeScoringService.ts`
-
-4. **Test thoroughly** before removing old versions
+3. **Test thoroughly** before removing old versions
 
 ## File Structure
 ```
 lit-actions/
-├── karaokeScorerV18.js    # Current production scorer
-├── singleLineScorer.js    # Study mode scorer
-├── karaokeScorer.js       # Legacy (broken keys)
-├── karaokeScorerV17.js    # Legacy (debug)
-├── voiceGrader.js         # Legacy (deprecated)
-├── deployments.json       # Deployment history
-└── README.md             # This file
+├── karaoke-scorer/
+│   └── karaokeScorerV21.js    # Current production scorer
+├── exercises/
+│   └── say-it-back/
+│       └── sayItBackV2.js     # Study mode scorer
+├── tools/
+│   ├── deploy.ts              # Deploy Lit Actions to IPFS
+│   ├── encrypt-keys.ts        # Encrypt API keys
+│   └── package.json           # Dependencies
+├── deployments.json           # Deployment history
+└── README.md                  # This file
 ```
+
+## Scripts
+
+### Setup
+```bash
+cd lit-actions/tools
+bun install
+```
+
+### Available Commands
+```bash
+cd lit-actions/tools
+bun run upload ../karaoke-scorer/karaokeScorerV21.js -- --name "Karaoke Scorer V21"
+bun run encrypt-keys
+```
+
+### Environment Variables
+- `PINATA_JWT` - Required for uploads, stored in root `.env`
+- `DEEPGRAM_API_KEY` & `OPENROUTER_API_KEY` - For encryption, stored in `scripts/.env`

@@ -1,0 +1,22 @@
+{
+  "name": "lit-actions-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for managing Lit Actions",
+  "type": "module",
+  "scripts": {
+    "upload": "tsx upload-lit-action.ts",
+    "encrypt-keys": "tsx encrypt-api-keys.ts"
+  },
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^6.11.0",
+    "@lit-protocol/constants": "^6.11.0",
+    "ethers": "^6.13.4",
+    "dotenv": "^16.4.5",
+    "pinata-web3": "^0.5.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
