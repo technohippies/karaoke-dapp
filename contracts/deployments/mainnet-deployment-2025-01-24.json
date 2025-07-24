@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-01-24T18:00:00Z",
+  "network": "base-mainnet",
+  "chainId": 8453,
+  "deployer": "0x25B4048c3B3c58973571db2dbbF87103f7406966",
+  "deploymentMethod": "ledger",
+  "contracts": {
+    "proxy": {
+      "address": "0x00a4c373c8263A70b520880151fA39D323030B22",
+      "type": "ERC1967Proxy"
+    },
+    "implementation": {
+      "address": "0xE07D2fB9BBEcA30005EcaD0948D8893C1acF5143",
+      "type": "KaraokeSchoolV3"
+    }
+  },
+  "configuration": {
+    "usdcToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "splitsContract": "0x7eA10e96D656Ab19D679fFfA3CA1Db9A531B1210",
+    "prices": {
+      "COMBO_PRICE": "7000000",
+      "VOICE_PACK_PRICE": "5000000",
+      "SONG_PACK_PRICE": "3000000"
+    }
+  },
+  "gasUsed": "3836282",
+  "notes": "Deployed with hardware wallet (Ledger). Contract verification pending due to API key issue."
+}

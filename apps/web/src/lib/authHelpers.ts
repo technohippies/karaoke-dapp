@@ -40,7 +40,7 @@ export async function getAuthSig(walletAddress: string) {
 }
 
 export async function getSessionSigs(walletAddress: string, chain: string = 'baseSepolia', signer?: ethers.Signer) {
-  // If no signer provided, try to create one from window.ethereum (fallback for non-Web3Auth)
+  // If no signer provided, try to create one from window.ethereum
   if (!signer) {
     if (!window.ethereum) {
       throw new Error('No ethereum provider available')

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useWalletClient } from 'wagmi'
@@ -7,7 +7,7 @@ import { walletClientToSigner } from '../utils/walletClientToSigner'
 import { useIDBSRS } from '../hooks/useIDBSRS'
 import { useLitSession } from '../hooks/useLitSession'
 import { useDirectIDB } from '../hooks/useDirectIDB'
-import { usePurchase } from '../hooks/usePurchase'
+import { usePurchaseV4 } from '../hooks/usePurchaseV4'
 import { Card } from '../components/ui/card'
 import { Progress } from '../components/ui/progress'
 import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
@@ -19,7 +19,7 @@ import { useSimpleAudioRecorder } from '../hooks/useSimpleAudioRecorder'
 import { useStreak } from '../hooks/useStreak'
 import { StudyCompletion } from '../components/StudyCompletion'
 import { KARAOKE_CONTRACT_ADDRESS } from '../constants'
-import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
+import { KARAOKE_SCHOOL_V4_ABI } from '../contracts/abis/KaraokeSchoolV4'
 import type { DueCard } from '../types/srs.types'
 
 interface StudyStats {
@@ -31,6 +31,7 @@ interface StudyStats {
 
 export function StudyPageV2() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -39,7 +40,7 @@ export function StudyPageV2() {
   const { getDueCards, isReady: isDBReady } = useDirectIDB()
   const { startRecording, stopRecording, audioBlob, isRecording, reset: resetRecorder } = useSimpleAudioRecorder()
   const { invalidateCache: invalidateStreakCache, currentStreak, refreshStreak } = useStreak()
-  const { voiceCredits, isConnected, isLoadingCredits, refetchCredits } = usePurchase()
+  const { voiceCredits, isConnected, isLoadingCredits, refetchCredits } = usePurchaseV4()
   
   // Contract hooks for exercises
   const { 
@@ -161,7 +162,7 @@ export function StudyPageV2() {
           
           await startExerciseWrite({
             address: KARAOKE_CONTRACT_ADDRESS,
-            abi: KARAOKE_SCHOOL_ABI,
+            abi: KARAOKE_SCHOOL_V4_ABI,
             functionName: 'startExercise',
             args: [BigInt(cards.length)]
           })
@@ -365,7 +366,7 @@ export function StudyPageV2() {
     try {
       await startExerciseWrite({
         address: KARAOKE_CONTRACT_ADDRESS,
-        abi: KARAOKE_SCHOOL_ABI,
+        abi: KARAOKE_SCHOOL_V4_ABI,
         functionName: 'startExercise',
         args: [BigInt(dueCards.length)]
       })

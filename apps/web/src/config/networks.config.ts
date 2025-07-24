@@ -6,7 +6,6 @@ export interface NetworkConfig {
   rpcUrl: string;
   contracts: {
     karaoke: string;
-    usdc: string;
   };
   tableland: {
     chainId: number;
@@ -32,7 +31,6 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     rpcUrl: 'https://sepolia.optimism.io',
     contracts: {
       karaoke: import.meta.env.VITE_KARAOKE_CONTRACT || '',
-      usdc: import.meta.env.VITE_OPTIMISM_SEPOLIA_USDC_ADDRESS || '0x5fd84259d66Cd46123540766Be93DFE6D43130D7',
     },
     tableland: {
       chainId: OPTIMISM_SEPOLIA_CHAIN_ID,
@@ -47,7 +45,6 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     rpcUrl: 'https://sepolia.base.org',
     contracts: {
       karaoke: import.meta.env.VITE_KARAOKE_CONTRACT || '',
-      usdc: import.meta.env.VITE_BASE_SEPOLIA_USDC_ADDRESS || '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
     },
     tableland: {
       // Split setup: Tableland on Optimism Sepolia even when contract is on Base Sepolia
@@ -63,7 +60,6 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     rpcUrl: 'https://mainnet.base.org',
     contracts: {
       karaoke: import.meta.env.VITE_KARAOKE_CONTRACT || '',
-      usdc: import.meta.env.VITE_BASE_MAINNET_USDC_ADDRESS || '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     },
     tableland: {
       chainId: BASE_MAINNET_CHAIN_ID,
@@ -79,7 +75,6 @@ console.log('🔧 networks.config - Environment variables:', {
   VITE_DEFAULT_CHAIN_ID: import.meta.env.VITE_DEFAULT_CHAIN_ID,
   VITE_NETWORK_NAME: import.meta.env.VITE_NETWORK_NAME,
   VITE_KARAOKE_CONTRACT: import.meta.env.VITE_KARAOKE_CONTRACT,
-  VITE_BASE_SEPOLIA_USDC_ADDRESS: import.meta.env.VITE_BASE_SEPOLIA_USDC_ADDRESS,
 });
 
 // Export the current network configuration
@@ -89,7 +84,6 @@ console.log('🔧 networks.config - Current network:', {
   name: NETWORK_NAME,
   network: currentNetwork,
   karaokeContract: currentNetwork.contracts.karaoke,
-  usdcAddress: currentNetwork.contracts.usdc,
 });
 
 // Export convenience helpers

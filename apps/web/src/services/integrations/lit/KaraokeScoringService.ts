@@ -3,8 +3,8 @@ import { LIT_ABILITY, LIT_NETWORK } from '@lit-protocol/constants'
 import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers'
 import { ethers } from 'ethers'
 
-// Deployed Lit Action CID - V18 with valid API keys
-const LIT_ACTION_CID = 'Qma1dWbGf1NWNP1TSWR6UERTZAaxVr8bbVGD89f2WHFiMq'
+// Deployed Lit Action CID - V21 with strict scoring fix (non-copyrighted examples)
+const LIT_ACTION_CID = 'QmVFTzVB7L1BSb5C83BWc3VuUftZLaLCVzgFXvuu35kX3i'
 
 interface LineScore {
   lineIndex: number

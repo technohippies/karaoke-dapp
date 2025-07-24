@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { openDB, type IDBPDatabase } from 'idb'
+import { type IDBPDatabase } from 'idb'
 import type { KaraokeSRSDB } from '../types/idb.types'
+import { getGlobalDB } from '../services/database/idb/globalDB'
 
 interface IDBContextType {
   db: IDBPDatabase<KaraokeSRSDB> | null
@@ -36,57 +37,14 @@ export function IDBProvider({ children }: IDBProviderProps) {
     
     const initDB = async () => {
       try {
-        console.log('🔗 IDBProvider: Opening database...')
+        console.log('🔗 IDBProvider: Getting global database connection...')
         
-        const database = await openDB<KaraokeSRSDB>('KaraokeSRS', 2, {
-          upgrade(db) {
-            // Create karaoke_sessions store
-            if (!db.objectStoreNames.contains('karaoke_sessions')) {
-              const sessionStore = db.createObjectStore('karaoke_sessions', { 
-                keyPath: 'id', 
-                autoIncrement: true 
-              })
-              sessionStore.createIndex('by-session-id', 'sessionId')
-              sessionStore.createIndex('by-sync-status', 'synced')
-            }
-
-            // Create karaoke_lines store
-            if (!db.objectStoreNames.contains('karaoke_lines')) {
-              const linesStore = db.createObjectStore('karaoke_lines', { 
-                keyPath: 'id', 
-                autoIncrement: true 
-              })
-              linesStore.createIndex('by-song-line', ['songId', 'lineIndex'])
-              linesStore.createIndex('by-due-date', 'dueDate')
-              linesStore.createIndex('by-sync-status', 'synced')
-            }
-
-            // Create exercise_sessions store
-            if (!db.objectStoreNames.contains('exercise_sessions')) {
-              const exerciseStore = db.createObjectStore('exercise_sessions', { 
-                keyPath: 'id', 
-                autoIncrement: true 
-              })
-              exerciseStore.createIndex('by-session-id', 'sessionId')
-              exerciseStore.createIndex('by-sync-status', 'synced')
-            }
-
-            // Create sync_metadata store
-            if (!db.objectStoreNames.contains('sync_metadata')) {
-              db.createObjectStore('sync_metadata', { keyPath: 'id' })
-            }
-
-            // Create user_settings store
-            if (!db.objectStoreNames.contains('user_settings')) {
-              db.createObjectStore('user_settings', { keyPath: 'key' })
-            }
-          }
-        })
+        const database = await getGlobalDB()
         
         if (isMounted) {
           setDb(database)
           setIsReady(true)
-          console.log('✅ IDBProvider: Database opened successfully')
+          console.log('✅ IDBProvider: Using global database connection')
           
           // Debug: Check what's in the database (only if store exists)
           try {
@@ -99,7 +57,7 @@ export function IDBProvider({ children }: IDBProviderProps) {
           }
         }
       } catch (err) {
-        console.error('❌ IDBProvider: Failed to open database:', err)
+        console.error('❌ IDBProvider: Failed to get database:', err)
         if (isMounted) {
           setError(err as Error)
         }

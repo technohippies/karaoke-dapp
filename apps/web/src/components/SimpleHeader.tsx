@@ -15,7 +15,16 @@ export function SimpleHeader({ onBack, hideLanguageSelector = false }: SimpleHea
     if (onBack) {
       onBack()
     } else {
-      navigate(-1) // Go to previous page in history
+      // Simple approach: if we can go back and document referrer is from same origin, go back
+      // Otherwise go home (direct visit or external referrer)
+      const canGoBack = window.history.length > 1
+      const isInternalReferrer = document.referrer && new URL(document.referrer).origin === window.location.origin
+      
+      if (canGoBack && isInternalReferrer) {
+        navigate(-1)
+      } else {
+        navigate('/')
+      }
     }
   }
   

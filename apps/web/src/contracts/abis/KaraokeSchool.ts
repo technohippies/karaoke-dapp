@@ -1,4 +1,8 @@
-export const KARAOKE_SCHOOL_ABI = [
+// Re-export V3 ABI as the main ABI
+export { KARAOKE_SCHOOL_V3_ABI as KARAOKE_SCHOOL_ABI } from './KaraokeSchoolV3';
+
+// Original V2 ABI (deprecated)
+export const KARAOKE_SCHOOL_V2_ABI = [
   {
     "type": "constructor",
     "inputs": [

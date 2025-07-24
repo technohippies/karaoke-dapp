@@ -101,8 +101,8 @@ export function CountrySelectionDialog({ open, onCountrySelect }: CountrySelecti
         onEscapeKeyDown={(e) => e.preventDefault()}>
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl text-left">{t('countryDialog.title')}</DialogTitle>
-          <DialogDescription className="text-neutral-300 text-md text-left">
-            {t('countryDialog.nonprofit')} • {t('countryDialog.ownData')} • {t('countryDialog.donation')}
+          <DialogDescription className="text-neutral-300 text-md text-left mt-2">
+            {t('countryDialog.welcomeMessage')}
           </DialogDescription>
         </DialogHeader>
         

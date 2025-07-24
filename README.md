@@ -1,13 +1,13 @@
 # Karaoke Language Learning Dapp
 
-A decentralized karaoke application that combines language learning with blockchain technology, using Lit Protocol for secure content encryption and Web3Auth for authentication.
+A decentralized karaoke application that combines language learning with blockchain technology, using Lit Protocol for secure content encryption.
 
 ## 🎤 Features
 
 - **Multi-language Support**: Interface available in English, Chinese (中文), Uyghur (ئۇيغۇرچە), and Tibetan (བོད་སྐད)
 - **Spaced Repetition System (SRS)**: Learn lyrics efficiently using the FSRS algorithm
 - **Encrypted Content**: Songs and translations protected via Lit Protocol
-- **Web3 Authentication**: Social login through Web3Auth
+- **Web3 Authentication**: Connect with popular wallets including MetaMask, Coinbase, and JoyID
 - **Voice & Song Credits**: Token-based access system
 - **AI-Powered Feedback**: Real-time pronunciation scoring
 - **Offline-First**: Local data persistence with IndexedDB
@@ -43,10 +43,6 @@ bun dev
 Create `.env` file in `apps/web/`:
 
 ```bash
-# Base configuration (defaults for development)
-VITE_WEB3AUTH_CLIENT_ID=your_web3auth_client_id
-VITE_WEB3AUTH_NETWORK=sapphire_devnet
-
 # For production deployment
 # Copy values from .env.production or set:
 VITE_DEFAULT_CHAIN_ID=8453
@@ -166,7 +162,7 @@ This software is provided as a decentralized platform for language learning kara
 ## 🙏 Acknowledgments
 
 - Lit Protocol for content encryption
-- Web3Auth for authentication
+- RainbowKit for wallet connections
 - Tableland for decentralized database
 - Base for L2 infrastructure
 - Splits.org for payment splitting infrastructure
@@ -176,7 +172,7 @@ This software is provided as a decentralized platform for language learning kara
 
 # 卡拉 OK 语言学习 Dapp (Chinese)
 
-一个结合语言学习与区块链技术的去中心化卡拉 OK 应用，使用 Lit Protocol 进行安全内容加密，Web3Auth 进行身份验证。
+一个结合语言学习与区块链技术的去中心化卡拉 OK 应用，使用 Lit Protocol 进行安全内容加密。
 
 ## 主要特性
 

@@ -162,10 +162,10 @@
     "filePath": "./lit-actions/karaokeScorer.js"
   },
   "Karaoke Scorer V21": {
-    "cid": "QmZTR9pbSAQ3MzCCiWzVRhaBQCuCUT9AMtRiwhL4S9dCzC",
+    "cid": "QmdjE8YZyCvZe3oCgK5kUBqckDNBbJRrNfurQad4iXx1Qr",
     "fileName": "Karaoke-Scorer-V21.js",
-    "uploadDate": "2025-07-15T15:41:34.556Z",
-    "filePath": "./lit-actions/karaokeScorer.js"
+    "uploadDate": "2025-07-24T10:36:14.349Z",
+    "filePath": "./lit-actions/karaokeScorerV21.js"
   },
   "Karaoke Scorer V22-Simplified": {
     "cid": "QmePqHXsmuZvyi8z33y3ynsDH3aVPkFhTzMkFUZwj7iBPK",
@@ -226,5 +226,29 @@
     "fileName": "Single-Line-Scorer-V4---Valid-Keys.js",
     "uploadDate": "2025-07-19T11:13:51.219Z",
     "filePath": "./lit-actions/singleLineScorer.js"
+  },
+  "Karaoke Scorer V19 - Improved Scoring": {
+    "cid": "Qmb586HFrDzk3qbF9zwkt3ae1yu1BVZnmH1o1TzHjr98kh",
+    "fileName": "Karaoke-Scorer-V19---Improved-Scoring.js",
+    "uploadDate": "2025-07-24T07:18:57.785Z",
+    "filePath": "../lit-actions/karaokeScorerV19.js"
+  },
+  "Karaoke Scorer V20 - Zero Score Fix": {
+    "cid": "QmQ3mdfPTAfLqsVszswwu2SCab5sqh338PU5nJ6q4r6f9c",
+    "fileName": "Karaoke-Scorer-V20---Zero-Score-Fix.js",
+    "uploadDate": "2025-07-24T07:27:37.061Z",
+    "filePath": "../lit-actions/karaokeScorerV20.js"
+  },
+  "Single Line Scorer V5 - No LLM Feedback": {
+    "cid": "QmPaDrDLiBqWH2dJy9cUS2GPk8W33nc4A9Yxx8PM4rXbiD",
+    "fileName": "Single-Line-Scorer-V5---No-LLM-Feedback.js",
+    "uploadDate": "2025-07-24T07:34:14.560Z",
+    "filePath": "../lit-actions/singleLineScorerV5.js"
+  },
+  "Karaoke Scorer V21 Fixed": {
+    "cid": "QmVFTzVB7L1BSb5C83BWc3VuUftZLaLCVzgFXvuu35kX3i",
+    "fileName": "Karaoke-Scorer-V21-Fixed.js",
+    "uploadDate": "2025-07-24T10:38:01.655Z",
+    "filePath": "./lit-actions/karaokeScorerV21.js"
   }
 }

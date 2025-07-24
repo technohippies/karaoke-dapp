@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import i18n from './i18n/config' // Initialize i18n
 import './index.css'
+import './styles/rainbowkit-overrides.css'
 import { SpinnerWithScarlett } from './components/ui/spinner-with-scarlett'
 import { WalletProvider } from './components/WalletProvider'
 
@@ -25,8 +26,9 @@ if (isMiniApp) {
 // Clear localStorage language cache for testing (remove this in production)
 // localStorage.removeItem('i18nextLng')
 
-// Version info for debugging
-console.log('📦 App Version: 1.0.8 - Fixed env loading for production deployment')
+// Version info for debugging - automatically pulled from package.json
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'development'
+console.log(`📦 App Version: ${APP_VERSION}`)
 console.log('🎯 Is Mini App:', isMiniApp)
 
 // Log language detection info

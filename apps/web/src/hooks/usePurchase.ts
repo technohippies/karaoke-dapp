@@ -21,7 +21,7 @@ export function usePurchase() {
     args: address ? [address] : undefined,
     query: { 
       enabled: !!address,
-      refetchInterval: 5000 // Poll every 5 seconds
+      // Remove polling to reduce RPC calls
     },
   })
 
@@ -32,7 +32,7 @@ export function usePurchase() {
     args: address ? [address, KARAOKE_CONTRACT_ADDRESS] : undefined,
     query: { 
       enabled: !!address,
-      refetchInterval: 5000 // Poll every 5 seconds
+      // Remove polling to reduce RPC calls
     },
   })
 
@@ -43,7 +43,7 @@ export function usePurchase() {
     args: address ? [address] : undefined,
     query: { 
       enabled: !!address,
-      refetchInterval: 3000 // Poll every 3 seconds for critical data
+      // Remove polling to reduce RPC calls
     },
   })
 
@@ -54,7 +54,7 @@ export function usePurchase() {
     args: address ? [address] : undefined,
     query: { 
       enabled: !!address,
-      refetchInterval: 3000 // Poll every 3 seconds for critical data
+      // Remove polling to reduce RPC calls
     },
   })
 
@@ -148,6 +148,7 @@ export function usePurchase() {
       abi: USDC_ABI,
       functionName: 'approve',
       args: [KARAOKE_CONTRACT_ADDRESS, amount],
+      gas: 100000n, // Override gas for approval
     })
   }
 
@@ -160,6 +161,7 @@ export function usePurchase() {
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buyCombopack',
       args: [country],
+      gas: 200000n, // Override gas to fix Base RPC estimation issue
     })
   }
 
@@ -172,6 +174,7 @@ export function usePurchase() {
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buyVoicePack',
       args: [country],
+      gas: 200000n, // Override gas to fix Base RPC estimation issue
     })
   }
 
@@ -184,6 +187,7 @@ export function usePurchase() {
       abi: KARAOKE_SCHOOL_ABI,
       functionName: 'buySongPack',
       args: [country],
+      gas: 200000n, // Override gas to fix Base RPC estimation issue
     })
   }
 

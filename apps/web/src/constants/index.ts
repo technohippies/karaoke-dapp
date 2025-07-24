@@ -6,7 +6,7 @@ export * from './networks'
 
 // Import and re-export ABIs
 import { SIMPLE_KARAOKE_ABI } from '../contracts/abis/SimpleKaraoke'
-import { USDCABI } from '../contracts/abis/USDC'
+import { KARAOKE_SCHOOL_V4_ABI } from '../contracts/abis/KaraokeSchoolV4'
 
 export const KARAOKE_ABI = SIMPLE_KARAOKE_ABI
-export const USDC_ABI = USDCABI
+export const KARAOKE_SCHOOL_ABI = KARAOKE_SCHOOL_V4_ABI

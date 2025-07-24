@@ -1,22 +1,23 @@
 import { MusicNotes, MicrophoneStage } from '@phosphor-icons/react'
 import { Button } from './ui/button'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 interface CreditsWidgetProps {
-  balance: string
   voiceCredits: number
   songCredits: number
   hidePricingButton?: boolean
+  isFirstPurchase?: boolean
 }
 
-export function CreditsWidget({ balance: _balance, voiceCredits, songCredits, hidePricingButton = false }: CreditsWidgetProps) {
+export function CreditsWidget({ voiceCredits, songCredits, hidePricingButton = false, isFirstPurchase }: CreditsWidgetProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
   
   return (
-    <div className="bg-neutral-800 rounded-lg p-6 border border-neutral-700">
-      <h3 className="text-xl font-semibold text-white mb-2">{t('account.credits.title')}</h3>
+    <div className="mb-8">
+      <h3 className="text-2xl font-bold text-white mb-6">{t('account.credits.title')}</h3>
       
       {/* Credits Row */}
       <div className="flex gap-4 mb-6">

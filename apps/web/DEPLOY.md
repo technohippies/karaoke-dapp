@@ -27,9 +27,7 @@ npx orbiter deploy --env
 ### Production (.env)
 - Network: Base Mainnet (8453)
 - Contract: 0x06AC258d391A5B2B6660d8d5Dee97507591376D0
-- Web3Auth: sapphire_mainnet
 
 ### Development (.env.local)
 - Network: Base Sepolia (84532)
 - Contract: 0x047eCeBC1C289b26210CDdc6a0BB343a2C984F5d
-- Web3Auth: sapphire_devnet

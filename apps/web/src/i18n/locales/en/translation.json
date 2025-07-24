@@ -63,8 +63,8 @@
       "grammar": "Grammar"
     },
     "priceInfo": {
-      "song": "1 Song Credit = {{price}} USDC",
-      "voice": "1 Voice Credit = {{price}} USDC"
+      "song": "1 Song Credit = {{price}} Base ETH",
+      "voice": "1 Voice Credit = {{price}} Base ETH"
     },
     "noCredits": {
       "song": "No song credits",
@@ -102,7 +102,7 @@
     },
     "credits": {
       "title": "Credits",
-      "usdcBalance": "USDC (Base $ETH)",
+      "ethBalance": "Base ETH Balance",
       "voice": "Voice",
       "songs": "Songs",
       "pricing": "Pricing"
@@ -134,9 +134,19 @@
     "voiceCredit": "voice credit",
     "eachKaraokeCosts": "Each karaoke costs",
     "buy": "Buy",
+    "buyNow": "Buy Now",
     "approving": "Approving...",
     "purchasing": "Purchasing...",
-    "connectToPurchase": "Connect Wallet to Purchase"
+    "connectToPurchase": "Connect Wallet to Purchase",
+    "songs": "Songs",
+    "songDesc": "Unlock songs and read translations",
+    "voiceCreditsDesc": "AI-powered pronunciation grading",
+    "buyMore": "Buy More",
+    "howWorks": "How It Works",
+    "step1": "Connect your wallet",
+    "step2": "Purchase credits with Base ETH",
+    "step3": "Unlock songs with song credits",
+    "step4": "Practice with voice credits"
   },
   "faq": {
     "title": "FAQ",
@@ -212,6 +222,7 @@
   },
   "countryDialog": {
     "title": "Karaoke English School",
+    "welcomeMessage": "Welcome! This app is in alpha, report bugs! We appreciate your support!",
     "nonprofit": "Non-profit",
     "ownData": "You own your data, we host nothing",
     "donation": "50% of song revenue donated to Doctors Without Borders",

@@ -22,7 +22,7 @@ bun run dev
 - **React 18** with TypeScript
 - **Vite** for fast development and building
 - **TailwindCSS** for styling
-- **Web3Auth** for authentication
+- **RainbowKit** for wallet connections
 - **wagmi** for Web3 interactions
 - **i18next** for internationalization
 - **IndexedDB** for offline storage

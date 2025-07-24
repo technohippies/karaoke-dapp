@@ -63,8 +63,8 @@
       "grammar": "语法"
     },
     "priceInfo": {
-      "song": "1个歌曲积分 = {{price}} USDC",
-      "voice": "1个语音积分 = {{price}} USDC"
+      "song": "1个歌曲积分 = {{price}} Base ETH",
+      "voice": "1个语音积分 = {{price}} Base ETH"
     },
     "noCredits": {
       "song": "没有歌曲积分",
@@ -102,7 +102,7 @@
     },
     "credits": {
       "title": "积分",
-      "usdcBalance": "USDC (Base $ETH)",
+      "ethBalance": "Base ETH 余额",
       "voice": "语音",
       "songs": "歌曲",
       "pricing": "价格"
@@ -134,9 +134,19 @@
     "voiceCredit": "语音积分",
     "eachKaraokeCosts": "每次卡拉OK消耗",
     "buy": "购买",
+    "buyNow": "立即购买",
     "approving": "批准中...",
     "purchasing": "购买中...",
-    "connectToPurchase": "连接钱包以购买"
+    "connectToPurchase": "连接钱包以购买",
+    "songs": "歌曲",
+    "songDesc": "解锁歌曲并阅读翻译",
+    "voiceCreditsDesc": "AI语音发音评分",
+    "buyMore": "购买更多",
+    "howWorks": "如何使用",
+    "step1": "连接您的钱包",
+    "step2": "使用Base ETH购买积分",
+    "step3": "使用歌曲积分解锁歌曲",
+    "step4": "使用语音积分练习"
   },
   "faq": {
     "title": "常见问题",
@@ -212,6 +222,7 @@
   },
   "countryDialog": {
     "title": "卡拉OK英语学校",
+    "welcomeMessage": "欢迎！本应用处于测试阶段，请报告错误！感谢您的支持！",
     "nonprofit": "非营利组织",
     "ownData": "您拥有自己的数据，我们不托管任何内容",
     "donation": "歌曲收入的50%捐赠给无国界医生",

@@ -8,7 +8,7 @@ import { SyncStatus } from '../components/SyncStatus'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { BASE_SEPOLIA_CHAIN_ID, OPTIMISM_SEPOLIA_CHAIN_ID } from '../constants'
 import { defaultChainId as DEFAULT_CHAIN_ID, tablelandChainId } from '../config/networks.config'
-import { usePurchase } from '../hooks/usePurchase'
+import { usePurchaseV4 } from '../hooks/usePurchaseV4'
 import { useStreak } from '../hooks/useStreak'
 import { useIDBSync } from '../hooks/useIDBSync'
 import { calculateStreakFromSessions } from '../services/streakService'
@@ -20,7 +20,7 @@ export function AccountPage() {
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
-  const { balance, voiceCredits, songCredits } = usePurchase()
+  const { voiceCredits, songCredits } = usePurchaseV4()
   const { currentStreak: localStreak, refreshStreak } = useStreak()
   const { syncToTableland, importFromTableland, syncStatus } = useIDBSync()
   
@@ -31,7 +31,10 @@ export function AccountPage() {
   // Load cloud streak from Tableland when on Tableland chain
   useEffect(() => {
     if (address && walletClient && chain?.id === tablelandChainId) {
-      loadCloudStreak()
+      // Defer to avoid React warning about updating during render
+      setTimeout(() => {
+        loadCloudStreak()
+      }, 0)
     }
   }, [address, walletClient, chain?.id])
   
@@ -174,7 +177,6 @@ export function AccountPage() {
           {/* Credits Widget - Show when on contract chain */}
           {chain?.id === DEFAULT_CHAIN_ID && (
             <CreditsWidget 
-              balance={balance}
               voiceCredits={voiceCredits}
               songCredits={songCredits}
             />

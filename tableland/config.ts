@@ -11,9 +11,19 @@ export const TABLELAND_CONFIG = {
       rpcUrl: process.env.OPTIMISM_SEPOLIA_RPC_URL || 'https://sepolia.optimism.io',
       tablelandHost: 'https://testnets.tableland.network'
     },
+    'base-sepolia': {
+      chainId: 84532,
+      rpcUrl: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
+      tablelandHost: 'https://testnets.tableland.network'
+    },
     'base-mainnet': {
       chainId: 8453,
       rpcUrl: process.env.BASE_MAINNET_RPC_URL || 'https://mainnet.base.org',
+      tablelandHost: 'https://tableland.network'
+    },
+    'optimism-mainnet': {
+      chainId: 10,
+      rpcUrl: process.env.OPTIMISM_MAINNET_RPC_URL || 'https://mainnet.optimism.io',
       tablelandHost: 'https://tableland.network'
     }
   },

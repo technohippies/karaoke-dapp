@@ -1,4 +1,5 @@
-import { openDB, type IDBPDatabase } from 'idb'
+import { type IDBPDatabase } from 'idb'
+import { getGlobalDB } from './globalDB'
 import { ethers } from 'ethers'
 import type { 
   KaraokeSRSDB,
@@ -15,14 +16,12 @@ import { idbWriteService } from './IDBWriteService'
 
 export class IDBSyncService {
   private db: IDBPDatabase<KaraokeSRSDB> | null = null
-  private DB_NAME = 'KaraokeSRS'
-  private DB_VERSION = 2
 
   async initialize(): Promise<void> {
     if (this.db) return
 
     try {
-      this.db = await openDB<KaraokeSRSDB>(this.DB_NAME, this.DB_VERSION)
+      this.db = await getGlobalDB()
       console.log('✅ IDB Sync Service initialized')
     } catch (error) {
       console.error('❌ Failed to initialize IDB Sync Service:', error)

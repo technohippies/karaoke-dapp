@@ -4,8 +4,8 @@ import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-prot
 import { ethers } from 'ethers'
 import { getDetectedLanguage } from '../../../i18n'
 
-// Single Line Scorer V4 deployed to IPFS - updated with valid API keys from karaoke scorer V18
-const SINGLE_LINE_SCORER_CID = 'QmPutELyCw8HcxbvhRV9PAopK1YiBY7cQU7UtNn9nvGUT1'
+// Single Line Scorer V5 deployed to IPFS - removed LLM feedback for better accuracy
+const SINGLE_LINE_SCORER_CID = 'QmPaDrDLiBqWH2dJy9cUS2GPk8W33nc4A9Yxx8PM4rXbiD'
 
 interface LineScoreResult {
   success: boolean

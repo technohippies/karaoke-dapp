@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
 import { useWalletAuth } from '../hooks/useWalletAuth'
 import { useTranslation } from 'react-i18next'
@@ -11,8 +11,8 @@ import {
   KARAOKE_CONTRACT_ADDRESS
 } from '../constants'
 import { defaultChainId as DEFAULT_CHAIN_ID } from '../config/networks.config'
-import { KARAOKE_SCHOOL_ABI } from '../contracts/abis/KaraokeSchool'
-import { HeaderWithAuth } from '../components/HeaderWithAuth'
+import { KARAOKE_SCHOOL_V4_ABI } from '../contracts/abis/KaraokeSchoolV4'
+import { Header } from '../components/Header'
 import { ListItem } from '../components/ListItem'
 import { LyricsSheet } from '../components/LyricsSheet'
 import { IconButton } from '../components/IconButton'
@@ -28,6 +28,7 @@ import { SpinnerWithScarlett } from '../components/ui/spinner-with-scarlett'
 export function SongPage() {
   const { songId } = useParams<{ songId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
   const { isConnected, address, chain, isReconnecting, isConnecting } = useAccount()
   const { data: walletClient } = useWalletClient()
@@ -45,7 +46,7 @@ export function SongPage() {
   // Simple contract reads for this song
   const { data: isSongUnlocked, refetch: refetchSongUnlocked } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_SCHOOL_ABI,
+    abi: KARAOKE_SCHOOL_V4_ABI,
     functionName: 'hasUnlockedSong',
     args: address && validSongId ? [address, BigInt(validSongId)] : undefined,
     query: {
@@ -55,7 +56,7 @@ export function SongPage() {
   
   const { data: voiceCredits } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_SCHOOL_ABI,
+    abi: KARAOKE_SCHOOL_V4_ABI,
     functionName: 'voiceCredits',
     args: address ? [address] : undefined,
     query: {
@@ -65,7 +66,7 @@ export function SongPage() {
   
   const { data: songCredits } = useReadContract({
     address: KARAOKE_CONTRACT_ADDRESS,
-    abi: KARAOKE_SCHOOL_ABI,
+    abi: KARAOKE_SCHOOL_V4_ABI,
     functionName: 'songCredits',
     args: address ? [address] : undefined,
     query: {
@@ -191,7 +192,7 @@ export function SongPage() {
     console.log('🔓 Unlocking song:', song.id)
     unlockSong({
       address: KARAOKE_CONTRACT_ADDRESS,
-      abi: KARAOKE_SCHOOL_ABI,
+      abi: KARAOKE_SCHOOL_V4_ABI,
       functionName: 'unlockSong',
       args: [BigInt(song.id)]
     })
@@ -240,7 +241,7 @@ export function SongPage() {
       
       await startKaraokeWrite({
         address: KARAOKE_CONTRACT_ADDRESS,
-        abi: KARAOKE_SCHOOL_ABI,
+        abi: KARAOKE_SCHOOL_V4_ABI,
         functionName: 'startKaraoke',
         args: [BigInt(song.id)]
       })
@@ -466,11 +467,22 @@ export function SongPage() {
       
       {/* Content */}
       <div className="relative z-10 h-screen flex flex-col">
-        <HeaderWithAuth 
+        <Header 
+          isLoggedIn={isConnected}
+          address={address}
+          onLogin={() => walletAuth.connect()}
           crownCount={0}
           fireCount={0}
           showBack={true}
-          onBack={() => navigate('/')}
+          onBack={() => {
+            // If we came from somewhere specific, go back there
+            if (window.history.length > 1) {
+              navigate(-1)
+            } else {
+              // Otherwise go to home
+              navigate('/')
+            }
+          }}
         />
         
         {/* Scrollable content */}

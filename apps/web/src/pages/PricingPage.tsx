@@ -1,17 +1,20 @@
 import { usePurchase } from '../hooks/usePurchase'
-import { HeaderWithAuth } from '../components/HeaderWithAuth'
+import { SimpleHeader } from '../components/SimpleHeader'
 import { Spinner } from '../components/ui/spinner'
 import { Button } from '../components/ui/button'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChainSwitcher } from '../components/ChainSwitcher'
 import { CreditsWidget } from '../components/CreditsWidget'
 import { PurchaseSuccessBanner } from '../components/PurchaseSuccessBanner'
 import { defaultChainId } from '../config/networks.config'
 import { useTranslation } from 'react-i18next'
+import { useWalletAuth } from '../hooks/useWalletAuth'
 
 export function PricingPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { t } = useTranslation()
+  const walletAuth = useWalletAuth()
   const {
     isConnected,
     isApproving,
@@ -26,17 +29,14 @@ export function PricingPage() {
     handleBuySong,
   } = usePurchase()
 
+  // No longer using URL params for navigation
+
 
   return (
     <div className="min-h-screen bg-neutral-900 relative overflow-hidden">
       {/* Content */}
       <div className="relative z-10 h-screen flex flex-col">
-        <HeaderWithAuth 
-          crownCount={0}
-          fireCount={0}
-          showBack={true}
-          onBack={() => navigate('/')}
-        />
+        <SimpleHeader />
         
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { WagmiProvider } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RainbowKitProvider, Locale } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, Locale, darkTheme } from '@rainbow-me/rainbowkit'
 import { useTranslation } from 'react-i18next'
 import { farcasterWagmiConfig } from '../config/wagmi-farcaster.config'
 import { rainbowConfig } from '../config/rainbowkit.config'
@@ -46,7 +46,16 @@ export function WalletProvider({ children, isMiniApp }: WalletProviderProps) {
   return (
     <WagmiProvider config={rainbowConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider locale={getRainbowKitLocale()}>
+        <RainbowKitProvider 
+          locale={getRainbowKitLocale()}
+          theme={darkTheme({
+            accentColor: '#525252', // neutral-600
+            accentColorForeground: 'white',
+            borderRadius: 'medium',
+            fontStack: 'system',
+            overlayBlur: 'small',
+          })}
+        >
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

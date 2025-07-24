@@ -4,15 +4,16 @@
   "description": "Tableland management for Lit Karaoke",
   "type": "module",
   "scripts": {
-    "deploy": "bun run deploy-tables.ts",
-    "deploy:table": "bun run deploy-table-auto.ts",
-    "deploy:ledger": "bun run deploy-table-ledger.ts",
-    "deploy:privatekey": "bun run deploy-table.ts",
-    "add": "bun run add-song.ts",
-    "batch": "bun run batch-add-songs.ts",
-    "pipeline": "bun run pipeline.ts",
-    "update": "bun run update-encrypted-content.ts",
-    "query": "bun run query-songs.ts"
+    "deploy": "bun run deploy/deploy-table.ts",
+    "deploy:ledger": "bun run deploy/deploy-table-ledger.ts",
+    "deploy:batch": "bun run deploy/deprecated/deploy-tables.ts",
+    "add": "bun run operations/add/add-song.ts",
+    "add:ledger": "bun run operations/add/add-song-ledger.ts",
+    "batch": "bun run operations/add/batch-add-songs.ts",
+    "batch:ledger": "bun run operations/add/batch-add-songs-ledger.ts",
+    "pipeline": "bun run scripts/pipeline.ts",
+    "update": "bun run operations/update/update-encrypted-content.ts",
+    "query": "bun run operations/query/query.ts"
   },
   "dependencies": {
     "@ethersproject/hardware-wallets": "5.8.0",

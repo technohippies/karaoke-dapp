@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { openDB } from 'idb'
+import { DB_NAME, DB_VERSION } from '../services/database/idb/schema'
 
 export function DebugIDB() {
   const [debugInfo, setDebugInfo] = useState<any>({})
@@ -8,7 +9,7 @@ export function DebugIDB() {
     const checkIDB = async () => {
       try {
         // Open the database directly
-        const db = await openDB('KaraokeSRS', 1)
+        const db = await openDB(DB_NAME, DB_VERSION)
         
         // Check all stores
         const stores = {

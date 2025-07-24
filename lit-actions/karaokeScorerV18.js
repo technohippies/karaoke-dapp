@@ -124,12 +124,23 @@ SCORING RULES:
 - 100: Perfect match (ignore case, punctuation, and capitalization)
 - 90-99: Missing small words (a, the, and, is) or minor variations
 - 70-89: Mostly correct but some word substitutions
-- Below 70: Significant errors requiring practice
+- 50-69: Some correct words but major errors
+- 20-49: Few correct words
+- 0-19: Completely wrong or no attempt
 
-Examples:
-"I've never seen a diamond in the flesh" → "i've never seen a diamond in the flesh" = 100
-"And I'm not proud of my address" → "I'm not proud of my address" = 90 (missing "And")
-"And I'm not proud of my address" → "and i'm not caught on my dress" = 65 (wrong key words)
+IMPORTANT: overall_score MUST be the mathematical average of all line scores.
+
+Examples with calculations:
+- 3 lines scoring [100, 80, 70] → overall_score = (100+80+70)/3 = 83
+- 2 lines scoring [0, 0] → overall_score = (0+0)/2 = 0
+- 4 lines scoring [100, 100, 90, 90] → overall_score = (100+100+90+90)/4 = 95
+
+Specific scoring examples:
+"I've never seen a diamond in the flesh" → "i've never seen a diamond in the flesh" = 100 (perfect)
+"I've never seen a diamond in the flesh" → "I never seen a diamond in the flesh" = 90 (missing "I've")
+"I've never seen a diamond in the flesh" → "I've never seen diamonds in flesh" = 85 (minor variations)
+"I've never seen a diamond in the flesh" → "I've never been a diamond in flash" = 60 (key words wrong)
+"I've never seen a diamond in the flesh" → "testing testing one two three" = 0 (completely unrelated)
 
 ORIGINAL LYRICS:
 ${numberedLyrics}
@@ -137,12 +148,14 @@ ${numberedLyrics}
 STT TRANSCRIPT:
 ${transcript}
 
+Calculate each line score, then overall_score = sum of line scores / number of lines.
+
 Return ONLY valid JSON with this exact structure:
 {
-  "overall_score": 85,
+  "overall_score": [calculated average],
   "lines": [
-    {"lineIndex": 0, "score": 100, "needsPractice": false},
-    {"lineIndex": 1, "score": 65, "needsPractice": true, "expectedText": "line text here", "transcribedText": "what was heard"}
+    {"lineIndex": 0, "score": [0-100], "needsPractice": [true if score < 90]},
+    {"lineIndex": 1, "score": [0-100], "needsPractice": [true if score < 90], "expectedText": "[original line]", "transcribedText": "[what was heard]"}
   ]
 }
 

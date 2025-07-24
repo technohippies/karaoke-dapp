@@ -1,6 +1,6 @@
 {
   "name": "@karaoke/web",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,13 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:e2e:build-cache": "synpress ./e2e/wallet-setup",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "PWDEBUG=1 playwright test",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",
@@ -53,10 +59,12 @@
     "wagmi": "^2.15.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.54.1",
     "@storybook/addon-docs": "^9.0.16",
     "@storybook/addon-onboarding": "^9.0.16",
     "@storybook/addon-themes": "^9.0.16",
     "@storybook/react-vite": "^9.0.16",
+    "@synthetixio/synpress": "^4.1.0",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",

@@ -1,148 +1,123 @@
 # Karaoke Smart Contracts
 
-This is the clean, production-ready smart contracts folder for the Karaoke application.
+## Current Contract (V4 - ETH Version)
+
+**KaraokeSchoolV4** - UUPS upgradeable contract for purchasing credits with ETH (no more USDC approvals).
+
+### Features
+
+- **Credit System**: 
+  - Voice credits: For AI grading (30 per karaoke session, 1 per exercise)
+  - Song credits: For unlocking songs (1 per song)
+- **ETH Pricing** (fixed in wei):
+  - Combo Pack: 0.002 ETH → 2000 voice + 3 song credits (~$7 at $3500/ETH)
+  - Voice Pack: 0.0011 ETH → 2000 voice credits (~$3.85)
+  - Song Pack: 0.0008 ETH → 3 song credits (~$2.80)
+- **Better UX**: Single transaction (no approval needed)
+- **UUPS Upgradeable**: Maintains fixed address for Lit Protocol integration
+- **Direct Payment**: ETH goes directly to splits contract
+
+### Deployments
+
+#### Base Sepolia (Test First!)
+- **Deploy with new proxy**:
+  ```bash
+  forge script script/DeployV4WithProxySepolia.s.sol --rpc-url base_sepolia --broadcast
+  ```
+- **Deploy implementation only** (to upgrade existing proxy):
+  ```bash
+  forge script script/DeployV4Sepolia.s.sol --rpc-url base_sepolia --broadcast
+  ```
+
+#### Base Mainnet (After Testing)
+- **New Splits Contract**: `0x90840E8cfbeEB3adC85cb665A5b9CeB942150f88`
+- Deploy implementation and call `upgradeTo()` on existing proxy
+
+### Contract Interface
+
+#### Purchase Functions (payable)
+- `buyCombopack(string country)` - Send 0.002 ETH for 2000 voice + 3 song credits
+- `buyVoicePack(string country)` - Send 0.0011 ETH for 2000 voice credits  
+- `buySongPack(string country)` - Send 0.0008 ETH for 3 song credits
+
+#### Usage Functions
+- `unlockSong(uint256 songId)` - Spend 1 song credit to unlock
+- `startKaraoke(uint256 songId)` - Spend 30 voice credits for session
+- `startExercise(uint256 numExercises)` - Spend N voice credits
+
+#### View Functions
+- `voiceCredits(address user)` - Check voice credit balance
+- `songCredits(address user)` - Check song credit balance
+- `hasUnlockedSong(address user, uint256 songId)` - Check if song unlocked
+
+#### Emergency Functions
+- `recoverToken(address token, uint256 amount)` - Recover stuck tokens
+- `recoverETH(uint256 amount)` - Recover stuck ETH
 
 ## Quick Start
 
-### Prerequisites
-- [Foundry](https://getfoundry.sh/) installed
-- Base Sepolia RPC access
-
-### Setup
-1. Navigate to this directory:
-   ```bash
-   cd contracts
-   ```
-
-2. Install dependencies:
-   ```bash
-   forge install
-   ```
-
-3. Build contracts:
-   ```bash
-   forge build
-   ```
-
-### Deployment Process
-
-1. **Deploy the contract**:
-   ```bash
-   cd contracts
-   forge script script/Deploy.s.sol --rpc-url $BASE_SEPOLIA_RPC --broadcast
-   ```
-
-2. **Verify on Basescan** (automatic with deployment):
-   ```bash
-   # If verification fails during deployment, manually verify:
-   forge verify-contract <CONTRACT_ADDRESS> KaraokeSchool \
-     --chain base-sepolia \
-     --constructor-args $(cast abi-encode "constructor(address,address,address)" \
-       0x036CbD53842c5426634e7929541eC2318f3dCF7e \
-       0xe7674fe5EAfdDb2590462E58B821DcD17052F76D \
-       0x862405bD3380EF10e41291e8db5aB630c28bD523)
-   ```
-
-3. **Extract ABI for frontend**:
-   ```bash
-   python3 -c "import json; print(json.dumps(json.load(open('out/KaraokeSchool.sol/KaraokeSchool.json'))['abi'], indent=2))" > ../apps/web/src/constants/abi/KaraokeSchool.json
-   ```
-
-### Current Deployment
-
-- **Contract**: KaraokeSchool (Ownable + Direct Splits Transfer)
-- **Address**: `0xc7D24B90C69c6F389fbC673987239f62F0869e3a`
-- **Network**: Base Sepolia
-- **Status**: ✅ ACTIVE & VERIFIED
-- **Splits Contract**: `0x862405bD3380EF10e41291e8db5aB630c28bD523`
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for full deployment history.
-
-## Contract Architecture
-
-### KaraokeSchool.sol
-Main contract with:
-- **Credit System**: Voice credits (for AI grading) and Song credits (for unlocking songs)
-- **Purchase Functions**: `buyCombopack(string country)`, `buyVoicePack(string country)`, `buySongPack(string country)`
-- **Song Management**: `unlockSong(uint256 songId)`
-- **USDC Integration**: Uses Base Sepolia USDC for payments
-- **Country Tracking**: Records user's country (2-letter code) for royalty distribution
-- **Direct Splits Transfer**: All payments go directly to Splits contract (no withdraw needed)
-- **Ownable**: Compatible with ENS/Enscribe for decentralized naming
-
-### Key Features
-- ✅ **Clean Architecture**: No complex inheritance, minimal dependencies
-- ✅ **No Stack Overflow**: Compiles without "stack too deep" errors
-- ✅ **Gas Optimized**: Simple mappings and efficient storage
-- ✅ **Custom Errors**: Better error handling than strings
-- ✅ **Owner Management**: Admin functions for contract management
-
-## Pricing
-- **Combo Pack**: 3 USDC → 100 Voice Credits + 10 Song Credits
-- **Voice Pack**: 1 USDC → 50 Voice Credits  
-- **Song Pack**: 2 USDC → 5 Song Credits
-
-## Testing Contract
-
-Test basic functions:
+### 1. Set Environment
 ```bash
-# Check owner
-cast call 0xc7D24B90C69c6F389fbC673987239f62F0869e3a "owner()" --rpc-url https://sepolia.base.org
-
-# Check voice credits for address
-cast call 0xc7D24B90C69c6F389fbC673987239f62F0869e3a "voiceCredits(address)" YOUR_ADDRESS --rpc-url https://sepolia.base.org
-
-# Check user's country
-cast call 0xc7D24B90C69c6F389fbC673987239f62F0869e3a "userCountry(address)" YOUR_ADDRESS --rpc-url https://sepolia.base.org
+cd contracts
+cp .env.example .env
+# Add your PRIVATE_KEY to .env
 ```
 
-## Directory Structure
-```
-contracts/
-├── src/
-│   └── KaraokeSchool.sol      # Main contract
-├── script/
-│   └── Deploy.s.sol           # Deployment script
-├── lib/
-│   ├── forge-std/             # Foundry standard library
-│   └── openzeppelin-contracts/# OpenZeppelin contracts
-├── out/                       # Compiled contracts
-├── broadcast/                 # Deployment artifacts
-├── .env                       # Environment variables
-├── foundry.toml               # Foundry configuration
-├── README.md                  # This file
-└── DEPLOYMENT.md              # Deployment history & details
+### 2. Deploy to Base Sepolia
+```bash
+# Build first
+forge build
+
+# Deploy with new proxy (for testing)
+forge script script/DeployV4WithProxySepolia.s.sol --rpc-url base_sepolia --broadcast
+
+# Verify
+forge verify-contract <IMPLEMENTATION_ADDRESS> src/KaraokeSchoolV4.sol:KaraokeSchoolV4 \
+  --chain base-sepolia \
+  --constructor-args $(cast abi-encode 'constructor(address)' 0x862405bD3380EF10e41291e8db5aB630c28bD523)
 ```
 
-## After Contract Update Checklist
-
-1. **Update Frontend**:
-   - Update contract address in `apps/web/src/constants/contracts.ts`
-   - Update `.env` variables (KARAOKE_CONTRACT & VITE_KARAOKE_CONTRACT)
-   - Copy new ABI to frontend (see deployment step 3)
-
-2. **Re-encrypt Content** (if access control changed):
-   ```bash
-   cd ../scripts
-   bash re-encrypt-songs.sh
-   ```
-
-3. **Update Tableland**:
-   ```bash
-   cd ../tableland
-   npx tsx update-encrypted-content.ts <songId> '<json>'
-   ```
-
-4. **Update Documentation**:
-   - Update this README with new address
-   - Update DEPLOYMENT.md with deployment details
-   - Commit all changes
-
-## Environment Variables
-
-Required in `.env`:
+### 3. Update Frontend
+```env
+VITE_KARAOKE_CONTRACT=<PROXY_ADDRESS>
+VITE_NETWORK_NAME=base-sepolia
+VITE_DEFAULT_CHAIN_ID=84532
 ```
-BASE_SEPOLIA_RPC=https://sepolia.base.org
-PRIVATE_KEY=<deployer_private_key>
-ETHERSCAN_API_KEY=<for_verification>
+
+### 4. Test Everything
+- Connect to Base Sepolia
+- Get test ETH from faucet
+- Test all purchase flows
+- Verify credits update correctly
+
+### 5. Deploy to Mainnet (After Testing)
+```bash
+# Update splits address in DeployV4.s.sol to: 0x90840E8cfbeEB3adC85cb665A5b9CeB942150f88
+forge script script/DeployV4.s.sol --rpc-url base --broadcast --verify
+
+# Upgrade existing proxy
+# Call upgradeTo(newImplementationAddress) from owner wallet
 ```
+
+## Frontend Updates
+
+The frontend has been updated to:
+- Use `PricingPageV4` component with ETH prices
+- Use `usePurchaseV4` hook (no approval flow)
+- Display all prices as "Base ETH"
+- Remove all USDC references
+- Use `KARAOKE_SCHOOL_V4_ABI`
+
+## Gas Optimization
+
+Frontend includes gas overrides for reliability:
+- Purchase functions: 200,000 gas
+- Actual usage is lower, but this ensures success
+
+## Important Notes
+
+1. **Always test on Base Sepolia first!**
+2. ETH prices are fixed - monitor volatility
+3. Splits contract must accept ETH
+4. No approval = better UX
+5. Lower gas without ERC20 calls
